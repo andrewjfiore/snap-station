@@ -465,7 +465,7 @@
     </div>
 
     <canvas id="captureCanvas"></canvas>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="lib/gif.js"></script>
 
     <script>
         // --- Core Utilities & Sound ---
@@ -628,14 +628,14 @@
         // --- Init ---
         async function prepareGifWorker() {
             try {
-                const response = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+                const response = await fetch('lib/gif.worker.js');
                 if (!response.ok) throw new Error('Fetch failed');
                 const workerScript = await response.text();
                 const blob = new Blob([workerScript], { type: 'application/javascript' });
                 window.gifWorkerBlobUrl = URL.createObjectURL(blob);
             } catch (e) {
-                console.warn('Fallback to CDN for GIF worker', e);
-                window.gifWorkerBlobUrl = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js';
+                console.warn('GIF worker load failed, using direct path', e);
+                window.gifWorkerBlobUrl = 'lib/gif.worker.js';
             }
         }
         prepareGifWorker();
@@ -867,7 +867,7 @@
             const viewW = baseW / window.zoomLevel;
             const viewH = baseH / window.zoomLevel;
             const scaleFactor = (vidW / video.offsetWidth) / window.zoomLevel;
-            const panOffsetX = -window.panX * scaleFactor;
+            const panOffsetX = (window.isMirrored ? window.panX : -window.panX) * scaleFactor;
             const panOffsetY = -window.panY * scaleFactor;
             const centerX = baseX + baseW / 2 + panOffsetX;
             const centerY = baseY + baseH / 2 + panOffsetY;
@@ -1098,23 +1098,29 @@
 
         // --- Profile Save/Load ---
         $('saveProfileBtn').onclick = () => {
-            SoundFX.printer(); // New Motor Sound
-            const snaps = [];
-            gallery.querySelectorAll('.snap-wrapper').forEach(w => {
-                const img = w.querySelector('img');
-                const badge = w.querySelector('.snap-badge');
-                if(img && badge) snaps.push({ type: badge.textContent === '🎬'?'gif':'jpg', data: img.src });
-            });
-            const blob = new Blob([JSON.stringify({ 
-                settings: { theme: themeSelect.value, crt: window.crtEnabled }, 
-                gallery: snaps 
-            })], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = `profile-${Date.now()}.json`;
-            link.href = url;
-            link.click();
-            URL.revokeObjectURL(url);
+            try {
+                SoundFX.printer(); // New Motor Sound
+                const snaps = [];
+                gallery.querySelectorAll('.snap-wrapper').forEach(w => {
+                    const img = w.querySelector('img');
+                    const badge = w.querySelector('.snap-badge');
+                    if(img && badge) snaps.push({ type: badge.textContent === '🎬'?'gif':'jpg', data: img.src });
+                });
+                const blob = new Blob([JSON.stringify({
+                    settings: { theme: themeSelect.value, crt: window.crtEnabled },
+                    gallery: snaps
+                })], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `profile-${Date.now()}.json`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('Profile saved successfully!');
+            } catch(err) {
+                console.error('Profile save error:', err);
+                showToast('Profile save failed - file may be too large');
+            }
         };
 
         $('loadProfileBtn').onclick = () => $('profileInput').click();
@@ -1126,9 +1132,27 @@
             r.onload = (ev) => {
                 try {
                     const d = JSON.parse(ev.target.result);
-                    if(d.settings?.theme) { themeSelect.value = d.settings.theme; themeSelect.dispatchEvent(new Event('change')); }
-                    if(d.gallery) d.gallery.reverse().forEach(i => addToGallery(i.data, i.type));
-                } catch(err) { console.error(err); }
+                    // Validate profile structure
+                    if (!d || typeof d !== 'object') {
+                        throw new Error('Invalid profile format');
+                    }
+                    if(d.settings?.theme) {
+                        themeSelect.value = d.settings.theme;
+                        themeSelect.dispatchEvent(new Event('change'));
+                    }
+                    if(Array.isArray(d.gallery)) {
+                        d.gallery.reverse().forEach(i => {
+                            // Validate each gallery item
+                            if(i.data && typeof i.data === 'string' && i.data.startsWith('data:')) {
+                                addToGallery(i.data, i.type || 'jpg');
+                            }
+                        });
+                    }
+                    showToast('Profile loaded successfully!');
+                } catch(err) {
+                    console.error('Profile load error:', err);
+                    showToast('Failed to load profile - invalid file');
+                }
             };
             r.readAsText(f);
             e.target.value = '';
@@ -1251,8 +1275,15 @@
         });
         
         $('fullscreenBtn').onclick = () => {
-            if(!document.fullscreenElement) videoContainer.requestFullscreen().catch(e=>console.log(e));
-            else document.exitFullscreen();
+            if(!document.fullscreenElement) {
+                videoContainer.requestFullscreen().catch(e => {
+                    console.log('Fullscreen error:', e);
+                    updateStatus('Fullscreen not supported');
+                    setTimeout(() => updateStatus(''), 3000);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         };
 
         // Konami
