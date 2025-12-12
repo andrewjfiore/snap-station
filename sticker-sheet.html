@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- GIF Encoder -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="lib/gif.js"></script>
     
     <!-- Fonts for Stamps (Google Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1430,11 +1430,6 @@
             else if (value === 'none') { bgLayer.style.backgroundImage = 'none'; }
             else if (bgPatterns[value]) { bgLayer.style.backgroundImage = `url("${bgPatterns[value]}")`; }
         }
-        
-        window.handleCustomBackground = function(event) {
-            const file = event.target.files[0]; if(!file) return;
-            bgLayer.style.backgroundImage = `url("${URL.createObjectURL(file)}")`;
-        }
 
         function urlToBase64(url) {
             return fetch(url).then(res => res.blob()).then(blob => {
@@ -1448,34 +1443,47 @@
         }
 
         window.saveProject = async function() {
-            const loadingOverlay = document.getElementById('loading-overlay'); loadingOverlay.style.display = 'flex';
-            const stamps = [];
-            document.querySelectorAll('#stamp-layer .stamp-wrapper').forEach(el => {
-                const st = window.getComputedStyle(el); const tr = st.getPropertyValue("transform");
-                let angle = 0; if (tr && tr !== 'none') { const values = tr.split('(')[1].split(')')[0].split(','); angle = Math.round(Math.atan2(values[1], values[0]) * (180/Math.PI)); }
-                const content = el.querySelector('.stamp-content');
-                stamps.push({
-                    text: content.innerText, left: parseFloat(el.style.left), top: parseFloat(el.style.top),
-                    size: content.style.fontSize, rotation: angle,
-                    isText: el.dataset.isText === 'true', font: el.dataset.font, color: el.dataset.color
+            const loadingOverlay = document.getElementById('loading-overlay');
+            try {
+                loadingOverlay.style.display = 'flex';
+                const stamps = [];
+                document.querySelectorAll('#stamp-layer .stamp-wrapper').forEach(el => {
+                    const st = window.getComputedStyle(el); const tr = st.getPropertyValue("transform");
+                    let angle = 0; if (tr && tr !== 'none') { const values = tr.split('(')[1].split(')')[0].split(','); angle = Math.round(Math.atan2(values[1], values[0]) * (180/Math.PI)); }
+                    const content = el.querySelector('.stamp-content');
+                    stamps.push({
+                        text: content.innerText, left: parseFloat(el.style.left), top: parseFloat(el.style.top),
+                        size: content.style.fontSize, rotation: angle,
+                        isText: el.dataset.isText === 'true', font: el.dataset.font, color: el.dataset.color
+                    });
                 });
-            });
 
-            const savedImages = [];
-            for (let i = 0; i < window.groupImages.length; i++) {
-                if (window.groupImages[i] && window.groupImages[i].url) {
-                    try { const b64 = await urlToBase64(window.groupImages[i].url); savedImages[i] = { b64: b64, canvasData: window.groupImages[i].canvasData, cropBoxData: window.groupImages[i].cropBoxData }; } catch (e) { savedImages[i] = null; }
-                } else { savedImages[i] = null; }
+                const savedImages = [];
+                for (let i = 0; i < window.groupImages.length; i++) {
+                    if (window.groupImages[i] && window.groupImages[i].url) {
+                        try { const b64 = await urlToBase64(window.groupImages[i].url); savedImages[i] = { b64: b64, canvasData: window.groupImages[i].canvasData, cropBoxData: window.groupImages[i].cropBoxData }; } catch (e) { savedImages[i] = null; }
+                    } else { savedImages[i] = null; }
+                }
+                const projectData = {
+                    theme: document.body.getAttribute('data-theme'), // Use data attribute
+                    bgValue: document.getElementById('bg-select').value,
+                    paperSize: document.getElementById('paper-size').value,
+                    mode: window.currentMode, images: savedImages, stamps: stamps
+                };
+                const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'snap-station-project.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Project saved successfully!');
+            } catch(err) {
+                console.error('Project save error:', err);
+                showToast('Failed to save project - file may be too large');
+            } finally {
+                loadingOverlay.style.display = 'none';
             }
-            const projectData = {
-                theme: document.body.getAttribute('data-theme'), // Use data attribute
-                bgValue: document.getElementById('bg-select').value,
-                paperSize: document.getElementById('paper-size').value,
-                mode: window.currentMode, images: savedImages, stamps: stamps
-            };
-            const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'snap-station-project.json'; a.click();
-            URL.revokeObjectURL(url); loadingOverlay.style.display = 'none';
         }
 
         window.loadProject = function(event) {
@@ -1484,25 +1492,47 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
+
+                    // Validate project structure
+                    if (!data || typeof data !== 'object') {
+                        throw new Error('Invalid project format');
+                    }
+
                     if (data.theme) { document.getElementById('theme-select').value = data.theme; changeTheme(data.theme); }
                     if (data.bgValue) { document.getElementById('bg-select').value = data.bgValue; changeBackground(data.bgValue); }
                     if (data.paperSize) { document.getElementById('paper-size').value = data.paperSize; changePaperSize(data.paperSize); }
                     if (data.mode) window.setMode(data.mode);
-                    if (data.images) {
-                        window.groupImages.forEach(g => { if(g && g.url) URL.revokeObjectURL(g.url); });
+
+                    if (Array.isArray(data.images)) {
+                        window.groupImages.forEach(g => { if(g && g.url && g.url.startsWith('blob:')) URL.revokeObjectURL(g.url); });
                         window.groupImages = new Array(data.images.length).fill(null);
                         setTimeout(() => {
                             data.images.forEach((imgData, idx) => {
-                                if (imgData && imgData.b64) { window.groupImages[idx] = { url: imgData.b64, canvasData: imgData.canvasData, cropBoxData: imgData.cropBoxData }; }
+                                // Validate image data
+                                if (imgData && imgData.b64 && typeof imgData.b64 === 'string' && imgData.b64.startsWith('data:')) {
+                                    window.groupImages[idx] = { url: imgData.b64, canvasData: imgData.canvasData, cropBoxData: imgData.cropBoxData };
+                                }
                             });
                             refreshGrid();
                         }, 100);
                     }
+
                     stampLayer.innerHTML = '';
-                    if (data.stamps) { data.stamps.forEach(s => { createStamp(s.text, s.left, s.top, s.size, s.rotation, s.isText || false, s.font, s.color); }); }
-                } catch (err) { alert('Error loading project file.'); }
+                    if (Array.isArray(data.stamps)) {
+                        data.stamps.forEach(s => {
+                            if (s && s.text) {
+                                createStamp(s.text, s.left, s.top, s.size, s.rotation, s.isText || false, s.font, s.color);
+                            }
+                        });
+                    }
+
+                    showToast('Project loaded successfully!');
+                } catch (err) {
+                    console.error('Project load error:', err);
+                    showToast('Failed to load project - invalid or corrupted file');
+                }
             };
-            reader.readAsText(file); event.target.value = ''; 
+            reader.readAsText(file); event.target.value = '';
         }
 
         window.saveOutput = async function() {
@@ -1513,7 +1543,15 @@
 
             const cells = document.querySelectorAll('.cell'); const tempImages = [];
             let gifWorkerUrl = null;
-            if(format === 'gif') { try { const blob = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js').then(r => r.blob()); gifWorkerUrl = URL.createObjectURL(blob); } catch(e) {} }
+            if(format === 'gif') {
+                try {
+                    const blob = await fetch('lib/gif.worker.js').then(r => r.blob());
+                    gifWorkerUrl = URL.createObjectURL(blob);
+                } catch(e) {
+                    console.warn('GIF worker load failed, using direct path', e);
+                    gifWorkerUrl = 'lib/gif.worker.js';
+                }
+            }
 
             if(format !== 'gif') {
                 cells.forEach((cell, index) => {
@@ -1587,7 +1625,11 @@
                          link.href = URL.createObjectURL(blob); link.click(); URL.revokeObjectURL(link.href);
                     }, mimeType, 0.95);
                 }
-            } catch (error) { console.error(error); alert('Failed to generate output.'); } finally { 
+            } catch (error) {
+                console.error('Export error:', error);
+                const errorMsg = error.message.includes('canvas') ? 'Failed to generate output - image may be too large' : 'Failed to generate output - please try a different format';
+                showToast(errorMsg);
+            } finally {
                 if (format !== 'gif') { tempImages.forEach(item => { item.img.remove(); if (item.cropperDiv) item.cropperDiv.style.display = ''; }); loadingOverlay.style.display = 'none'; document.body.classList.remove('printing'); }
             }
         }
