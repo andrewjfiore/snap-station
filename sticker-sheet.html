@@ -1107,8 +1107,13 @@
         }
         
         window.clearImage = function(index) {
-             if (window.groupImages[index] && window.groupImages[index].url) { URL.revokeObjectURL(window.groupImages[index].url); }
-            window.groupImages[index] = null; 
+            if (window.groupImages[index] && window.groupImages[index].url) {
+                // Only revoke blob URLs, not data URLs
+                if (window.groupImages[index].url.startsWith('blob:')) {
+                    URL.revokeObjectURL(window.groupImages[index].url);
+                }
+            }
+            window.groupImages[index] = null;
             const input = document.querySelector(`.file-input-wrapper[data-index="${index}"] input[type=file]`);
             if(input) input.value = '';
             refreshGrid();
