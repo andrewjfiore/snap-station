@@ -1041,18 +1041,38 @@
         }
 
         // Auto-check for pending imports
-        setTimeout(() => {
+        function checkForPendingImports() {
             try {
                 const data = localStorage.getItem('snapstation-export');
                 if (data) {
                     try {
                         const parsed = JSON.parse(data);
                         const count = parsed.images?.length || 0;
-                        if (count > 0) showToast(`${count} snap${count !== 1 ? 's' : ''} ready to import. Click "Import Snaps".`);
+                        if (count > 0) {
+                            showToast(`${count} snap${count !== 1 ? 's' : ''} ready to import. Click "Import Snaps".`);
+                            return true;
+                        }
                     } catch (e) {}
                 }
             } catch(e) {}
-        }, 500);
+            return false;
+        }
+
+        // Check on load
+        setTimeout(checkForPendingImports, 500);
+
+        // Listen for storage changes from other tabs/frames
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'snapstation-export' && e.newValue) {
+                checkForPendingImports();
+            }
+        });
+
+        // Poll periodically (storage event doesn't fire in same window/frame)
+        setInterval(() => {
+            const data = localStorage.getItem('snapstation-export');
+            if (data) checkForPendingImports();
+        }, 2000);
 
         window.toggleHelp = function() {
             const modal = document.getElementById('help-modal');
@@ -1275,7 +1295,7 @@
             if (newUrl) {
                 img.src = newUrl; img.style.display = 'block';
                 const cropper = new Cropper(img, {
-                    aspectRatio: stickerW / stickerH, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false,
+                    aspectRatio: stickerW / stickerH, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false, modal: false, background: false,
                     ready: function() {
                         this.cropper.isCustomReady = true;
                         if (imgData.canvasData) try { this.cropper.setCanvasData(imgData.canvasData); } catch(e) {}
