@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta http-equiv="Permissions-Policy" content="gamepad=(self), clipboard-read=(self)">
 
     <title>Sticker Sheet Creator</title>
@@ -466,12 +468,231 @@
         @media (max-width: 768px) {
             .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: repeat(2, 1fr); }
             .action-bar { justify-content: center; gap: 20px; }
-            .toggles { flex-wrap: wrap; justify-content: center; }
+            .toggles { flex-wrap: wrap; justify-content: center; gap: 15px; }
             #paper { transform-origin: top center; transform: scale(0.8); margin-bottom: -20mm; }
+
+            /* Larger touch targets */
+            .help-btn {
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 1.4rem;
+            }
+
+            .toggle-label input {
+                width: 24px !important;
+                height: 24px !important;
+            }
+
+            .btn-purple, .btn-green {
+                min-height: 48px;
+                padding: 12px 20px;
+            }
+
+            .mode-selector button {
+                min-height: 48px;
+                padding: 14px 16px;
+            }
+
+            .btn-stamp-add {
+                min-width: 48px !important;
+                min-height: 48px !important;
+                font-size: 1.6rem;
+            }
+
+            .custom-stamp-input {
+                min-height: 48px;
+                width: 180px;
+                font-size: 1rem;
+            }
+
+            .text-input, select {
+                min-height: 48px;
+                font-size: 1rem;
+            }
+
+            /* Better spacing for touch */
+            .actions-right {
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .stamp-list {
+                gap: 12px;
+            }
+
+            .text-stamp-controls {
+                gap: 12px;
+            }
+
+            /* Stack action buttons on smaller tablets */
+            .btn-project {
+                min-height: 48px;
+            }
         }
+
+        @media (max-width: 600px) {
+            /* Stack buttons vertically for better touch */
+            .actions-right {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-purple {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .save-group {
+                width: 100%;
+            }
+
+            .save-group select {
+                flex: 1;
+            }
+
+            /* Larger modal controls */
+            .fullscreen-crop-close {
+                width: 48px !important;
+                height: 48px !important;
+                font-size: 28px;
+            }
+
+            .fullscreen-crop-btn {
+                min-height: 56px;
+                padding: 14px 20px;
+                font-size: 1.1rem;
+            }
+        }
+
         @media (max-width: 480px) {
             .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: 1fr; }
             #paper { transform: scale(0.55); margin-bottom: -45mm; }
+
+            body {
+                padding: 10px;
+            }
+
+            .control-section {
+                padding: 15px;
+            }
+
+            .mode-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .mode-selector button {
+                width: 100%;
+            }
+
+            .project-buttons {
+                flex-direction: column;
+            }
+
+            .btn-project {
+                width: 100%;
+                min-width: auto;
+            }
+
+            /* Stamp controls stack */
+            .text-stamp-controls {
+                flex-direction: column;
+            }
+
+            .text-stamp-controls > * {
+                width: 100%;
+            }
+
+            .text-input {
+                min-width: auto;
+            }
+
+            /* Help modal optimization */
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                max-height: 85vh;
+            }
+
+            .modal-close {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            /* Very small screens */
+            body {
+                padding: 5px;
+            }
+
+            .control-section {
+                padding: 10px;
+            }
+
+            #paper {
+                transform: scale(0.45);
+                margin-bottom: -55mm;
+            }
+
+            .btn-purple, .btn-green, .mode-selector button {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+            }
+
+            .fullscreen-crop-btn {
+                font-size: 0.95rem;
+                padding: 12px 16px;
+            }
+        }
+
+        /* Landscape mode optimizations */
+        @media (max-height: 600px) and (orientation: landscape) {
+            #paper {
+                transform: scale(0.6) !important;
+                margin-bottom: -30mm;
+            }
+
+            .control-section {
+                padding: 10px;
+            }
+
+            .fullscreen-crop-modal .fullscreen-crop-body {
+                padding: 10px;
+            }
+
+            .fullscreen-crop-controls {
+                padding: 12px;
+                gap: 10px;
+            }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents iOS zoom on focus */
+            }
+
+            .custom-stamp-input,
+            .text-input {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Prevent double-tap zoom on buttons */
+        button, .btn, .btn-purple, .btn-green, .btn-project {
+            touch-action: manipulation;
+        }
+
+        /* Better safe area handling for notched devices */
+        @supports (padding: env(safe-area-inset-top)) {
+            body {
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
         }
         
         .emoji-wallpaper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; opacity: 0; transition: opacity 0.5s ease; }
