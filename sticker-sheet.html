@@ -479,6 +479,42 @@
         .emoji-wallpaper span { position: absolute; font-size: 24px; animation: float 8s ease-in-out infinite; opacity: 0.6; }
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(10deg); } }
 
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white !important;
+            }
+            .controls,
+            .stamp-selector,
+            .emoji-wallpaper,
+            .gamepad-mode-indicator,
+            .toast-notification,
+            .modal-overlay,
+            .fullscreen-crop-modal,
+            .cell-controls,
+            button[onclick="downloadCuttingTemplate()"] {
+                display: none !important;
+            }
+            #paper {
+                margin: 0 auto;
+                box-shadow: none;
+                transform: none !important;
+                page-break-after: avoid;
+            }
+            .stamp-wrapper.selected .stamp-content {
+                outline: none !important;
+                background: none !important;
+            }
+            .stamp-controls {
+                display: none !important;
+            }
+            @page {
+                margin: 0;
+            }
+        }
+
         /* Cell Controls for Touch */
         .cell-controls {
             position: absolute;
@@ -868,6 +904,10 @@
                     <span class="emoji-icon">📤</span> Upload
                 </button>
 
+                <button class="btn-purple" onclick="printStickers()" title="Print the sticker sheet directly">
+                    <span class="emoji-icon">🖨️</span> Print
+                </button>
+
                 <div class="save-group">
                     <select id="export-format">
                         <option value="png">PNG</option>
@@ -974,7 +1014,8 @@
         <button class="btn-stamp-add" onclick="addStamp('💀')">💀</button>
         
         <!-- Custom Input replacing "More..." button -->
-        <input type="text" placeholder="Type or paste emoji" class="custom-stamp-input" onkeypress="if(event.key === 'Enter'){ window.addStamp(this.value); this.value=''; }">
+        <input type="text" placeholder="Type or paste emoji" class="custom-stamp-input" id="custom-emoji-input" onkeypress="if(event.key === 'Enter'){ window.addStamp(this.value); this.value=''; }">
+        <button class="btn-stamp-add" onclick="addCustomEmoji()" title="Add custom emoji" style="background: var(--accent); color: var(--bg); font-weight: bold;">+</button>
     </div>
     
     <div class="text-stamp-controls">
@@ -1406,6 +1447,17 @@
             const color = document.getElementById('text-color-input').value;
             createStamp(text, undefined, undefined, undefined, undefined, true, font, color);
             document.getElementById('text-stamp-input').value = '';
+        }
+
+        window.addCustomEmoji = function() {
+            const input = document.getElementById('custom-emoji-input');
+            const emoji = input.value.trim();
+            if(!emoji) {
+                showToast('Please enter an emoji or text first');
+                return;
+            }
+            window.addStamp(emoji);
+            input.value = '';
         }
 
         function createStamp(contentStr, x, y, size, rotation, isText=false, font='', color='') {
@@ -2074,6 +2126,39 @@
                 if (format !== 'gif') { tempImages.forEach(item => { item.img.remove(); if (item.cropperDiv) item.cropperDiv.style.display = ''; }); loadingOverlay.style.display = 'none'; document.body.classList.remove('printing'); }
             }
         }
+
+        // Print function for direct printing
+        window.printStickers = function() {
+            // Deselect any selected stamps
+            document.querySelectorAll('.stamp-wrapper').forEach(el => el.classList.remove('selected'));
+            activeStamp = null;
+
+            // Add print class to body for print-specific styles
+            document.body.classList.add('printing');
+
+            // Hide controls and UI elements during print
+            const controlsEl = document.querySelector('.controls');
+            const stampSelector = document.querySelector('.stamp-selector');
+            const cuttingBtn = document.querySelector('button[onclick="downloadCuttingTemplate()"]');
+
+            if (controlsEl) controlsEl.style.display = 'none';
+            if (stampSelector) stampSelector.style.display = 'none';
+            if (cuttingBtn) cuttingBtn.style.display = 'none';
+
+            // Trigger browser print dialog
+            setTimeout(() => {
+                window.print();
+
+                // Restore UI after print dialog closes
+                setTimeout(() => {
+                    document.body.classList.remove('printing');
+                    if (controlsEl) controlsEl.style.display = '';
+                    if (stampSelector) stampSelector.style.display = '';
+                    if (cuttingBtn) cuttingBtn.style.display = '';
+                }, 100);
+            }, 100);
+        }
+
         init();
     })();
 </script>
