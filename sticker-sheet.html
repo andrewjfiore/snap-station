@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta http-equiv="Permissions-Policy" content="gamepad=(self), clipboard-read=(self)">
 
     <title>Sticker Sheet Creator</title>
@@ -33,6 +35,28 @@
             --gap: 1mm;
             --grid-width: calc((var(--cell-width) * 4) + (var(--gap) * 3));
             --grid-height: calc((var(--cell-height) * 4) + (var(--gap) * 3));
+
+            /* Touch & Spacing */
+            --touch-target: 44px;
+            --touch-target-lg: 48px;
+            --touch-target-xl: 56px;
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 12px;
+            --spacing-lg: 15px;
+            --spacing-xl: 20px;
+
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+            --radius-pill: 50%;
+
+            /* Button Padding */
+            --btn-padding: 10px 24px;
+            --btn-padding-sm: 6px 12px;
+            --btn-padding-lg: 12px 20px;
 
             /* Video Rental Palette */
             --bg: #1d2c5e;         /* Deep Blue Main BG */
@@ -161,35 +185,38 @@
         [data-theme="light"] option { background-color: #fff; color: #333; }
 
         /* Project Buttons */
-        .project-buttons { display: flex; gap: 15px; flex-wrap: wrap; }
+        .project-buttons { display: flex; gap: var(--spacing-lg); flex-wrap: wrap; }
         .btn-project {
             flex: 1;
             background: var(--bg);
-            color: white; /* Forced white text per request */
+            color: white;
             border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
             font-weight: 700;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
             cursor: pointer;
             transition: all 0.2s;
-            font-family: inherit; 
+            font-family: inherit;
             min-width: 180px;
         }
-        [data-theme="light"] .btn-project { color: #333; } /* Exception for light theme readability */
-        
+        [data-theme="light"] .btn-project { color: #333; }
+
         .btn-project:hover { border-color: var(--text); transform: translateY(-1px); }
         .emoji-icon { font-size: 1.3rem; line-height: 1; }
 
         /* Mode Selector */
-        .mode-selector { display: flex; gap: 20px; margin-bottom: 25px; }
+        .mode-selector { display: flex; gap: var(--spacing-xl); margin-bottom: 25px; }
         .mode-selector button {
             flex: 1;
             background: var(--bg);
             color: var(--text);
             border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
             font-weight: 700;
             cursor: pointer;
             font-family: inherit;
@@ -280,60 +307,95 @@
         .toggle-label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
         .toggle-label input { width: 18px; height: 18px; accent-color: var(--text); cursor: pointer; }
 
-        .actions-right { display: flex; gap: 15px; align-items: center; }
+        .actions-right { display: flex; gap: var(--spacing-lg); align-items: center; }
 
-        .btn-purple {
-            background-color: var(--purple-btn);
-            color: white; border: none;
-            padding: 10px 24px; border-radius: 6px; font-weight: 700;
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-            font-size: 1rem; font-family: inherit;
+        /* Base button styles - consolidation */
+        .btn-purple, .btn-green {
+            color: white;
+            border: none;
+            padding: var(--btn-padding);
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
         }
-        
+
+        .btn-purple { background-color: var(--purple-btn); }
+        .btn-green { background-color: var(--green-btn); }
+
         .save-group {
-            display: flex; border-radius: 6px; overflow: hidden;
-            background: var(--bg); border: 1px solid var(--border);
+            display: flex;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--bg);
+            border: 1px solid var(--border);
             align-items: center;
         }
         .save-group select {
-            background: var(--bg); border: none; border-radius: 0; padding: 10px;
-            color: var(--text); width: auto; cursor: pointer;
+            background: var(--bg);
+            border: none;
+            border-radius: 0;
+            padding: var(--spacing-sm);
+            color: var(--text);
+            width: auto;
+            cursor: pointer;
         }
-        .save-separator { width: 1px; height: 24px; background-color: var(--border); margin: 0 5px; opacity: 0.5; }
-        
-        .btn-green {
-            background-color: var(--green-btn); color: white;
-            border: none; padding: 10px 24px; border-radius: 0;
-            font-weight: 700; cursor: pointer; font-size: 1rem;
-            font-family: inherit; height: 100%;
-            display: flex; align-items: center; justify-content: center;
+        .save-separator {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border);
+            margin: 0 5px;
+            opacity: 0.5;
         }
 
         /* --- STAMP & EDITOR --- */
         .stamp-selector {
-            background: var(--light-blue); border: 2px solid var(--border);
-            border-radius: 8px; padding: 20px; width: 100%;
-            max-width: 800px; box-sizing: border-box;
+            background: var(--light-blue);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .stamp-selector label { font-weight: 800; margin-bottom: 12px; display: block; font-size: 1.1rem; }
-        
-        .stamp-list { 
-            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; 
-            overflow-x: hidden; /* No scrolling */
+        .stamp-selector label { font-weight: 800; margin-bottom: var(--spacing-md); display: block; font-size: 1.1rem; }
+
+        .stamp-list {
+            display: flex;
+            gap: var(--spacing-xs);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-lg);
+            overflow-x: hidden;
         }
-        .btn-stamp-add { 
-            font-size: 1.5rem; padding: 5px 10px; 
-            background: var(--bg); border: 1px solid var(--border); color: var(--text);
-            border-radius: 6px; cursor: pointer;
-            min-width: 45px; text-align: center;
+        .btn-stamp-add {
+            font-size: 1.5rem;
+            padding: var(--btn-padding-sm);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            min-width: 45px;
+            text-align: center;
         }
-        
+
         /* Custom Stamp Input */
         .custom-stamp-input {
-            padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
-            background: var(--bg); color: var(--text); font-family: inherit;
-            text-align: center; font-weight: bold; width: 150px;
+            padding: var(--btn-padding-sm);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            text-align: center;
+            font-weight: bold;
+            width: 150px;
         }
         .custom-stamp-input::placeholder { color: var(--text); opacity: 0.7; font-weight: normal; }
         
@@ -462,22 +524,137 @@
         }
         .gamepad-mode-indicator.visible { opacity: 1; }
 
-        /* Responsive */
+        /* Responsive - Consolidated */
         @media (max-width: 768px) {
             .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: repeat(2, 1fr); }
-            .action-bar { justify-content: center; gap: 20px; }
-            .toggles { flex-wrap: wrap; justify-content: center; }
+            .action-bar { justify-content: center; gap: var(--spacing-xl); }
+            .toggles { flex-wrap: wrap; justify-content: center; gap: var(--spacing-lg); }
             #paper { transform-origin: top center; transform: scale(0.8); margin-bottom: -20mm; }
+
+            /* Touch targets - use CSS variables */
+            .help-btn { width: var(--touch-target); height: var(--touch-target); font-size: 1.4rem; }
+            .toggle-label input { width: 24px; height: 24px; }
+            .btn-purple, .btn-green, .mode-selector button, .btn-project { min-height: var(--touch-target-lg); padding: var(--btn-padding-lg); }
+            .btn-stamp-add { min-width: var(--touch-target-lg); min-height: var(--touch-target-lg); font-size: 1.6rem; }
+            .custom-stamp-input { min-height: var(--touch-target-lg); width: 180px; font-size: 1rem; }
+            .text-input, select { min-height: var(--touch-target-lg); font-size: 1rem; }
+
+            /* Better spacing */
+            .actions-right { gap: var(--spacing-md); flex-wrap: wrap; justify-content: center; }
+            .stamp-list { gap: var(--spacing-md); }
+            .text-stamp-controls { gap: var(--spacing-md); }
         }
+
         @media (max-width: 480px) {
             .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: 1fr; }
             #paper { transform: scale(0.55); margin-bottom: -45mm; }
+            body { padding: var(--spacing-sm); }
+            .control-section { padding: var(--spacing-lg); }
+
+            /* Stack layouts */
+            .actions-right { width: 100%; flex-direction: column; }
+            .btn-purple { width: 100%; justify-content: center; }
+            .save-group { width: 100%; }
+            .save-group select { flex: 1; }
+            .mode-selector { flex-direction: column; gap: var(--spacing-sm); }
+            .mode-selector button { width: 100%; }
+            .project-buttons { flex-direction: column; }
+            .btn-project { width: 100%; min-width: auto; }
+            .text-stamp-controls { flex-direction: column; }
+            .text-stamp-controls > * { width: 100%; }
+            .text-input { min-width: auto; }
+
+            /* Modal optimization */
+            .modal-content { width: 95%; padding: var(--spacing-xl); max-height: 85vh; }
+            .modal-close { width: 36px; height: 36px; }
+            .fullscreen-crop-close { width: var(--touch-target-lg); height: var(--touch-target-lg); font-size: 28px; }
+            .fullscreen-crop-btn { min-height: var(--touch-target-xl); padding: 14px 20px; font-size: 1.1rem; }
+
+            /* Very small screens */
+            @media (max-width: 380px) {
+                body { padding: 5px; }
+                .control-section { padding: var(--spacing-sm); }
+                #paper { transform: scale(0.45); margin-bottom: -55mm; }
+                .btn-purple, .btn-green, .mode-selector button { font-size: 0.9rem; padding: var(--spacing-md) 16px; }
+                .fullscreen-crop-btn { font-size: 0.95rem; padding: var(--spacing-md) 16px; }
+            }
+        }
+
+        /* Landscape mode optimizations */
+        @media (max-height: 600px) and (orientation: landscape) {
+            #paper { transform: scale(0.6); margin-bottom: -30mm; }
+            .control-section { padding: var(--spacing-sm); }
+            .fullscreen-crop-modal .fullscreen-crop-body { padding: var(--spacing-sm); }
+            .fullscreen-crop-controls { padding: var(--spacing-md); gap: var(--spacing-sm); }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents iOS zoom on focus */
+            }
+
+            .custom-stamp-input,
+            .text-input {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Prevent double-tap zoom on buttons */
+        button, .btn, .btn-purple, .btn-green, .btn-project {
+            touch-action: manipulation;
+        }
+
+        /* Better safe area handling for notched devices */
+        @supports (padding: env(safe-area-inset-top)) {
+            body {
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
         }
         
         .emoji-wallpaper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; opacity: 0; transition: opacity 0.5s ease; }
         .emoji-wallpaper.active { opacity: 1; }
         .emoji-wallpaper span { position: absolute; font-size: 24px; animation: float 8s ease-in-out infinite; opacity: 0.6; }
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(10deg); } }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white !important;
+            }
+            .controls,
+            .stamp-selector,
+            .emoji-wallpaper,
+            .gamepad-mode-indicator,
+            .toast-notification,
+            .modal-overlay,
+            .fullscreen-crop-modal,
+            .cell-controls,
+            button[onclick="downloadCuttingTemplate()"] {
+                display: none !important;
+            }
+            #paper {
+                margin: 0 auto;
+                box-shadow: none;
+                transform: none !important;
+                page-break-after: avoid;
+            }
+            .stamp-wrapper.selected .stamp-content {
+                outline: none !important;
+                background: none !important;
+            }
+            .stamp-controls {
+                display: none !important;
+            }
+            @page {
+                margin: 0;
+            }
+        }
 
         /* Cell Controls for Touch */
         .cell-controls {
@@ -868,6 +1045,10 @@
                     <span class="emoji-icon">📤</span> Upload
                 </button>
 
+                <button class="btn-purple" onclick="printStickers()" title="Print the sticker sheet directly">
+                    <span class="emoji-icon">🖨️</span> Print
+                </button>
+
                 <div class="save-group">
                     <select id="export-format">
                         <option value="png">PNG</option>
@@ -897,84 +1078,10 @@
 
 <div class="stamp-selector">
     <label>Add Stamp:</label>
-    <div class="stamp-list">
-        <!-- New Requested Emoji List - Consolidated and Cleaned -->
-        <button class="btn-stamp-add" onclick="addStamp('⚡')">⚡</button>
-        <button class="btn-stamp-add" onclick="addStamp('🔥')">🔥</button>
-        <button class="btn-stamp-add" onclick="addStamp('💧')">💧</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌱')">🌱</button>
-        <button class="btn-stamp-add" onclick="addStamp('❄️')">❄️</button>
-        <button class="btn-stamp-add" onclick="addStamp('🪨')">🪨</button>
-        <button class="btn-stamp-add" onclick="addStamp('🐉')">🐉</button>
-        <button class="btn-stamp-add" onclick="addStamp('🧪')">🧪</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌀')">🌀</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌩️')">🌩️</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎮')">🎮</button>
-        <button class="btn-stamp-add" onclick="addStamp('⭐')">⭐</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎒')">🎒</button>
-        <button class="btn-stamp-add" onclick="addStamp('🧢')">🧢</button>
-        <button class="btn-stamp-add" onclick="addStamp('🔎')">🔎</button>
-        <button class="btn-stamp-add" onclick="addStamp('🏋️')">🏋️</button>
-        <button class="btn-stamp-add" onclick="addStamp('⚔️')">⚔️</button>
-        <button class="btn-stamp-add" onclick="addStamp('📍')">📍</button>
-        <button class="btn-stamp-add" onclick="addStamp('📸')">📸</button>
-        <button class="btn-stamp-add" onclick="addStamp('🤳')">🤳</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎞️')">🎞️</button>
-        <button class="btn-stamp-add" onclick="addStamp('📷')">📷</button>
-        <button class="btn-stamp-add" onclick="addStamp('🖼️')">🖼️</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌿')">🌿</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌋')">🌋</button>
-        <button class="btn-stamp-add" onclick="addStamp('🏜️')">🏜️</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌊')">🌊</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌌')">🌌</button>
-        <button class="btn-stamp-add" onclick="addStamp('🪵')">🪵</button>
-        <button class="btn-stamp-add" onclick="addStamp('✨')">✨</button>
-        <button class="btn-stamp-add" onclick="addStamp('💐')">💐</button>
-        <button class="btn-stamp-add" onclick="addStamp('🍎')">🍎</button>
-        <button class="btn-stamp-add" onclick="addStamp('🔔')">🔔</button>
-        <button class="btn-stamp-add" onclick="addStamp('💫')">💫</button>
-        <button class="btn-stamp-add" onclick="addStamp('😲')">😲</button>
-        <button class="btn-stamp-add" onclick="addStamp('💤')">💤</button>
-        <button class="btn-stamp-add" onclick="addStamp('⭐')">⭐</button>
-        <button class="btn-stamp-add" onclick="addStamp('📝')">📝</button>
-        <button class="btn-stamp-add" onclick="addStamp('➕')">➕</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎯')">🎯</button>
-        <button class="btn-stamp-add" onclick="addStamp('👀')">👀</button>
-        <button class="btn-stamp-add" onclick="addStamp('🚙')">🚙</button>
-        <button class="btn-stamp-add" onclick="addStamp('🛤️')">🛤️</button>
-        <button class="btn-stamp-add" onclick="addStamp('🛰️')">🛰️</button>
-        <button class="btn-stamp-add" onclick="addStamp('📡')">📡</button>
-        <button class="btn-stamp-add" onclick="addStamp('🔍')">🔍</button>
-        <button class="btn-stamp-add" onclick="addStamp('🪈')">🪈</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎶')">🎶</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎵')">🎵</button>
-        <button class="btn-stamp-add" onclick="addStamp('💜')">💜</button>
-        <button class="btn-stamp-add" onclick="addStamp('💙')">💙</button>
-        <button class="btn-stamp-add" onclick="addStamp('💚')">💚</button>
-        <button class="btn-stamp-add" onclick="addStamp('💛')">💛</button>
-        <button class="btn-stamp-add" onclick="addStamp('🤍')">🤍</button>
-        <button class="btn-stamp-add" onclick="addStamp('🤎')">🤎</button>
-        <button class="btn-stamp-add" onclick="addStamp('🩷')">🩷</button>
-        <button class="btn-stamp-add" onclick="addStamp('🩵')">🩵</button>
-        <button class="btn-stamp-add" onclick="addStamp('🩶')">🩶</button>
-        <button class="btn-stamp-add" onclick="addStamp('😲')">😲</button>
-        <button class="btn-stamp-add" onclick="addStamp('🥺')">🥺</button>
-        <button class="btn-stamp-add" onclick="addStamp('😳')">😳</button>
-        <button class="btn-stamp-add" onclick="addStamp('🥰')">🥰</button>
-        <button class="btn-stamp-add" onclick="addStamp('😻')">😻</button>
-        <button class="btn-stamp-add" onclick="addStamp('🤗')">🤗</button>
-        <button class="btn-stamp-add" onclick="addStamp('😇')">😇</button>
-        <button class="btn-stamp-add" onclick="addStamp('🌸')">🌸</button>
-        <button class="btn-stamp-add" onclick="addStamp('🐾')">🐾</button>
-        <button class="btn-stamp-add" onclick="addStamp('🎀')">🎀</button>
-        <button class="btn-stamp-add" onclick="addStamp('🐱')">🐱</button>
-        <button class="btn-stamp-add" onclick="addStamp('🧸')">🧸</button>
-        <button class="btn-stamp-add" onclick="addStamp('👻')">👻</button>
-        <button class="btn-stamp-add" onclick="addStamp('☠️')">☠️</button>
-        <button class="btn-stamp-add" onclick="addStamp('💀')">💀</button>
-        
-        <!-- Custom Input replacing "More..." button -->
-        <input type="text" placeholder="Type or paste emoji" class="custom-stamp-input" onkeypress="if(event.key === 'Enter'){ window.addStamp(this.value); this.value=''; }">
+    <div class="stamp-list" id="stamp-list-container">
+        <!-- Stamps generated dynamically via JavaScript -->
+        <input type="text" placeholder="Type or paste emoji" class="custom-stamp-input" id="custom-emoji-input" onkeypress="if(event.key === 'Enter'){ window.addStamp(this.value); this.value=''; }">
+        <button class="btn-stamp-add" onclick="addCustomEmoji()" title="Add custom emoji" style="background: var(--accent); color: var(--bg); font-weight: bold;">+</button>
     </div>
     
     <div class="text-stamp-controls">
@@ -1083,6 +1190,32 @@
             window.addEventListener('mouseup', handleGlobalMouseUp);
             window.addEventListener('touchmove', handleGlobalMouseMove, {passive: false});
             window.addEventListener('touchend', handleGlobalMouseUp);
+
+            // Initialize stamps with event delegation
+            initStamps();
+        }
+
+        // Stamp list - dynamically generated
+        function initStamps() {
+            const stamps = ['⚡','🔥','💧','🌱','❄️','🪨','🐉','🧪','🌀','🌩️','🎮','⭐','🎒','🧢','🔎','🏋️','⚔️','📍','📸','🤳','🎞️','📷','🖼️','🌿','🌋','🏜️','🌊','🌌','🪵','✨','💐','🍎','🔔','💫','😲','💤','⭐','📝','➕','🎯','👀','🚙','🛤️','🛰️','📡','🔍','🪈','🎶','🎵','💜','💙','💚','💛','🤍','🤎','🩷','🩵','🩶','😲','🥺','😳','🥰','😻','🤗','😇','🌸','🐾','🎀','🐱','🧸','👻','☠️','💀'];
+
+            const container = document.getElementById('stamp-list-container');
+            const customInput = container.querySelector('.custom-stamp-input');
+
+            // Generate stamp buttons
+            const buttonsHTML = stamps.map(stamp =>
+                `<button class="btn-stamp-add" data-stamp="${stamp}">${stamp}</button>`
+            ).join('');
+
+            // Insert before custom input
+            customInput.insertAdjacentHTML('beforebegin', buttonsHTML);
+
+            // Event delegation for stamp buttons
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-stamp-add') && e.target.dataset.stamp) {
+                    window.addStamp(e.target.dataset.stamp);
+                }
+            });
         }
 
         // --- KONAMI CODE ---
@@ -1406,6 +1539,17 @@
             const color = document.getElementById('text-color-input').value;
             createStamp(text, undefined, undefined, undefined, undefined, true, font, color);
             document.getElementById('text-stamp-input').value = '';
+        }
+
+        window.addCustomEmoji = function() {
+            const input = document.getElementById('custom-emoji-input');
+            const emoji = input.value.trim();
+            if(!emoji) {
+                showToast('Please enter an emoji or text first');
+                return;
+            }
+            window.addStamp(emoji);
+            input.value = '';
         }
 
         function createStamp(contentStr, x, y, size, rotation, isText=false, font='', color='') {
@@ -2074,6 +2218,39 @@
                 if (format !== 'gif') { tempImages.forEach(item => { item.img.remove(); if (item.cropperDiv) item.cropperDiv.style.display = ''; }); loadingOverlay.style.display = 'none'; document.body.classList.remove('printing'); }
             }
         }
+
+        // Print function for direct printing
+        window.printStickers = function() {
+            // Deselect any selected stamps
+            document.querySelectorAll('.stamp-wrapper').forEach(el => el.classList.remove('selected'));
+            activeStamp = null;
+
+            // Add print class to body for print-specific styles
+            document.body.classList.add('printing');
+
+            // Hide controls and UI elements during print
+            const controlsEl = document.querySelector('.controls');
+            const stampSelector = document.querySelector('.stamp-selector');
+            const cuttingBtn = document.querySelector('button[onclick="downloadCuttingTemplate()"]');
+
+            if (controlsEl) controlsEl.style.display = 'none';
+            if (stampSelector) stampSelector.style.display = 'none';
+            if (cuttingBtn) cuttingBtn.style.display = 'none';
+
+            // Trigger browser print dialog
+            setTimeout(() => {
+                window.print();
+
+                // Restore UI after print dialog closes
+                setTimeout(() => {
+                    document.body.classList.remove('printing');
+                    if (controlsEl) controlsEl.style.display = '';
+                    if (stampSelector) stampSelector.style.display = '';
+                    if (cuttingBtn) cuttingBtn.style.display = '';
+                }, 100);
+            }, 100);
+        }
+
         init();
     })();
 </script>
