@@ -478,6 +478,229 @@
         .emoji-wallpaper.active { opacity: 1; }
         .emoji-wallpaper span { position: absolute; font-size: 24px; animation: float 8s ease-in-out infinite; opacity: 0.6; }
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(10deg); } }
+
+        /* Cell Controls for Touch */
+        .cell-controls {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 4px;
+            z-index: 25;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .cell:hover .cell-controls,
+        .cell.has-image .cell-controls { display: flex; }
+
+        .cell-control-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .cell-control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .cell-control-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+
+        /* Touch feedback */
+        @media (hover: none) {
+            .cell-control-btn:active {
+                background: var(--accent);
+                border-color: var(--accent);
+                animation: tapPulse 0.3s ease;
+            }
+        }
+        @keyframes tapPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        /* Cell tap indicator */
+        .cell {
+            position: relative;
+            transition: transform 0.1s ease;
+        }
+        .cell:active {
+            transform: scale(0.98);
+        }
+
+        /* Stamp touch feedback */
+        .stamp-wrapper {
+            transition: transform 0.1s ease;
+        }
+        .stamp-wrapper:active {
+            transform: translate(-50%, -50%) scale(1.05) !important;
+        }
+
+        /* Touch hint for empty cells */
+        .cell:not(.has-image)::after {
+            content: 'Tap to upload';
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        @media (hover: none) and (max-width: 768px) {
+            .cell:not(.has-image)::after {
+                opacity: 1;
+            }
+        }
+
+        /* Larger touch targets on mobile */
+        @media (max-width: 768px) {
+            .handle {
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 18px;
+            }
+            .cell-control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .cell-controls {
+                bottom: 4px;
+                padding: 6px;
+                gap: 6px;
+            }
+            /* Show controls on touch devices when image is present */
+            .cell.has-image .cell-controls {
+                display: flex !important;
+            }
+        }
+
+        /* Fullscreen Cropper Modal */
+        .fullscreen-crop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            flex-direction: column;
+        }
+        .fullscreen-crop-modal.active { display: flex; }
+
+        .fullscreen-crop-header {
+            padding: 15px 20px;
+            background: var(--light-blue);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+        .fullscreen-crop-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .fullscreen-crop-close {
+            background: var(--red-btn);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-crop-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        .fullscreen-crop-container {
+            max-width: 90vw;
+            max-height: 60vh;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fullscreen-crop-container img {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        .fullscreen-crop-controls {
+            padding: 20px;
+            background: var(--light-blue);
+            border-top: 2px solid var(--border);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .fullscreen-crop-btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 48px;
+            transition: all 0.2s;
+        }
+        .fullscreen-crop-btn:active {
+            transform: scale(0.95);
+            background: var(--accent);
+            color: var(--bg);
+        }
+        .zoom-display {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            min-width: 80px;
+            text-align: center;
+        }
     </style>
 </head>
 <body data-theme="video-rental">
@@ -503,6 +726,7 @@
         <div class="guide-section">
             <h3>Editing</h3>
             <p><strong>Double-click</strong> any sticker to reset its zoom and position.</p>
+            <p><strong>Tap the 🔍 button</strong> to open fullscreen editing mode (great for mobile!).</p>
         </div>
         <div class="guide-section">
             <h3>Cutting Template</h3>
@@ -512,6 +736,34 @@
             <h3>Paste Images</h3>
             <p>Press <strong>Ctrl+V</strong> (or <strong>Cmd+V</strong>) anywhere to paste images from your clipboard.</p>
         </div>
+    </div>
+</div>
+
+<!-- FULLSCREEN CROP MODAL -->
+<div id="fullscreen-crop-modal" class="fullscreen-crop-modal">
+    <div class="fullscreen-crop-header">
+        <h3>✂️ Crop Sticker</h3>
+        <button class="fullscreen-crop-close" onclick="closeFullscreenCrop()">×</button>
+    </div>
+    <div class="fullscreen-crop-body">
+        <div class="fullscreen-crop-container" id="fullscreen-crop-container">
+            <img id="fullscreen-crop-image" src="" alt="Crop">
+        </div>
+    </div>
+    <div class="fullscreen-crop-controls">
+        <button class="fullscreen-crop-btn" onclick="zoomFullscreenCrop(-0.1)">
+            <span style="font-size:1.5rem;">−</span> Zoom Out
+        </button>
+        <div class="zoom-display" id="fullscreen-zoom-display">100%</div>
+        <button class="fullscreen-crop-btn" onclick="zoomFullscreenCrop(0.1)">
+            <span style="font-size:1.5rem;">+</span> Zoom In
+        </button>
+        <button class="fullscreen-crop-btn" onclick="resetFullscreenCrop()">
+            ↻ Reset
+        </button>
+        <button class="fullscreen-crop-btn" style="background: var(--green-btn); border-color: var(--green-btn);" onclick="closeFullscreenCrop()">
+            ✓ Done
+        </button>
     </div>
 </div>
 
@@ -780,12 +1032,12 @@
         function init() {
             gridEl.innerHTML = '';
             window.cropperInstances = new Array(16).fill(null);
-            
+
             for(let i=0; i<16; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.id = `cell-${i}`;
-                
+
                 // Double Click Reset
                 cell.addEventListener('dblclick', function() {
                     const idx = parseInt(this.id.split('-')[1]);
@@ -793,12 +1045,12 @@
                         window.cropperInstances[idx].reset();
                     }
                 });
-                
+
                 const imgContainer = document.createElement('div');
                 imgContainer.className = 'img-container';
                 const img = document.createElement('img');
-                img.className = 'source-image'; 
-                img.style.display = 'none'; 
+                img.className = 'source-image';
+                img.style.display = 'none';
                 imgContainer.appendChild(img);
                 cell.appendChild(imgContainer);
 
@@ -810,6 +1062,16 @@
                 overlay.className = 'overlay';
                 overlay.innerHTML = `<svg viewBox="0 0 26.6 20"><path d="${overlayPath}" /></svg>`;
                 cell.appendChild(overlay);
+
+                // Cell Controls for Touch
+                const controls = document.createElement('div');
+                controls.className = 'cell-controls';
+                controls.innerHTML = `
+                    <button class="cell-control-btn" onclick="zoomCell(${i}, -0.1)" title="Zoom Out">−</button>
+                    <button class="cell-control-btn" onclick="zoomCell(${i}, 0.1)" title="Zoom In">+</button>
+                    <button class="cell-control-btn" onclick="openFullscreenCrop(${i})" title="Edit Fullscreen">🔍</button>
+                `;
+                cell.appendChild(controls);
 
                 gridEl.appendChild(cell);
             }
@@ -1299,6 +1561,7 @@
 
             if (newUrl) {
                 img.src = newUrl; img.style.display = 'block';
+                cell.classList.add('has-image'); // Show controls
                 const cropper = new Cropper(img, {
                     aspectRatio: stickerW / stickerH, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false, modal: false, background: false,
                     ready: function() {
@@ -1321,7 +1584,11 @@
                     }
                 });
                 window.cropperInstances[index] = cropper; cropper.isCustomReady = false;
-            } else { img.style.display = 'none'; img.src = ''; }
+            } else {
+                img.style.display = 'none';
+                img.src = '';
+                cell.classList.remove('has-image'); // Hide controls
+            }
         }
         
         function syncCrops(sourceCellIndex, groupIdx, canvasData, cropBoxData) {
@@ -1333,6 +1600,155 @@
                 }
             }
             isSyncing = false;
+        }
+
+        // Zoom controls for individual cells
+        window.zoomCell = function(cellIndex, delta) {
+            const cropper = window.cropperInstances[cellIndex];
+            if (!cropper || !cropper.isCustomReady) return;
+
+            try {
+                const containerData = cropper.getContainerData();
+                const canvasData = cropper.getCanvasData();
+                const currentZoom = canvasData.width / canvasData.naturalWidth;
+                const newZoom = Math.max(0.1, Math.min(3, currentZoom + delta));
+
+                cropper.zoomTo(newZoom);
+            } catch(e) {
+                console.warn('Zoom failed:', e);
+            }
+        }
+
+        // Fullscreen crop modal
+        let fullscreenCellIndex = null;
+        let fullscreenCropper = null;
+
+        window.openFullscreenCrop = function(cellIndex) {
+            const cropper = window.cropperInstances[cellIndex];
+            if (!cropper || !cropper.isCustomReady) return;
+
+            fullscreenCellIndex = cellIndex;
+            const modal = document.getElementById('fullscreen-crop-modal');
+            const img = document.getElementById('fullscreen-crop-image');
+            const cell = document.getElementById(`cell-${cellIndex}`);
+            const sourceImg = cell.querySelector('.source-image');
+
+            // Set image source
+            img.src = sourceImg.src;
+
+            // Show modal
+            modal.classList.add('active');
+
+            // Initialize cropper in modal
+            setTimeout(() => {
+                if (fullscreenCropper) {
+                    fullscreenCropper.destroy();
+                }
+
+                const groupIdx = window.cellGroups[cellIndex];
+                const imgData = window.groupImages[groupIdx];
+
+                fullscreenCropper = new Cropper(img, {
+                    aspectRatio: stickerW / stickerH,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: true,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
+                    toggleDragModeOnDblclick: false,
+                    checkCrossOrigin: false,
+                    ready: function() {
+                        // Restore saved crop data
+                        if (imgData && imgData.canvasData) {
+                            try { this.cropper.setCanvasData(imgData.canvasData); } catch(e) {}
+                        }
+                        if (imgData && imgData.cropBoxData) {
+                            try { this.cropper.setCropBoxData(imgData.cropBoxData); } catch(e) {}
+                        }
+                        updateFullscreenZoomDisplay();
+                    },
+                    zoom: function() {
+                        updateFullscreenZoomDisplay();
+                    }
+                });
+            }, 100);
+        }
+
+        window.closeFullscreenCrop = function() {
+            if (fullscreenCropper && fullscreenCellIndex !== null) {
+                try {
+                    // Save crop data back to the original cropper
+                    const canvasData = fullscreenCropper.getCanvasData();
+                    const cropBoxData = fullscreenCropper.getCropBoxData();
+                    const groupIdx = window.cellGroups[fullscreenCellIndex];
+
+                    // Update the group image data
+                    if (window.groupImages[groupIdx]) {
+                        window.groupImages[groupIdx].canvasData = canvasData;
+                        window.groupImages[groupIdx].cropBoxData = cropBoxData;
+                    }
+
+                    // Apply to all croppers in the same group
+                    isSyncing = true;
+                    for (let i = 0; i < 16; i++) {
+                        const target = window.cropperInstances[i];
+                        if (window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
+                            try {
+                                target.setCanvasData(canvasData);
+                                target.setCropBoxData(cropBoxData);
+                            } catch(e) {}
+                        }
+                    }
+                    isSyncing = false;
+
+                    fullscreenCropper.destroy();
+                    fullscreenCropper = null;
+                } catch(e) {
+                    console.warn('Error closing fullscreen crop:', e);
+                }
+            }
+
+            document.getElementById('fullscreen-crop-modal').classList.remove('active');
+            fullscreenCellIndex = null;
+        }
+
+        window.zoomFullscreenCrop = function(delta) {
+            if (!fullscreenCropper) return;
+
+            try {
+                const containerData = fullscreenCropper.getContainerData();
+                const canvasData = fullscreenCropper.getCanvasData();
+                const currentZoom = canvasData.width / canvasData.naturalWidth;
+                const newZoom = Math.max(0.1, Math.min(3, currentZoom + delta));
+
+                fullscreenCropper.zoomTo(newZoom);
+                updateFullscreenZoomDisplay();
+            } catch(e) {
+                console.warn('Zoom failed:', e);
+            }
+        }
+
+        window.resetFullscreenCrop = function() {
+            if (!fullscreenCropper) return;
+            fullscreenCropper.reset();
+            updateFullscreenZoomDisplay();
+        }
+
+        function updateFullscreenZoomDisplay() {
+            if (!fullscreenCropper) return;
+
+            try {
+                const canvasData = fullscreenCropper.getCanvasData();
+                const zoom = canvasData.width / canvasData.naturalWidth;
+                const zoomPercent = Math.round(zoom * 100);
+                document.getElementById('fullscreen-zoom-display').textContent = zoomPercent + '%';
+            } catch(e) {
+                document.getElementById('fullscreen-zoom-display').textContent = '100%';
+            }
         }
 
         window.resetCrop = function(groupIdx) {
