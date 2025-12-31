@@ -1,4 +1,5 @@
-(function() {
+function initStickerSheet() {
+    (function() {
     // Global variables
     window.groupImages = [];
     window.cropperInstances = [];
@@ -154,7 +155,7 @@
             gridEl.appendChild(cell);
         }
 
-        window.setMode('quad');
+        setMode('quad');
 
         window.addEventListener('mousedown', handleGlobalMouseDown);
         window.addEventListener('mousemove', handleGlobalMouseMove);
@@ -1750,4 +1751,11 @@
     } else {
         PrinterGamepad.init();
     }
-})();
+    })();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStickerSheet);
+} else {
+    initStickerSheet();
+}
