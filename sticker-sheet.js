@@ -154,7 +154,7 @@
             gridEl.appendChild(cell);
         }
 
-        setMode('quad');
+        window.setMode('quad');
 
         window.addEventListener('mousedown', handleGlobalMouseDown);
         window.addEventListener('mousemove', handleGlobalMouseMove);
@@ -1124,8 +1124,6 @@
         }
         refreshGrid();
     }
-
-    window.setMode = setMode;
 
     function handleUpload(event, inputIndex) {
         const file = event.target.files[0]; if(!file) return;
