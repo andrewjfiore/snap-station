@@ -155,7 +155,7 @@ function initStickerSheet() {
             gridEl.appendChild(cell);
         }
 
-        window.setMode('quad');
+        setMode('quad');
 
         window.addEventListener('mousedown', handleGlobalMouseDown);
         window.addEventListener('mousemove', handleGlobalMouseMove);
