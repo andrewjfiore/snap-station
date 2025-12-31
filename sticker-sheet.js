@@ -1,3 +1,11 @@
+// Wait for DOM to be fully loaded before initializing
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStickerSheet);
+} else {
+    initStickerSheet();
+}
+
+function initStickerSheet() {
 (function() {
     // Global variables
     window.groupImages = [];
@@ -1425,6 +1433,7 @@
 
     init();
 })();
+} // end initStickerSheet
 
 /* * ADVANCED PRINTER GAMEPAD SUPPORT 
  * Features: Spatial Nav, Analog Support, Contextual Modes, Grabbing
