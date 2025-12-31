@@ -61,17 +61,6 @@
     const fullscreenCropZoomInBtn = document.getElementById('fullscreenCropZoomInBtn');
     const fullscreenCropResetBtn = document.getElementById('fullscreenCropResetBtn');
     const fullscreenCropDoneBtn = document.getElementById('fullscreenCropDoneBtn');
-    const testStatusPanelId = 'button-test-status';
-
-    const actionTracker = {
-        counts: {},
-        mark(action) {
-            this.counts[action] = (this.counts[action] || 0) + 1;
-        },
-        getCount(action) {
-            return this.counts[action] || 0;
-        }
-    };
 
     // Cache cell selector
     const allCells = () => document.querySelectorAll('.cell');
@@ -165,7 +154,7 @@
             gridEl.appendChild(cell);
         }
 
-        setMode('quad');
+        window.setMode('quad');
 
         window.addEventListener('mousedown', handleGlobalMouseDown);
         window.addEventListener('mousemove', handleGlobalMouseMove);
@@ -201,31 +190,19 @@
         }
 
         if (saveProjectBtn) {
-            saveProjectBtn.addEventListener('click', () => {
-                actionTracker.mark('saveProject');
-                saveProject();
-            });
+            saveProjectBtn.addEventListener('click', saveProject);
         }
 
         if (loadProjectBtn) {
-            loadProjectBtn.addEventListener('click', () => {
-                actionTracker.mark('loadProject');
-                loadProjectInput?.click();
-            });
+            loadProjectBtn.addEventListener('click', () => loadProjectInput?.click());
         }
 
         if (loadProjectInput) {
-            loadProjectInput.addEventListener('change', (event) => {
-                actionTracker.mark('loadProjectFile');
-                loadProject(event);
-            });
+            loadProjectInput.addEventListener('change', loadProject);
         }
 
         if (actionHelpBtn) {
-            actionHelpBtn.addEventListener('click', () => {
-                actionTracker.mark('help');
-                toggleHelp();
-            });
+            actionHelpBtn.addEventListener('click', toggleHelp);
         }
 
         if (helpModal) {
@@ -241,90 +218,56 @@
         }
 
         if (toggleOverlayInput) {
-            toggleOverlayInput.addEventListener('change', () => {
-                actionTracker.mark('toggleOverlay');
-                toggleOverlay();
-            });
+            toggleOverlayInput.addEventListener('change', toggleOverlay);
         }
 
         if (toggleWeatheredInput) {
-            toggleWeatheredInput.addEventListener('change', () => {
-                actionTracker.mark('toggleWeathered');
-                toggleWeathered();
-            });
+            toggleWeatheredInput.addEventListener('change', toggleWeathered);
         }
 
         if (toggleCrtInput) {
-            toggleCrtInput.addEventListener('change', () => {
-                actionTracker.mark('toggleCrt');
-                toggleCRT();
-            });
+            toggleCrtInput.addEventListener('change', toggleCRT);
         }
 
         if (importSnapsBtn) {
-            importSnapsBtn.addEventListener('click', () => {
-                actionTracker.mark('importSnaps');
-                importFromSnapStation();
-            });
+            importSnapsBtn.addEventListener('click', importFromSnapStation);
         }
 
         if (bulkUploadBtn) {
-            bulkUploadBtn.addEventListener('click', () => {
-                actionTracker.mark('bulkUpload');
-                bulkInput?.click();
-            });
+            bulkUploadBtn.addEventListener('click', () => bulkInput?.click());
         }
 
         if (bulkInput) {
-            bulkInput.addEventListener('change', (event) => {
-                actionTracker.mark('bulkInputChange');
-                handleBulkUpload(event);
-            });
+            bulkInput.addEventListener('change', handleBulkUpload);
         }
 
         if (printBtn) {
-            printBtn.addEventListener('click', () => {
-                actionTracker.mark('print');
-                printStickers();
-            });
+            printBtn.addEventListener('click', printStickers);
         }
 
         if (saveOutputBtn) {
-            saveOutputBtn.addEventListener('click', () => {
-                actionTracker.mark('saveOutput');
-                saveOutput();
-            });
+            saveOutputBtn.addEventListener('click', saveOutput);
         }
 
         if (cuttingTemplateBtn) {
-            cuttingTemplateBtn.addEventListener('click', () => {
-                actionTracker.mark('cuttingTemplate');
-                downloadCuttingTemplate();
-            });
+            cuttingTemplateBtn.addEventListener('click', downloadCuttingTemplate);
         }
 
         if (customEmojiAddBtn) {
-            customEmojiAddBtn.addEventListener('click', () => {
-                actionTracker.mark('customEmoji');
-                addCustomEmoji();
-            });
+            customEmojiAddBtn.addEventListener('click', addCustomEmoji);
         }
 
         if (customEmojiInput) {
             customEmojiInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    actionTracker.mark('customEmoji');
                     addCustomEmoji();
                 }
             });
         }
 
         if (addTextStampBtn) {
-            addTextStampBtn.addEventListener('click', () => {
-                actionTracker.mark('textStamp');
-                addTextStampFromInput();
-            });
+            addTextStampBtn.addEventListener('click', addTextStampFromInput);
         }
 
         if (fullscreenCropCloseBtn) {
@@ -350,8 +293,6 @@
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) checkForPendingImports();
         });
-
-        maybeRunButtonTests();
     }
 
     // Stamp list - dynamically generated
@@ -638,61 +579,6 @@
         const isOpen = helpModal.style.display === 'flex';
         helpModal.style.display = isOpen ? 'none' : 'flex';
         helpModal.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
-    }
-
-    function maybeRunButtonTests() {
-        const params = new URLSearchParams(window.location.search);
-        if (!params.has('testButtons')) return;
-        runButtonTests();
-    }
-
-    function updateTestStatus(results) {
-        let panel = document.getElementById(testStatusPanelId);
-        if (!panel) {
-            panel = document.createElement('div');
-            panel.id = testStatusPanelId;
-            panel.style.cssText = 'position:fixed;top:10px;left:10px;z-index:4000;background:#111;color:#fff;padding:12px 16px;border-radius:8px;font-size:12px;max-width:320px;box-shadow:0 6px 16px rgba(0,0,0,0.4);';
-            document.body.appendChild(panel);
-        }
-        const rows = results.map((result) => `${result.pass ? '✅' : '❌'} ${result.name}`).join('<br>');
-        panel.innerHTML = `<strong>Button tests</strong><br>${rows}`;
-    }
-
-    async function runButtonTests() {
-        const results = [];
-
-        const beforeHelp = helpModal?.style.display || 'none';
-        actionHelpBtn?.click();
-        const afterHelp = helpModal?.style.display || 'none';
-        results.push({ name: 'Help modal toggles', pass: beforeHelp !== afterHelp });
-
-        if (toggleOverlayInput) {
-            toggleOverlayInput.checked = true;
-            toggleOverlayInput.dispatchEvent(new Event('change'));
-            const overlayVisible = document.querySelector('.overlay.visible');
-            results.push({ name: 'Overlay toggle works', pass: Boolean(overlayVisible) });
-        }
-
-        if (customEmojiInput) {
-            const beforeStampCount = document.querySelectorAll('.stamp-wrapper').length;
-            customEmojiInput.value = '⭐';
-            customEmojiAddBtn?.click();
-            const afterStampCount = document.querySelectorAll('.stamp-wrapper').length;
-            results.push({ name: 'Emoji stamp add works', pass: afterStampCount > beforeStampCount });
-        }
-
-        const pixelDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
-        localStorage.setItem('snapstation-export', JSON.stringify({ timestamp: Date.now(), images: [pixelDataUrl] }));
-        importSnapsBtn?.click();
-        await new Promise((resolve) => setTimeout(resolve, 250));
-        const importPass = window.groupImages?.[0]?.url === pixelDataUrl;
-        results.push({ name: 'Import snaps works', pass: Boolean(importPass) });
-
-        results.push({ name: 'Import button handler fired', pass: actionTracker.getCount('importSnaps') > 0 });
-        results.push({ name: 'Save output handler wired', pass: actionTracker.getCount('saveOutput') >= 0 });
-
-        updateTestStatus(results);
-        console.table(results);
     }
 
     function changePaperSize(size) {
@@ -1238,8 +1124,6 @@
         }
         refreshGrid();
     }
-
-    window.setMode = setMode;
 
     function handleUpload(event, inputIndex) {
         const file = event.target.files[0]; if(!file) return;
