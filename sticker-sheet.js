@@ -1,4 +1,5 @@
-(function() {
+function initStickerSheet() {
+    (function() {
     // Global variables
     window.groupImages = [];
     window.cropperInstances = [];
@@ -1750,4 +1751,11 @@
     } else {
         PrinterGamepad.init();
     }
-})();
+    })();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStickerSheet);
+} else {
+    initStickerSheet();
+}
