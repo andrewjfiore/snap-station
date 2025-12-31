@@ -670,8 +670,7 @@
             border-radius: 6px;
             backdrop-filter: blur(4px);
         }
-        .cell:hover .cell-controls,
-        .cell.has-image .cell-controls { display: flex; }
+        .cell.selected .cell-controls { display: flex; }
 
         .cell-control-btn {
             width: 28px;
@@ -765,8 +764,8 @@
                 padding: 6px;
                 gap: 6px;
             }
-            /* Show controls on touch devices when image is present */
-            .cell.has-image .cell-controls {
+            /* Show controls on touch devices when cell is selected */
+            .cell.selected .cell-controls {
                 display: flex !important;
             }
         }
@@ -1145,6 +1144,17 @@
                 cell.className = 'cell';
                 cell.id = `cell-${i}`;
 
+                // Click to Select Cell (shows zoom controls)
+                cell.addEventListener('click', function(e) {
+                    // Don't select if clicking on control buttons
+                    if (e.target.classList.contains('cell-control-btn')) return;
+
+                    // Deselect all cells
+                    document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+                    // Select this cell
+                    this.classList.add('selected');
+                });
+
                 // Double Click Reset
                 cell.addEventListener('dblclick', function() {
                     const idx = parseInt(this.id.split('-')[1]);
@@ -1188,6 +1198,7 @@
             window.addEventListener('mousedown', handleGlobalMouseDown);
             window.addEventListener('mousemove', handleGlobalMouseMove);
             window.addEventListener('mouseup', handleGlobalMouseUp);
+            window.addEventListener('touchstart', handleGlobalMouseDown);
             window.addEventListener('touchmove', handleGlobalMouseMove, {passive: false});
             window.addEventListener('touchend', handleGlobalMouseUp);
 
@@ -1646,7 +1657,15 @@
         }
 
         function handleGlobalMouseDown(e) {
-            if (e.target.id === 'stamp-layer' || e.target.id === 'background-layer') deselectAll();
+            if (e.target.id === 'stamp-layer' || e.target.id === 'background-layer') {
+                deselectAll();
+                // Also deselect all cells when clicking on stamps or background
+                document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+            }
+            // Deselect cells when clicking outside of grid
+            if (!e.target.closest('.cell') && !e.target.closest('.fullscreen-crop-modal')) {
+                document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+            }
         }
 
         function handleGlobalMouseMove(e) {
@@ -1718,10 +1737,15 @@
                             if (syncFrameId) cancelAnimationFrame(syncFrameId);
                             syncFrameId = requestAnimationFrame(() => {
                                 try {
+                                    const cropData = this.cropper.getData();
                                     const canvasData = this.cropper.getCanvasData();
                                     const cropBoxData = this.cropper.getCropBoxData();
-                                    if (window.groupImages[groupIdx]) { window.groupImages[groupIdx].canvasData = canvasData; window.groupImages[groupIdx].cropBoxData = cropBoxData; }
-                                    syncCrops(index, groupIdx, canvasData, cropBoxData);
+                                    if (window.groupImages[groupIdx]) {
+                                        window.groupImages[groupIdx].cropData = cropData;
+                                        window.groupImages[groupIdx].canvasData = canvasData;
+                                        window.groupImages[groupIdx].cropBoxData = cropBoxData;
+                                    }
+                                    syncCrops(index, groupIdx, cropData);
                                 } catch(e) { isSyncing=false; }
                             });
                         }
@@ -1735,12 +1759,14 @@
             }
         }
         
-        function syncCrops(sourceCellIndex, groupIdx, canvasData, cropBoxData) {
+        function syncCrops(sourceCellIndex, groupIdx, cropData) {
             isSyncing = true;
             for (let i = 0; i < 16; i++) {
                 const target = window.cropperInstances[i];
                 if (i !== sourceCellIndex && window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
-                    try { target.setCanvasData(canvasData); target.setCropBoxData(cropBoxData); } catch(e) {}
+                    try { target.setData(cropData); } catch(e) {
+                        console.warn('Failed to sync crop data to cell', i, e);
+                    }
                 }
             }
             isSyncing = false;
@@ -1806,12 +1832,24 @@
                     toggleDragModeOnDblclick: false,
                     checkCrossOrigin: false,
                     ready: function() {
-                        // Restore saved crop data
-                        if (imgData && imgData.canvasData) {
+                        // Restore saved crop data - prefer relative cropData for cross-container compatibility
+                        if (imgData && imgData.cropData) {
+                            try { this.cropper.setData(imgData.cropData); } catch(e) {
+                                console.warn('Failed to restore cropData, trying fallback', e);
+                                // Fallback to absolute data if relative fails
+                                if (imgData.canvasData) {
+                                    try { this.cropper.setCanvasData(imgData.canvasData); } catch(e2) {}
+                                }
+                                if (imgData.cropBoxData) {
+                                    try { this.cropper.setCropBoxData(imgData.cropBoxData); } catch(e2) {}
+                                }
+                            }
+                        } else if (imgData && imgData.canvasData) {
+                            // Legacy: restore using absolute data
                             try { this.cropper.setCanvasData(imgData.canvasData); } catch(e) {}
-                        }
-                        if (imgData && imgData.cropBoxData) {
-                            try { this.cropper.setCropBoxData(imgData.cropBoxData); } catch(e) {}
+                            if (imgData.cropBoxData) {
+                                try { this.cropper.setCropBoxData(imgData.cropBoxData); } catch(e) {}
+                            }
                         }
                         updateFullscreenZoomDisplay();
                     },
@@ -1825,26 +1863,30 @@
         window.closeFullscreenCrop = function() {
             if (fullscreenCropper && fullscreenCellIndex !== null) {
                 try {
-                    // Save crop data back to the original cropper
+                    // Get crop data relative to the original image (not container-specific)
+                    const cropData = fullscreenCropper.getData();
                     const canvasData = fullscreenCropper.getCanvasData();
                     const cropBoxData = fullscreenCropper.getCropBoxData();
                     const groupIdx = window.cellGroups[fullscreenCellIndex];
 
-                    // Update the group image data
+                    // Update the group image data with both relative and absolute data
                     if (window.groupImages[groupIdx]) {
+                        window.groupImages[groupIdx].cropData = cropData;
                         window.groupImages[groupIdx].canvasData = canvasData;
                         window.groupImages[groupIdx].cropBoxData = cropBoxData;
                     }
 
-                    // Apply to all croppers in the same group
+                    // Apply to all croppers in the same group using relative data
                     isSyncing = true;
                     for (let i = 0; i < 16; i++) {
                         const target = window.cropperInstances[i];
                         if (window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
                             try {
-                                target.setCanvasData(canvasData);
-                                target.setCropBoxData(cropBoxData);
-                            } catch(e) {}
+                                // Use setData with relative crop data for cross-container compatibility
+                                target.setData(cropData);
+                            } catch(e) {
+                                console.warn('Failed to apply crop data to cell', i, e);
+                            }
                         }
                     }
                     isSyncing = false;
