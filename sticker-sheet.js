@@ -846,8 +846,33 @@ function initStickerSheet() {
                 aspectRatio: stickerW / stickerH, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false, modal: false, background: false,
                 ready: function() {
                     this.cropper.isCustomReady = true;
-                    if (imgData.canvasData) try { this.cropper.setCanvasData(imgData.canvasData); } catch(e) {}
-                    if (imgData.cropBoxData) try { this.cropper.setCropBoxData(imgData.cropBoxData); } catch(e) {}
+                    if (imgData.canvasData) {
+                        try {
+                            if (imgData.sourceContainerData) {
+                                // Scale proportionally from source container to this cell's container
+                                const tc = this.cropper.getContainerData();
+                                const scaleX = tc.width / imgData.sourceContainerData.width;
+                                const scaleY = tc.height / imgData.sourceContainerData.height;
+                                this.cropper.setCanvasData({
+                                    left: imgData.canvasData.left * scaleX,
+                                    top: imgData.canvasData.top * scaleY,
+                                    width: imgData.canvasData.width * scaleX,
+                                    height: imgData.canvasData.height * scaleY
+                                });
+                                if (imgData.cropBoxData) {
+                                    this.cropper.setCropBoxData({
+                                        left: imgData.cropBoxData.left * scaleX,
+                                        top: imgData.cropBoxData.top * scaleY,
+                                        width: imgData.cropBoxData.width * scaleX,
+                                        height: imgData.cropBoxData.height * scaleY
+                                    });
+                                }
+                            } else {
+                                this.cropper.setCanvasData(imgData.canvasData);
+                                if (imgData.cropBoxData) this.cropper.setCropBoxData(imgData.cropBoxData);
+                            }
+                        } catch(e) {}
+                    }
                 },
                 crop: function() {
                     if (!isSyncing && this.cropper.isCustomReady) {
@@ -861,6 +886,7 @@ function initStickerSheet() {
                                     window.groupImages[groupIdx].cropData = cropData;
                                     window.groupImages[groupIdx].canvasData = canvasData;
                                     window.groupImages[groupIdx].cropBoxData = cropBoxData;
+                                    window.groupImages[groupIdx].sourceContainerData = this.cropper.getContainerData();
                                 }
                                 syncCrops(index, groupIdx, cropData);
                             } catch(e) { isSyncing=false; }
@@ -878,10 +904,37 @@ function initStickerSheet() {
 
     function syncCrops(sourceCellIndex, groupIdx, cropData) {
         isSyncing = true;
+        const source = window.cropperInstances[sourceCellIndex];
+        let sourceCanvasData, sourceCropBoxData, sourceContainerData;
+        if (source && source.isCustomReady) {
+            sourceCanvasData = source.getCanvasData();
+            sourceCropBoxData = source.getCropBoxData();
+            sourceContainerData = source.getContainerData();
+        }
         for (let i = 0; i < 16; i++) {
             const target = window.cropperInstances[i];
             if (i !== sourceCellIndex && window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
-                try { target.setData(cropData); } catch(e) {
+                try {
+                    if (sourceCanvasData && sourceContainerData) {
+                        const tc = target.getContainerData();
+                        const scaleX = tc.width / sourceContainerData.width;
+                        const scaleY = tc.height / sourceContainerData.height;
+                        target.setCanvasData({
+                            left: sourceCanvasData.left * scaleX,
+                            top: sourceCanvasData.top * scaleY,
+                            width: sourceCanvasData.width * scaleX,
+                            height: sourceCanvasData.height * scaleY
+                        });
+                        if (sourceCropBoxData) {
+                            target.setCropBoxData({
+                                left: sourceCropBoxData.left * scaleX,
+                                top: sourceCropBoxData.top * scaleY,
+                                width: sourceCropBoxData.width * scaleX,
+                                height: sourceCropBoxData.height * scaleY
+                            });
+                        }
+                    }
+                } catch(e) {
                     console.warn('Failed to sync crop data to cell', i, e);
                 }
             }
@@ -889,7 +942,7 @@ function initStickerSheet() {
         isSyncing = false;
     }
 
-    // Zoom controls for individual cells
+    // Zoom controls for individual cells — syncs zoom to all cells in same group
     window.zoomCell = function(cellIndex, delta) {
         const cropper = window.cropperInstances[cellIndex];
         if (!cropper || !cropper.isCustomReady) return;
@@ -900,6 +953,38 @@ function initStickerSheet() {
             const newZoom = Math.max(0.1, Math.min(3, currentZoom + delta));
 
             cropper.zoomTo(newZoom);
+
+            // Sync the zoom to sibling cells in the same group
+            const groupIdx = window.cellGroups[cellIndex];
+            if (groupIdx >= 0) {
+                const updatedCanvas = cropper.getCanvasData();
+                const updatedCropBox = cropper.getCropBoxData();
+                const sourceContainer = cropper.getContainerData();
+                isSyncing = true;
+                for (let i = 0; i < 16; i++) {
+                    const target = window.cropperInstances[i];
+                    if (i !== cellIndex && window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
+                        try {
+                            const tc = target.getContainerData();
+                            const scaleX = tc.width / sourceContainer.width;
+                            const scaleY = tc.height / sourceContainer.height;
+                            target.setCanvasData({
+                                left: updatedCanvas.left * scaleX,
+                                top: updatedCanvas.top * scaleY,
+                                width: updatedCanvas.width * scaleX,
+                                height: updatedCanvas.height * scaleY
+                            });
+                            target.setCropBoxData({
+                                left: updatedCropBox.left * scaleX,
+                                top: updatedCropBox.top * scaleY,
+                                width: updatedCropBox.width * scaleX,
+                                height: updatedCropBox.height * scaleY
+                            });
+                        } catch(e) {}
+                    }
+                }
+                isSyncing = false;
+            }
         } catch(e) {
             console.warn('Zoom failed:', e);
         }
@@ -990,16 +1075,31 @@ function initStickerSheet() {
                     window.groupImages[groupIdx].cropData = cropData;
                     window.groupImages[groupIdx].canvasData = canvasData;
                     window.groupImages[groupIdx].cropBoxData = cropBoxData;
+                    window.groupImages[groupIdx].sourceContainerData = fullscreenCropper.getContainerData();
                 }
 
-                // Apply to all croppers in the same group using relative data
+                // Apply to all croppers in the same group — scale canvas proportionally
+                const fullscreenContainerData = fullscreenCropper.getContainerData();
                 isSyncing = true;
                 for (let i = 0; i < 16; i++) {
                     const target = window.cropperInstances[i];
                     if (window.cellGroups[i] === groupIdx && target && target.isCustomReady) {
                         try {
-                            // Use setData with relative crop data for cross-container compatibility
-                            target.setData(cropData);
+                            const tc = target.getContainerData();
+                            const scaleX = tc.width / fullscreenContainerData.width;
+                            const scaleY = tc.height / fullscreenContainerData.height;
+                            target.setCanvasData({
+                                left: canvasData.left * scaleX,
+                                top: canvasData.top * scaleY,
+                                width: canvasData.width * scaleX,
+                                height: canvasData.height * scaleY
+                            });
+                            target.setCropBoxData({
+                                left: cropBoxData.left * scaleX,
+                                top: cropBoxData.top * scaleY,
+                                width: cropBoxData.width * scaleX,
+                                height: cropBoxData.height * scaleY
+                            });
                         } catch(e) {
                             console.warn('Failed to apply crop data to cell', i, e);
                         }
