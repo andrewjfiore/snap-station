@@ -284,6 +284,7 @@ $('mirrorToggle').addEventListener('click', function() {
 let isDragging = false;
 let startDragX = 0, startDragY = 0;
 
+// Mouse wheel zoom
 videoContainer.addEventListener('wheel', (e) => {
     if (!window.activeSource) return;
     e.preventDefault();
@@ -292,6 +293,7 @@ videoContainer.addEventListener('wheel', (e) => {
     updateTransform();
 }, { passive: false });
 
+// Mouse drag to pan
 videoContainer.addEventListener('mousedown', (e) => {
     if (!window.activeSource || window.zoomLevel <= 1) return;
     isDragging = true;
@@ -313,9 +315,85 @@ window.addEventListener('mouseup', () => {
     videoContainer.style.cursor = 'grab';
 });
 
+// Double-click to reset zoom
 videoContainer.addEventListener('dblclick', () => {
     if (!window.activeSource) return;
     window.zoomLevel = 1; window.panX = 0; window.panY = 0; updateTransform();
+});
+
+// --- Touch Input Handling ---
+let lastTouchDist = 0;
+let lastTapTime = 0;
+let touchStartPanX = 0, touchStartPanY = 0;
+let touchStartX = 0, touchStartY = 0;
+let isTouchDragging = false;
+
+videoContainer.addEventListener('touchstart', (e) => {
+    if (!window.activeSource) return;
+
+    if (e.touches.length === 2) {
+        // Pinch-to-zoom: record initial distance
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDist = Math.hypot(dx, dy);
+    } else if (e.touches.length === 1) {
+        // Double-tap detection
+        const now = Date.now();
+        if (now - lastTapTime < 300) {
+            e.preventDefault();
+            window.zoomLevel = 1; window.panX = 0; window.panY = 0;
+            updateTransform();
+            lastTapTime = 0;
+            return;
+        }
+        lastTapTime = now;
+
+        // Single-finger drag to pan (only when zoomed)
+        if (window.zoomLevel > 1) {
+            e.preventDefault();
+            isTouchDragging = true;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartPanX = window.panX;
+            touchStartPanY = window.panY;
+        }
+    }
+}, { passive: false });
+
+videoContainer.addEventListener('touchmove', (e) => {
+    if (!window.activeSource) return;
+
+    if (e.touches.length === 2) {
+        // Pinch-to-zoom
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+
+        if (lastTouchDist > 0) {
+            const scale = dist / lastTouchDist;
+            window.zoomLevel = Math.min(Math.max(window.zoomLevel * scale, 1), 5);
+            if (window.zoomLevel === 1) { window.panX = 0; window.panY = 0; }
+            updateTransform();
+        }
+        lastTouchDist = dist;
+    } else if (e.touches.length === 1 && isTouchDragging) {
+        // Single-finger pan
+        e.preventDefault();
+        window.panX = touchStartPanX + (e.touches[0].clientX - touchStartX);
+        window.panY = touchStartPanY + (e.touches[0].clientY - touchStartY);
+        updateTransform();
+    }
+}, { passive: false });
+
+videoContainer.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+        lastTouchDist = 0;
+    }
+    if (e.touches.length === 0) {
+        isTouchDragging = false;
+    }
 });
 
 // --- Camera & Stream ---

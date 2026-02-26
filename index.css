@@ -86,8 +86,35 @@ body {
 
 .app-frame.active { display: block; }
 
+/* Prevent double-tap zoom on tab buttons */
+.tab {
+    touch-action: manipulation;
+}
+
+/* Safe area for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+    .tab-bar {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+    }
+}
+
 @media (max-width: 500px) {
-    .tab { padding: 8px 12px; font-size: 0.8rem; }
+    .tab { padding: 8px 12px; font-size: 0.8rem; min-height: 44px; }
     .tab-label { display: none; }
     .tab-icon { margin: 0; font-size: 1.2rem; }
+    .transfer-indicator {
+        font-size: 0.65rem;
+        padding: 4px 8px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Prevent sticky hover on touch */
+@media (hover: none) {
+    .tab:hover { opacity: 0.6; }
+    .tab.active:hover { opacity: 1; }
 }

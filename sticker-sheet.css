@@ -182,7 +182,7 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 .emoji-icon { font-size: 1.3rem; line-height: 1; }
 
 /* Mode Selector */
-.mode-selector { display: flex; gap: var(--spacing-xl); margin-bottom: 25px; }
+.mode-selector { display: flex; gap: var(--spacing-sm); margin-bottom: 25px; }
 .mode-selector button {
     flex: 1;
     background: var(--bg);
@@ -500,8 +500,9 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 /* Responsive - Consolidated */
 @media (max-width: 768px) {
     .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: repeat(2, 1fr); }
-    .action-bar { justify-content: center; gap: var(--spacing-xl); }
+    .action-bar { justify-content: center; gap: var(--spacing-md); flex-direction: column; align-items: center; }
     .toggles { flex-wrap: wrap; justify-content: center; gap: var(--spacing-lg); }
+    .actions-right { flex-wrap: wrap; justify-content: center; width: 100%; }
     #paper { transform-origin: top center; transform: scale(0.8); margin-bottom: -20mm; }
 
     /* Touch targets - use CSS variables */
@@ -574,8 +575,22 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 }
 
 /* Prevent double-tap zoom on buttons */
-button, .btn, .btn-purple, .btn-green, .btn-project {
+button, .btn, .btn-purple, .btn-green, .btn-project, .mode-selector button, select {
     touch-action: manipulation;
+}
+
+/* Prevent sticky hover on touch devices */
+@media (hover: none) {
+    .btn-project:hover {
+        border-color: var(--border);
+        transform: none;
+    }
+    .btn-purple:hover, .btn-green:hover {
+        filter: none;
+    }
+    .btn-project:active, .btn-purple:active, .btn-green:active {
+        transform: scale(0.97);
+    }
 }
 
 /* Better safe area handling for notched devices */
@@ -692,12 +707,12 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     transform: scale(0.98);
 }
 
-/* Stamp touch feedback */
+/* Stamp touch feedback - only on non-dragging stamps */
 .stamp-wrapper {
     transition: transform 0.1s ease;
 }
-.stamp-wrapper:active {
-    transform: translate(-50%, -50%) scale(1.05) !important;
+.stamp-wrapper:not(.grabbed):not(.selected):active {
+    filter: brightness(1.1);
 }
 
 /* Touch hint for empty cells */
