@@ -1,0 +1,28 @@
+{
+  "name": "snap-station",
+  "version": "1.0.0",
+  "description": "A modern recreation of the Pokemon Snap Station",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "npx playwright test",
+    "test:phone": "npx playwright test --project=phone",
+    "test:tablet": "npx playwright test --project=tablet",
+    "test:laptop": "npx playwright test --project=laptop",
+    "test:headed": "npx playwright test --headed",
+    "test:report": "npx playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:59540/git/andrewjfiore/snap-station"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/test": "^1.58.2",
+    "puppeteer-core": "^24.37.5"
+  }
+}
