@@ -192,8 +192,9 @@ h1 {
     border-color: var(--accent); 
 }
 
-.btn:focus {
-    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.3);
+.btn:focus { outline: none; }
+.btn:focus-visible {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.3);
     z-index: 5;
 }
 .btn:active { transform: translateY(0); }
@@ -217,7 +218,9 @@ h1 {
     display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
     font-size: 0.8rem;
 }
-.help-btn:hover, .help-btn:focus { background: var(--accent); color: var(--bg); outline: none; }
+.help-btn:hover { background: var(--accent); color: var(--bg); }
+.help-btn:focus { outline: none; }
+.help-btn:focus-visible { background: var(--accent); color: var(--bg); }
 
 .tooltip-content {
     visibility: hidden; width: 280px; background-color: var(--panel); color: var(--text);
@@ -247,6 +250,8 @@ h1 {
     color: var(--text); cursor: pointer;
 }
 .controls-select:hover { border-color: #fff; }
+.controls-select:focus { outline: none; }
+.controls-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .ratio-toggle {
     display: flex; border: 2px solid var(--border); border-radius: 6px;
@@ -260,6 +265,8 @@ h1 {
 .ratio-option:first-child { border-right: 2px solid var(--border); }
 .ratio-option:hover { background: rgba(255,255,255,0.1); }
 .ratio-option.active { background: var(--accent); color: var(--bg); }
+.ratio-option:focus { outline: none; }
+.ratio-option:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .video-container:fullscreen, .video-container:-webkit-full-screen {
     background: #000; display: flex; align-items: center; justify-content: center;
