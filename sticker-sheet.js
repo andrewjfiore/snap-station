@@ -704,19 +704,25 @@ function initStickerSheet() {
 
         wrapper.addEventListener('mousedown', (e) => {
             e.stopPropagation(); selectStamp(wrapper);
-            if (e.target.classList.contains('handle-del')) { wrapper.remove(); activeStamp = null; }
-            else if (e.target.classList.contains('handle-rot')) { startInteraction(e, wrapper, 'rotate'); }
-            else if (e.target.classList.contains('handle-sz')) { startInteraction(e, wrapper, 'resize'); }
+            if (e.target.closest('.handle-del')) { wrapper.remove(); activeStamp = null; }
+            else if (e.target.closest('.handle-rot')) { startInteraction(e, wrapper, 'rotate'); }
+            else if (e.target.closest('.handle-sz')) { startInteraction(e, wrapper, 'resize'); }
             else { startInteraction(e, wrapper, 'drag'); }
         });
 
         wrapper.addEventListener('touchstart', (e) => {
             e.stopPropagation(); selectStamp(wrapper);
             const touch = e.touches[0];
-            const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY, preventDefault: ()=>e.preventDefault() };
-            if (e.target.classList.contains('handle-del')) { wrapper.remove(); activeStamp = null; }
-            else if (e.target.classList.contains('handle-rot')) { startInteraction(fakeEvent, wrapper, 'rotate'); }
-            else if (e.target.classList.contains('handle-sz')) { startInteraction(fakeEvent, wrapper, 'resize'); }
+            const target = e.target;
+            const fakeEvent = {
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+            };
+            if (target.closest('.handle-del')) { wrapper.remove(); activeStamp = null; }
+            else if (target.closest('.handle-rot')) { startInteraction(fakeEvent, wrapper, 'rotate'); }
+            else if (target.closest('.handle-sz')) { startInteraction(fakeEvent, wrapper, 'resize'); }
             else { startInteraction(fakeEvent, wrapper, 'drag'); }
         }, {passive: false});
     }
@@ -751,13 +757,17 @@ function initStickerSheet() {
     }
 
     function handleGlobalMouseDown(e) {
-        if (e.target.id === 'stamp-layer' || e.target.id === 'background-layer') {
+        // For touch events, use the touch target; for mouse events, use e.target
+        const target = e.touches ? e.touches[0]?.target || e.target : e.target;
+        if (!target) return;
+
+        if (target.id === 'stamp-layer' || target.id === 'background-layer') {
             deselectAll();
             // Also deselect all cells when clicking on stamps or background
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
         }
         // Deselect cells when clicking outside of grid
-        if (!e.target.closest('.cell') && !e.target.closest('.fullscreen-crop-modal')) {
+        if (!target.closest('.cell') && !target.closest('.fullscreen-crop-modal')) {
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
         }
     }

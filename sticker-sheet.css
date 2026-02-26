@@ -154,6 +154,7 @@ select {
     width: 100%;
     font-family: inherit;
 }
+select:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 option { background-color: #333; color: white; } /* Fix for white-on-white in some browsers */
 [data-theme="light"] option { background-color: #fff; color: #333; }
 
@@ -179,10 +180,12 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 [data-theme="light"] .btn-project { color: #333; }
 
 .btn-project:hover { border-color: var(--text); transform: translateY(-1px); }
+.btn-project:focus { outline: none; }
+.btn-project:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .emoji-icon { font-size: 1.3rem; line-height: 1; }
 
 /* Mode Selector */
-.mode-selector { display: flex; gap: var(--spacing-xl); margin-bottom: 25px; }
+.mode-selector { display: flex; gap: var(--spacing-sm); margin-bottom: 25px; }
 .mode-selector button {
     flex: 1;
     background: var(--bg);
@@ -199,6 +202,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
     color: #1d2c5e; 
     border-color: var(--accent);
 }
+.mode-selector button:focus { outline: none; }
+.mode-selector button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Retro theme fix for active button text */
 [data-theme="retro"] .mode-selector button.active {
     color: #fff;
@@ -259,6 +264,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
     pointer-events: auto;
 }
 .btn-delete:hover { transform: scale(1.1); filter: brightness(1.1); }
+.btn-delete:focus { outline: none; }
+.btn-delete:focus-visible { outline: 2px solid white; outline-offset: 2px; }
 
 /* Action Bar */
 .action-bar {
@@ -275,6 +282,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
     font-weight: bold; font-size: 1.2rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
+.help-btn:focus { outline: none; }
+.help-btn:focus-visible { background: var(--accent); color: var(--bg); }
 
 .toggles { display: flex; gap: 20px; align-items: center; }
 .toggle-label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; }
@@ -300,6 +309,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 
 .btn-purple { background-color: var(--purple-btn); }
 .btn-green { background-color: var(--green-btn); }
+.btn-purple:focus, .btn-green:focus { outline: none; }
+.btn-purple:focus-visible, .btn-green:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .save-group {
     display: flex;
@@ -357,6 +368,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
     min-width: 45px;
     text-align: center;
 }
+.btn-stamp-add:focus { outline: none; }
+.btn-stamp-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Custom Stamp Input */
 .custom-stamp-input {
@@ -428,7 +441,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 
 .cell {
     width: var(--cell-width); height: var(--cell-height);
-    position: relative; overflow: hidden; background: #eee; pointer-events: auto; 
+    position: relative; overflow: hidden; background: #eee; pointer-events: auto;
+    touch-action: none;
 }
 .img-container { width: 100%; height: 100%; position: relative; }
 .img-container > img.source-image { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -473,6 +487,8 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
     position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 4px solid var(--border);
 }
 .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 0; width: auto; height: auto; }
+.modal-close:focus { outline: none; }
+.modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Toast Notification */
 .toast-notification {
@@ -500,8 +516,9 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 /* Responsive - Consolidated */
 @media (max-width: 768px) {
     .upload-area[data-mode="quad"], .upload-area[data-mode="unique"] { grid-template-columns: repeat(2, 1fr); }
-    .action-bar { justify-content: center; gap: var(--spacing-xl); }
+    .action-bar { justify-content: center; gap: var(--spacing-md); flex-direction: column; align-items: center; }
     .toggles { flex-wrap: wrap; justify-content: center; gap: var(--spacing-lg); }
+    .actions-right { flex-wrap: wrap; justify-content: center; width: 100%; }
     #paper { transform-origin: top center; transform: scale(0.8); margin-bottom: -20mm; }
 
     /* Touch targets - use CSS variables */
@@ -574,8 +591,22 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 }
 
 /* Prevent double-tap zoom on buttons */
-button, .btn, .btn-purple, .btn-green, .btn-project {
+button, .btn, .btn-purple, .btn-green, .btn-project, .mode-selector button, select {
     touch-action: manipulation;
+}
+
+/* Prevent sticky hover on touch devices */
+@media (hover: none) {
+    .btn-project:hover {
+        border-color: var(--border);
+        transform: none;
+    }
+    .btn-purple:hover, .btn-green:hover {
+        filter: none;
+    }
+    .btn-project:active, .btn-purple:active, .btn-green:active {
+        transform: scale(0.97);
+    }
 }
 
 /* Better safe area handling for notched devices */
@@ -660,6 +691,7 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     justify-content: center;
     transition: all 0.2s;
     user-select: none;
+    touch-action: manipulation;
 }
 .cell-control-btn:hover {
     background: rgba(255, 255, 255, 0.3);
@@ -668,6 +700,8 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     background: rgba(255, 255, 255, 0.5);
     transform: scale(0.95);
 }
+.cell-control-btn:focus { outline: none; }
+.cell-control-btn:focus-visible { outline: 2px solid white; outline-offset: 1px; }
 
 /* Touch feedback */
 @media (hover: none) {
@@ -692,12 +726,12 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     transform: scale(0.98);
 }
 
-/* Stamp touch feedback */
+/* Stamp touch feedback - only on non-dragging stamps */
 .stamp-wrapper {
     transition: transform 0.1s ease;
 }
-.stamp-wrapper:active {
-    transform: translate(-50%, -50%) scale(1.05) !important;
+.stamp-wrapper:not(.grabbed):not(.selected):active {
+    filter: brightness(1.1);
 }
 
 /* Touch hint for empty cells */
@@ -784,6 +818,8 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     align-items: center;
     justify-content: center;
 }
+.fullscreen-crop-close:focus { outline: none; }
+.fullscreen-crop-close:focus-visible { outline: 2px solid white; outline-offset: 2px; }
 
 .fullscreen-crop-body {
     flex: 1;
@@ -841,6 +877,8 @@ button, .btn, .btn-purple, .btn-green, .btn-project {
     background: var(--accent);
     color: var(--bg);
 }
+.fullscreen-crop-btn:focus { outline: none; }
+.fullscreen-crop-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .zoom-display {
     padding: 8px 16px;
     background: rgba(0, 0, 0, 0.3);
