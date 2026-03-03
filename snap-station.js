@@ -879,7 +879,8 @@ const Gamepad = {
             } else this.navThrottle = false;
 
             // Actions
-            if(click(0)) document.activeElement?.click(); // A
+            if(click(0)) document.activeElement?.click(); // A = select/activate
+            if(click(1)) this.goBack(); // B = back/cancel
             if(click(2)) $('screenshotBtn').click(); // X
             if(click(9)) $('startCameraBtn').click(); // Start
         }
@@ -897,21 +898,47 @@ const Gamepad = {
         const r1 = el.getBoundingClientRect();
         const x1 = r1.x + r1.width/2, y1 = r1.y + r1.height/2;
 
-        let next = null, minDist = Infinity;
+        let next = null, minScore = Infinity;
 
         all.forEach(cand => {
-            if(cand === el) return;
+            if(cand === el || !cand.offsetParent) return;
             const r2 = cand.getBoundingClientRect();
+            if(r2.width === 0 && r2.height === 0) return;
             const x2 = r2.x + r2.width/2, y2 = r2.y + r2.height/2;
+            const ddx = x2 - x1, ddy = y2 - y1;
 
-            // Direction Check
-            const valid = (dx===1 && x2>x1) || (dx===-1 && x2<x1) || (dy===1 && y2>y1) || (dy===-1 && y2<y1);
-            if(valid) {
-                const dist = Math.hypot(x2-x1, y2-y1);
-                if(dist < minDist) { minDist = dist; next = cand; }
-            }
+            // Strict directional filter: candidate must be in the pressed direction
+            if(dx === 1 && ddx <= 0) return;
+            if(dx === -1 && ddx >= 0) return;
+            if(dy === 1 && ddy <= 0) return;
+            if(dy === -1 && ddy >= 0) return;
+
+            // Weighted distance: penalize cross-axis deviation heavily
+            // so LEFT/RIGHT prefers same-row, UP/DOWN prefers same-column
+            const primaryDist = dx ? Math.abs(ddx) : Math.abs(ddy);
+            const crossDist = dx ? Math.abs(ddy) : Math.abs(ddx);
+            const score = primaryDist + crossDist * 3;
+
+            if(score < minScore) { minScore = score; next = cand; }
         });
         if(next) { next.focus(); SoundFX.beep(); }
+    },
+
+    goBack() {
+        // B button: close modals/dialogs or go back
+        const modal = document.querySelector('.modal.active, .overlay.active, dialog[open]');
+        if(modal) {
+            const closeBtn = modal.querySelector('.close-btn, .cancel-btn, [data-dismiss]');
+            if(closeBtn) { closeBtn.click(); return; }
+        }
+        // If help tooltip visible, close it
+        const help = $('helpTooltip');
+        if(help && help.classList.contains('visible')) {
+            help.classList.remove('visible');
+            return;
+        }
+        // Fall back to history
+        if(window.history.length > 1) window.history.back();
     }
 };
 Gamepad.init();
