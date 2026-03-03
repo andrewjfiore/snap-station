@@ -958,3 +958,156 @@ window.addEventListener('keydown', e => {
 });
 
 generateWallpaper('video-rental');
+
+// --- Video Filters ---
+window.currentFilter = 'none';
+const filterMap = {
+    none:      '',
+    grayscale: 'grayscale(100%)',
+    sepia:     'sepia(80%)',
+    vivid:     'saturate(200%) contrast(110%)',
+    warm:      'sepia(40%) saturate(150%) hue-rotate(-10deg)',
+    cool:      'hue-rotate(180deg) saturate(120%)',
+    invert:    'invert(100%)',
+};
+
+function applyVideoFilter(name) {
+    window.currentFilter = name;
+    const f = filterMap[name] || '';
+    video.style.filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === name));
+}
+
+// Inject filter bar into fx-controls
+(function injectFilterBar() {
+    const fxControls = document.querySelector('.fx-controls');
+    if (!fxControls) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'filter-bar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;';
+
+    const label = document.createElement('span');
+    label.className = 'controls-label';
+    label.textContent = '🎨 Filter:';
+    bar.appendChild(label);
+
+    Object.keys(filterMap).forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-toggle filter-btn';
+        btn.dataset.filter = name;
+        btn.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+        if (name === 'none') btn.classList.add('active');
+        btn.addEventListener('click', () => { applyVideoFilter(name); SoundFX.init(); });
+        bar.appendChild(btn);
+    });
+
+    fxControls.appendChild(bar);
+})();
+
+// Apply filter when capturing screenshot (draw on canvas with filter)
+const _origScreenshotClick = $('screenshotBtn').onclick;
+$('screenshotBtn').addEventListener('click', function _filterPatch(e) {
+    // Patch getCaptureParams draw call to include filter via offscreen canvas
+    const origDraw = CanvasRenderingContext2D.prototype.drawImage;
+    if (window.currentFilter && filterMap[window.currentFilter]) {
+        const once = function(img, sx, sy, sw, sh, dx, dy, dw, dh) {
+            this.filter = filterMap[window.currentFilter] || 'none';
+            origDraw.call(this, img, sx, sy, sw, sh, dx, dy, dw, dh);
+            this.filter = 'none';
+            CanvasRenderingContext2D.prototype.drawImage = origDraw;
+        };
+        CanvasRenderingContext2D.prototype.drawImage = once;
+    }
+}, true);
+
+// --- Keyboard Shortcuts ---
+const SHORTCUTS = {
+    ' ':     () => { if (!$('screenshotBtn').disabled) $('screenshotBtn').click(); },
+    'g':     () => { if (!$('gifBtn').disabled) $('gifBtn').click(); },
+    'c':     () => $('startCameraBtn').click(),
+    'm':     () => $('mirrorToggle').click(),
+    'f':     () => $('fullscreenBtn').click(),
+    'Escape':() => { if (document.fullscreenElement) document.exitFullscreen(); },
+    '?':     () => { $('helpTooltip').classList.toggle('visible'); SoundFX.beep(); },
+};
+
+// Build keyboard shortcut help lines into the existing tooltip
+(function patchHelpTooltip() {
+    const list = document.querySelector('#helpTooltip .tooltip-list');
+    if (!list) return;
+    const items = [
+        ['⌨️', '<b>Space</b>: Take Picture'],
+        ['⌨️', '<b>G</b>: Record GIF'],
+        ['⌨️', '<b>C</b>: Toggle Camera'],
+        ['⌨️', '<b>M</b>: Mirror'],
+        ['⌨️', '<b>F</b>: Fullscreen'],
+        ['⌨️', '<b>?</b>: Help'],
+    ];
+    items.forEach(([icon, text]) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="tooltip-icon">${icon}</span><span>${text}</span>`;
+        list.appendChild(li);
+    });
+})();
+
+window.addEventListener('keydown', function snapShortcuts(e) {
+    // Don't fire when typing in inputs/selects
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    // Don't fire during konami sequence (only letters matter here)
+    const fn = SHORTCUTS[e.key] || SHORTCUTS[e.key.toLowerCase()];
+    if (fn) { e.preventDefault(); fn(); }
+});
+
+// --- Gallery Timestamp & Drag-to-Reorder ---
+// Patch addToGallery to show timestamps and support drag-reorder
+const _origAddToGallery = window.addToGallery;
+window.addToGallery = function patchedAddToGallery(dataUrl, type, index) {
+    _origAddToGallery(dataUrl, type, index);
+    // Find the newest snap (first child after insert)
+    const wrapper = gallery.children[0];
+    if (!wrapper || wrapper.dataset.timestamped) return;
+    wrapper.dataset.timestamped = '1';
+
+    // Add timestamp badge
+    const ts = document.createElement('div');
+    ts.className = 'snap-timestamp';
+    ts.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    ts.style.cssText = 'position:absolute;bottom:2px;left:2px;font-size:9px;background:rgba(0,0,0,0.6);color:#fff;padding:1px 4px;border-radius:3px;pointer-events:none;';
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(ts);
+
+    // Drag-to-reorder
+    wrapper.draggable = true;
+    wrapper.addEventListener('dragstart', (ev) => {
+        ev.dataTransfer.setData('text/plain', '');
+        gallery._dragSrc = wrapper;
+        wrapper.style.opacity = '0.5';
+    });
+    wrapper.addEventListener('dragend', () => { wrapper.style.opacity = ''; gallery._dragSrc = null; });
+    wrapper.addEventListener('dragover', (ev) => { ev.preventDefault(); wrapper.classList.add('drag-over-snap'); });
+    wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over-snap'));
+    wrapper.addEventListener('drop', (ev) => {
+        ev.preventDefault();
+        wrapper.classList.remove('drag-over-snap');
+        const src = gallery._dragSrc;
+        if (src && src !== wrapper) {
+            // Swap in DOM
+            const srcNext = src.nextSibling;
+            if (srcNext === wrapper) {
+                gallery.insertBefore(wrapper, src);
+            } else {
+                gallery.insertBefore(src, wrapper);
+                if (srcNext) gallery.insertBefore(wrapper, srcNext);
+            }
+            SoundFX.beep();
+        }
+    });
+};
+
+// Add drag-over style
+(function addDragStyle() {
+    const s = document.createElement('style');
+    s.textContent = `.drag-over-snap { outline: 2px dashed var(--accent, #ffcb05) !important; }`;
+    document.head.appendChild(s);
+})();
