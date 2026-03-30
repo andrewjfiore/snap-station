@@ -1138,3 +1138,51 @@ window.addToGallery = function patchedAddToGallery(dataUrl, type, index) {
     s.textContent = `.drag-over-snap { outline: 2px dashed var(--accent, #ffcb05) !important; }`;
     document.head.appendChild(s);
 })();
+
+// --- Sticker Grid Population (new skeuomorphic UI) ---
+// Mirrors the 16 most recent gallery snaps into the 4x4 sticker selection grid.
+(function initStickerGrid() {
+    const stickerGrid = document.getElementById('stickerGrid');
+    if (!stickerGrid) return;
+
+    function refreshStickerGrid() {
+        const snaps = gallery.querySelectorAll('.snap-wrapper');
+        const slots = stickerGrid.querySelectorAll('.sticker-slot');
+        slots.forEach((slot, i) => {
+            const snap = snaps[i];
+            if (snap) {
+                const imgSrc = snap.querySelector('img')?.src;
+                if (imgSrc && slot.dataset.src !== imgSrc) {
+                    slot.dataset.src = imgSrc;
+                    slot.classList.remove('empty');
+                    slot.innerHTML = `<img src="${imgSrc}" alt="Sticker ${i + 1}">`;
+                }
+            } else {
+                slot.dataset.src = '';
+                slot.classList.add('empty');
+                slot.innerHTML = '';
+            }
+        });
+    }
+
+    // Populate on first load
+    refreshStickerGrid();
+
+    // Refresh whenever gallery changes (observe mutations)
+    const obs = new MutationObserver(refreshStickerGrid);
+    if (gallery) obs.observe(gallery, { childList: true });
+
+    // Sticker slot click: toggle selected (max 4)
+    stickerGrid.addEventListener('click', (e) => {
+        const slot = e.target.closest('.sticker-slot:not(.empty)');
+        if (!slot) return;
+        const selectedCount = stickerGrid.querySelectorAll('.sticker-slot.selected').length;
+        if (!slot.classList.contains('selected') && selectedCount >= 4) {
+            // Deselect oldest selected
+            const first = stickerGrid.querySelector('.sticker-slot.selected');
+            if (first) first.classList.remove('selected');
+        }
+        slot.classList.toggle('selected');
+        SoundFX.beep();
+    });
+})();

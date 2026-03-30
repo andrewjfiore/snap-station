@@ -5,122 +5,404 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="Permissions-Policy" content="gamepad=(self); camera=(self); microphone=()">
-    <title>Snap Station</title>
-    <!-- Removed Google Fonts for Utilitarian System Look -->
+    <title>Pokémon Snap Station</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- JSZip for Cricut export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <link rel="stylesheet" href="snap-station.css">
 </head>
-<body data-theme="video-rental">
+<body data-theme="snap-station">
+
+    <!-- Pikachu silhouette watermark -->
+    <svg class="pikachu-watermark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <ellipse cx="100" cy="130" rx="55" ry="45" fill="currentColor"/>
+        <circle cx="100" cy="85" r="35" fill="currentColor"/>
+        <ellipse cx="78" cy="68" rx="12" ry="22" fill="currentColor" transform="rotate(-20,78,68)"/>
+        <ellipse cx="122" cy="68" rx="12" ry="22" fill="currentColor" transform="rotate(20,122,68)"/>
+        <ellipse cx="78" cy="61" rx="7" ry="14" fill="#000" opacity="0.3" transform="rotate(-20,78,61)"/>
+        <ellipse cx="122" cy="61" rx="7" ry="14" fill="#000" opacity="0.3" transform="rotate(20,122,61)"/>
+        <circle cx="90" cy="88" r="5" fill="#000" opacity="0.6"/>
+        <circle cx="110" cy="88" r="5" fill="#000" opacity="0.6"/>
+        <ellipse cx="90" cy="100" rx="10" ry="6" fill="#000" opacity="0.3"/>
+        <ellipse cx="110" cy="100" rx="10" ry="6" fill="#000" opacity="0.3"/>
+        <ellipse cx="75" cy="148" rx="20" ry="12" fill="currentColor" transform="rotate(-15,75,148)"/>
+        <ellipse cx="125" cy="148" rx="20" ry="12" fill="currentColor" transform="rotate(15,125,148)"/>
+        <path d="M 60 170 Q 80 185 100 170 Q 120 185 140 170" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <circle cx="82" cy="118" r="14" fill="#cc0000" opacity="0.5"/>
+        <circle cx="118" cy="118" r="14" fill="#cc0000" opacity="0.5"/>
+    </svg>
+
+    <!-- Emoji wallpaper (shown for hearts/vines/1-up themes) -->
     <div class="emoji-wallpaper" id="emojiWallpaper"></div>
-    
-    <!-- Main Snap Station View -->
+
+    <!-- Main Kiosk Container -->
     <div class="container" id="mainApp">
-        <header>
-            <h1>📷 Snap Station</h1>
-        </header>
 
-        <div class="monitor-frame">
-            <div class="siren-container" id="sirenContainer" title="Click to toggle flashing" aria-label="Toggle siren" role="button" tabindex="0">
-                <span class="siren" id="siren">🚨</span>
+        <!-- Kiosk Housing Frame -->
+        <div class="kiosk-frame">
+
+            <!-- Title Bar -->
+            <div class="kiosk-title-bar">
+                <div class="title-bolt left"></div>
+                <div class="title-content">
+                    <span class="pokeball-icon">◉</span>
+                    <h1 class="kiosk-title pixel-font">POKÉMON SNAP STATION</h1>
+                    <span class="pokeball-icon">◉</span>
+                </div>
+                <div class="title-bolt right"></div>
             </div>
-            
-            <div class="video-container" id="videoContainer" title="Scroll to zoom, drag to pan, double click to reset">
-                <video id="webcam" autoplay playsinline webkit-playsinline muted></video>
-                <div class="crt-overlay" id="crtOverlay"></div>
-                <div class="flash-overlay" id="flashOverlay"></div>
-                <div class="video-overlay">
-                    <div class="recording-indicator" id="recordingIndicator">
-                        <span class="dot"></span> <span>REC</span>
+
+            <!-- Main Screen Area -->
+            <div class="kiosk-body">
+
+                <!-- Left column: camera + controls -->
+                <div class="kiosk-left">
+
+                    <!-- Screen Bezel -->
+                    <div class="screen-bezel">
+                        <div class="bezel-label pixel-font">CAMERA PREVIEW</div>
+                        <div class="video-container" id="videoContainer" title="Scroll to zoom, drag to pan, double click to reset">
+                            <video id="webcam" autoplay playsinline webkit-playsinline muted></video>
+                            <div class="crt-overlay" id="crtOverlay"></div>
+                            <div class="flash-overlay" id="flashOverlay"></div>
+                            <div class="video-overlay">
+                                <div class="recording-indicator" id="recordingIndicator">
+                                    <span class="dot"></span><span>REC</span>
+                                </div>
+                                <div class="timer-display" id="timerDisplay">5</div>
+                            </div>
+                            <div class="no-camera" id="noCamera">
+                                <div class="no-camera-icon">📷</div>
+                                <p id="noCameraMessage">Camera access required</p>
+                                <p class="no-camera-sub">Press START CAMERA below</p>
+                            </div>
+                        </div>
+
+                        <!-- Source buttons row -->
+                        <div class="source-buttons">
+                            <button class="btn source-btn" id="startCameraBtn">
+                                <span class="source-arrow">▶</span> CAMERA
+                            </button>
+                            <button class="btn source-btn" id="shareScreenBtn">
+                                <span class="source-arrow">▶</span> SCREEN
+                            </button>
+                            <div class="ratio-toggle" id="ratioToggle">
+                                <button class="ratio-option active" data-ratio="16:9">16:9</button>
+                                <button class="ratio-option" data-ratio="4:3">4:3</button>
+                            </div>
+                            <button class="btn source-btn" id="fullscreenBtn" title="Toggle fullscreen">
+                                <span class="btn-icon" id="fullscreenIcon">⛶</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="timer-display" id="timerDisplay">5</div>
-                </div>
-                <div class="no-camera" id="noCamera">
-                    <div class="no-camera-icon">📷</div>
-                    <p id="noCameraMessage">Camera access required</p>
-                    <p style="font-size: 0.9rem; margin-top: 10px;">Click "Start Camera" below</p>
-                </div>
-            </div>
 
-            <div class="controls">
-                <button class="btn" id="startCameraBtn"><span class="btn-icon">📷</span>Start Camera</button>
-                <button class="btn" id="shareScreenBtn"><span class="btn-icon">🖥️</span>Share Screen</button>
-                <div class="ratio-toggle" id="ratioToggle">
-                    <button class="ratio-option active" data-ratio="16:9">16:9</button>
-                    <button class="ratio-option" data-ratio="4:3">4:3</button>
-                </div>
-                <button class="btn" id="fullscreenBtn" title="Toggle fullscreen"><span class="btn-icon" id="fullscreenIcon">⛶</span>Fullscreen</button>
-                <button class="btn btn-primary" id="screenshotBtn" disabled><span class="btn-icon">📸</span>Take Picture</button>
-                <button class="btn btn-primary" id="gifBtn" disabled><span class="btn-icon">🎬</span>Record GIF</button>
-                <button class="btn" id="saveProfileBtn" title="Save current settings and snaps"><span class="btn-icon">💾</span> Save Profile</button>
-                <button class="btn" id="loadProfileBtn" title="Load a saved profile"><span class="btn-icon">📂</span> Load Profile</button>
-                <input type="file" id="profileInput" style="display: none;" accept=".json">
-            </div>
-            
-            <div class="fx-controls">
-                <div class="tooltip-container">
-                    <div class="help-btn" id="helpBtn" tabindex="0" role="button" aria-label="Open station guide">?</div>
-                    <div class="tooltip-content" id="helpTooltip">
-                        <div class="tooltip-header">STATION GUIDE</div>
-                        <ul class="tooltip-list">
-                            <li><span class="tooltip-icon">🖱️</span><span><b>Zoom/Pan:</b> Scroll to zoom, Drag to move.</span></li>
-                            <li><span class="tooltip-icon">📸</span><span><b>Snap:</b> Click to Select. Use toolbar to act.</span></li>
-                            <li><span class="tooltip-icon">🎬</span><span><b>GIF:</b> Records 5s loop.</span></li>
-                            <li><span class="tooltip-icon">🎮</span><span><b>Gamepad:</b> L1+L2+R1+R2 to Toggle Mode.</span></li>
-                        </ul>
+                    <!-- FX Controls Panel -->
+                    <div class="fx-panel">
+                        <div class="fx-panel-label pixel-font">FX OPTIONS</div>
+                        <div class="fx-controls">
+                            <div class="tooltip-container">
+                                <div class="help-btn" id="helpBtn" tabindex="0" role="button" aria-label="Open station guide">?</div>
+                                <div class="tooltip-content" id="helpTooltip">
+                                    <div class="tooltip-header">STATION GUIDE</div>
+                                    <ul class="tooltip-list">
+                                        <li><span class="tooltip-icon">🖱️</span><span><b>Zoom/Pan:</b> Scroll to zoom, Drag to move.</span></li>
+                                        <li><span class="tooltip-icon">📸</span><span><b>Snap:</b> Click to select. Use toolbar to act.</span></li>
+                                        <li><span class="tooltip-icon">🎬</span><span><b>GIF:</b> Records 5s loop.</span></li>
+                                        <li><span class="tooltip-icon">🎮</span><span><b>Gamepad:</b> L1+L2+R1+R2 to Toggle Mode.</span></li>
+                                        <li><span class="tooltip-icon">💳</span><span><b>Print:</b> Needs credits. Use INSERT CARD to add.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-toggle" id="muteToggle">🔊 Sound On</button>
+                            <button class="btn btn-sm btn-toggle" id="crtToggle">📺 CRT</button>
+                            <button class="btn btn-sm btn-toggle" id="mirrorToggle">↔ Mirror</button>
+                            <div class="siren-container" id="sirenContainer" title="Click to toggle flashing" aria-label="Toggle siren" role="button" tabindex="0">
+                                <span class="siren" id="siren">🚨</span>
+                            </div>
+                            <button class="btn btn-sm" id="saveProfileBtn" title="Save settings">💾</button>
+                            <button class="btn btn-sm" id="loadProfileBtn" title="Load settings">📂</button>
+                            <input type="file" id="profileInput" style="display:none;" accept=".json">
+                            <div style="display:flex;align-items:center;gap:4px;">
+                                <label for="themeSelect" class="controls-label" style="font-size:0.7rem;">🎨</label>
+                                <select id="themeSelect" class="controls-select" style="font-size:0.75rem;padding:4px 6px;">
+                                    <optgroup label="Color Themes" id="colorThemesGroup">
+                                        <option value="snap-station" selected>Snap Station</option>
+                                        <option value="video-rental">Video Rental</option>
+                                        <option value="dark">Dark</option>
+                                        <option value="light">Light</option>
+                                        <option value="retro">Retro</option>
+                                    </optgroup>
+                                    <optgroup label="Wallpaper Themes">
+                                        <option value="hearts">Hearts 💖</option>
+                                        <option value="vines">Vines 🌿</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="status-bar" id="statusBar"></div>
                 </div>
 
-                <button class="btn btn-sm btn-toggle" id="muteToggle">🔊 Sound On</button>
-                <button class="btn btn-sm btn-toggle" id="crtToggle">📺 CRT Mode</button>
-                <button class="btn btn-sm btn-toggle" id="mirrorToggle">Mirror Video</button>
-                
-                <div style="display: flex; align-items: center;">
-                    <label for="themeSelect" class="controls-label">🎨 Theme:</label>
-                    <select id="themeSelect" class="controls-select">
-                        <optgroup label="Color Themes" id="colorThemesGroup">
-                            <option value="video-rental" selected>Video Rental</option>
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
-                            <option value="retro">Retro</option>
-                        </optgroup>
-                        <optgroup label="Wallpaper Themes">
-                            <option value="hearts">Hearts & Bubbles 💖</option>
-                            <option value="vines">Vines & Flowers 🌿</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </div>
+                <!-- Right column: sticker selection + actions -->
+                <div class="kiosk-right">
 
-            <div class="status-bar" id="statusBar"></div>
+                    <!-- Sticker Selection Panel -->
+                    <div class="sticker-panel">
+                        <div class="sticker-panel-header">
+                            <span class="pixel-font panel-title">STICKER SELECTION</span>
+                            <span class="sticker-hint">(click to select, max 4)</span>
+                        </div>
+                        <div class="sticker-grid" id="stickerGrid">
+                            <!-- 16 sticker slots, populated by JS -->
+                            <div class="sticker-slot empty" data-slot="0"></div>
+                            <div class="sticker-slot empty" data-slot="1"></div>
+                            <div class="sticker-slot empty" data-slot="2"></div>
+                            <div class="sticker-slot empty" data-slot="3"></div>
+                            <div class="sticker-slot empty" data-slot="4"></div>
+                            <div class="sticker-slot empty" data-slot="5"></div>
+                            <div class="sticker-slot empty" data-slot="6"></div>
+                            <div class="sticker-slot empty" data-slot="7"></div>
+                            <div class="sticker-slot empty" data-slot="8"></div>
+                            <div class="sticker-slot empty" data-slot="9"></div>
+                            <div class="sticker-slot empty" data-slot="10"></div>
+                            <div class="sticker-slot empty" data-slot="11"></div>
+                            <div class="sticker-slot empty" data-slot="12"></div>
+                            <div class="sticker-slot empty" data-slot="13"></div>
+                            <div class="sticker-slot empty" data-slot="14"></div>
+                            <div class="sticker-slot empty" data-slot="15"></div>
+                        </div>
+                    </div>
 
-            <div class="gallery-container">
-                <div class="gallery-header">
-                    <h3 class="gallery-title">Recent Snaps</h3>
-                    <span class="gallery-counter" id="galleryCounter">0 / 256</span>
-                </div>
-                <div class="gallery-actions">
-                    <button class="btn btn-sm" id="selectAllBtn">✅ Select All</button>
-                    <button class="btn btn-sm" id="sendToStickerBtn">📷 Send to Stickers</button>
-                    <button class="btn btn-sm" id="downloadBtn">⬇️ Download</button>
-                    <button class="btn btn-sm" id="deleteBtn">🗑️ Delete</button>
-                </div>
-                <div class="gallery" id="gallery">
-                    <div class="empty-gallery" id="emptyGallery">No snaps yet! Take a picture or video.</div>
+                    <!-- Big Arcade Action Buttons -->
+                    <div class="arcade-action-row">
+                        <div class="arcade-btn-group">
+                            <button class="arcade-btn red" id="screenshotBtn" disabled>
+                                <span class="arcade-btn-icon">📸</span>
+                                <span class="arcade-btn-label pixel-font">TAKE PHOTO</span>
+                            </button>
+                            <button class="arcade-btn yellow" id="gifBtn" disabled>
+                                <span class="arcade-btn-icon">🎬</span>
+                                <span class="arcade-btn-label pixel-font">REC GIF</span>
+                            </button>
+                        </div>
+                        <div class="arcade-btn-group">
+                            <button class="arcade-btn green" id="printNowBtn">
+                                <span class="arcade-btn-icon">🖨️</span>
+                                <span class="arcade-btn-label pixel-font">PRINT NOW</span>
+                            </button>
+                            <button class="arcade-btn blue" id="cricutExportBtn">
+                                <span class="arcade-btn-icon">✂️</span>
+                                <span class="arcade-btn-label pixel-font">CRICUT</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Credits Bar -->
+                    <div class="credits-bar">
+                        <div class="credits-display">
+                            <span class="credits-label pixel-font">CREDITS</span>
+                            <span class="credits-dots" id="creditsDots">●●●</span>
+                            <span class="credits-count" id="creditsCount" data-credits-display>0</span>
+                        </div>
+                        <button class="insert-card-btn pixel-font" id="insertCardBtn">INSERT CARD</button>
+                        <button class="btn btn-sm admin-link-btn" id="adminLinkBtn" title="Admin Panel">⚙</button>
+                    </div>
+
+                    <!-- Print Settings Gear Panel -->
+                    <div class="print-settings-panel" id="printSettingsPanel">
+                        <div class="print-settings-header pixel-font">PRINT SETTINGS
+                            <button class="btn btn-sm" id="closePrintSettingsBtn" style="font-size:0.7rem; padding:4px 8px;">✕</button>
+                        </div>
+                        <div class="print-settings-body">
+                            <div class="setting-row">
+                                <label>Printer:</label>
+                                <select id="printerTypeSelect">
+                                    <option value="generic">Auto-detect</option>
+                                    <option value="selphy">Canon SELPHY</option>
+                                    <option value="inkjet">Inkjet (4x6)</option>
+                                    <option value="laser">Laser / Letter</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Paper Size:</label>
+                                <select id="paperSizeSelect">
+                                    <option value="4x6">4x6 Postcard</option>
+                                    <option value="letter">Letter</option>
+                                    <option value="a4">A4</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label>Borderless:</label>
+                                <input type="checkbox" id="borderlessCheck">
+                            </div>
+                            <div class="setting-row">
+                                <label>Copies:</label>
+                                <input type="number" id="copiesInput" value="1" min="1" max="10" style="width:50px; padding:4px 8px; background:#1a1a2e; border:1px solid #FFD700; color:#fff; border-radius:4px;">
+                            </div>
+                            <button class="btn" id="printGearBtn" style="width:100%; margin-top:8px;">⚙ Settings</button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
 
+        <!-- Gallery Section (below kiosk) -->
+        <div class="gallery-container">
+            <div class="gallery-header">
+                <h3 class="gallery-title">Recent Snaps</h3>
+                <span class="gallery-counter" id="galleryCounter">0 / 256</span>
+            </div>
+            <div class="gallery-actions">
+                <button class="btn btn-sm" id="selectAllBtn">✅ Select All</button>
+                <button class="btn btn-sm" id="sendToStickerBtn">📷 Send to Stickers</button>
+                <button class="btn btn-sm" id="downloadBtn">⬇️ Download</button>
+                <button class="btn btn-sm" id="deleteBtn">🗑️ Delete</button>
+            </div>
+            <div class="gallery" id="gallery">
+                <div class="empty-gallery" id="emptyGallery">No snaps yet! Take a picture or video.</div>
+            </div>
+        </div>
+
+        <!-- Gamepad Indicator -->
         <div class="gamepad-indicator" id="gamepadIndicator">
             <span class="mode-icon" id="gamepadModeIcon">🎮</span>
             <span id="gamepadModeText">Menu Mode</span>
         </div>
 
+        <!-- Undo Toast -->
         <div class="undo-toast" id="undoToast">
             <span id="toastMessage">Action Completed</span>
         </div>
     </div>
 
-    <canvas id="captureCanvas"></canvas>
+    <!-- Payment Modal -->
+    <div class="payment-modal" id="paymentModal" role="dialog" aria-modal="true" aria-label="Insert Credits">
+        <div class="payment-modal-inner">
+            <div class="payment-title-bar pixel-font">INSERT CREDITS</div>
+            <div class="payment-body">
+                <div class="pin-display-area">
+                    <div class="pin-display" id="pinDisplay">_____-_____</div>
+                    <div class="pin-error" id="pinError"></div>
+                </div>
+                <div class="keypad">
+                    <button class="keypad-btn" data-key="1">1</button>
+                    <button class="keypad-btn" data-key="2">2</button>
+                    <button class="keypad-btn" data-key="3">3</button>
+                    <button class="keypad-btn" data-key="4">4</button>
+                    <button class="keypad-btn" data-key="5">5</button>
+                    <button class="keypad-btn" data-key="6">6</button>
+                    <button class="keypad-btn" data-key="7">7</button>
+                    <button class="keypad-btn" data-key="8">8</button>
+                    <button class="keypad-btn" data-key="9">9</button>
+                    <button class="keypad-btn dash-btn" data-key="-">—</button>
+                    <button class="keypad-btn" data-key="0">0</button>
+                    <button class="keypad-btn back-btn" data-key="back">←</button>
+                </div>
+                <button class="validate-btn pixel-font" id="validatePinBtn">VALIDATE</button>
+                <div class="payment-footer">
+                    <span>Credits remaining: <strong id="creditsInModal" data-credits-display>0</strong></span>
+                    <button class="attendant-btn" id="attendantBtn">Ask Attendant for Help</button>
+                </div>
+                <button class="close-payment-btn" id="closePaymentBtn">✕ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="captureCanvas" id="stickerSheetCanvas"></canvas>
     <script src="lib/gif.js"></script>
+    <script src="snap-payment.js"></script>
+    <script src="snap-printing.js"></script>
+    <script src="snap-cricut.js"></script>
     <script src="snap-station.js" defer></script>
+    <script>
+    // Bootstrap payment + print UI after DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        window._paymentUI = new PaymentUI();
+        window._printSettingsUI = new PrintSettingsUI();
+
+        // INSERT CARD button
+        const insertBtn = document.getElementById('insertCardBtn');
+        if (insertBtn) insertBtn.addEventListener('click', () => window._paymentUI.show());
+
+        // PRINT NOW button
+        const printNowBtn = document.getElementById('printNowBtn');
+        if (printNowBtn) {
+            printNowBtn.addEventListener('click', () => {
+                const settings = window._printSettingsUI ? window._printSettingsUI.getSettings() : {};
+                const printerType = settings.printerType || 'generic';
+                const canvas = document.getElementById('captureCanvas');
+                if (!canvas || canvas.width === 0) {
+                    // Try building a sheet from sticker slots
+                    const imgs = document.querySelectorAll('.sticker-slot.selected img, .sticker-slot:not(.empty) img');
+                    if (imgs.length === 0) {
+                        alert('No photos to print. Take some photos first!');
+                        return;
+                    }
+                }
+                if (!PaymentSystem.spendCredit()) {
+                    window._paymentUI.show();
+                    return;
+                }
+                const dataUrl = canvas && canvas.width > 0 ? canvas.toDataURL('image/png', 1.0) : null;
+                if (dataUrl) {
+                    PrintManager.print(dataUrl, printerType, settings);
+                } else {
+                    alert('No sticker sheet generated yet.');
+                    PaymentSystem.addCredits(1); // refund
+                }
+                // Update credits display
+                document.querySelectorAll('[data-credits-display]').forEach(el => {
+                    el.textContent = PaymentSystem.getBalance();
+                });
+            });
+        }
+
+        // Print gear toggle
+        const gearBtn = document.getElementById('printGearBtn');
+        if (gearBtn) {
+            gearBtn.addEventListener('click', () => {
+                document.getElementById('printSettingsPanel').classList.toggle('active');
+            });
+        }
+
+        // Admin link
+        const adminBtn = document.getElementById('adminLinkBtn');
+        if (adminBtn) adminBtn.addEventListener('click', () => {
+            window.open('/admin.html', '_blank');
+        });
+
+        // Update credits display on load
+        document.querySelectorAll('[data-credits-display]').forEach(el => {
+            el.textContent = PaymentSystem.getBalance();
+        });
+        updateCreditsDots();
+    });
+
+    function updateCreditsDots() {
+        const bal = PaymentSystem.getBalance();
+        const dots = document.getElementById('creditsDots');
+        if (!dots) return;
+        if (bal === 0) {
+            dots.textContent = '○○○';
+            dots.style.color = '#555';
+        } else {
+            dots.textContent = '●'.repeat(Math.min(bal, 5)) + '○'.repeat(Math.max(0, 5 - bal));
+            dots.style.color = '#FFD700';
+        }
+    }
+
+    // Watch for credit changes
+    const _origGet = PaymentSystem.getBalance.bind(PaymentSystem);
+    setInterval(() => {
+        const bal = PaymentSystem.getBalance();
+        document.querySelectorAll('[data-credits-display]').forEach(el => {
+            el.textContent = bal;
+        });
+        updateCreditsDots();
+    }, 500);
+    </script>
 </body>
 </html>
