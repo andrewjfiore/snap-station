@@ -35,14 +35,10 @@ module.exports = defineConfig({
     baseURL: 'http://localhost:3737',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
-    launchOptions: {
-      executablePath: '/home/andrew/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome',
-    },
     // Grant permissions that the app needs
     permissions: ['camera'],
     // Fake media for camera tests
     launchOptions: {
-      executablePath: '/home/andrew/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome',
       args: [
         '--use-fake-device-for-media-stream',
         '--use-fake-ui-for-media-stream',

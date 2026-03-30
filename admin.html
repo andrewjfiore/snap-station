@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snap Station — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="snap-station.css">
+  <style>
+    body { padding: 20px; min-height: 100vh; }
+    .admin-shell {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .admin-section {
+      background: #1a1a2e;
+      border: 2px solid #003791;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .admin-section h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: #FFD700;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+      border-bottom: 1px solid #003791;
+      padding-bottom: 10px;
+    }
+    .admin-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .admin-row label {
+      font-size: 11px;
+      color: #aaa;
+      white-space: nowrap;
+    }
+    .admin-row input, .admin-row select {
+      background: #111;
+      border: 1px solid #444;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 80px;
+    }
+    .admin-row select { width: auto; }
+    .admin-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 8px 14px;
+      background: #003791;
+      color: #FFD700;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #002060;
+      transition: transform 0.08s;
+    }
+    .admin-btn:active { transform: translateY(2px); }
+    .admin-btn.danger { background: #cc0000; color: white; box-shadow: 0 3px 0 #880000; }
+    .admin-btn.success { background: #00AA44; color: white; box-shadow: 0 3px 0 #006622; }
+    .pin-list {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #00ff00;
+      max-height: 220px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #222;
+      font-size: 12px;
+    }
+    .stat-row .val {
+      color: #FFD700;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+    }
+    .login-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 40px 20px;
+    }
+    .login-panel h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #FFD700;
+    }
+    .login-panel input {
+      background: #111;
+      border: 2px solid #444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 18px;
+      letter-spacing: 4px;
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+    }
+    .login-error { color: #ff4444; font-size: 11px; font-family: 'Press Start 2P', monospace; }
+    #adminMain { display: none; }
+    #loginMain { display: block; }
+    .session-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #00ff00;
+      background: #001a00;
+      border: 1px solid #00ff00;
+      border-radius: 3px;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginMain">
+  <div class="admin-shell">
+    <div class="title-bar">
+      <div class="title-bar-inner">
+        <span class="title-logo">SNAP STATION ADMIN</span>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="login-panel">
+        <h1>🔐 STAFF LOGIN</h1>
+        <p style="color:#666;font-size:11px;">Enter admin password to continue</p>
+        <input type="password" id="loginPassword" placeholder="Password" autofocus>
+        <div class="login-error" id="loginError"></div>
+        <button class="admin-btn" onclick="doLogin()">LOGIN</button>
+        <a href="snap-station.html" style="color:#444;font-size:10px;margin-top:8px;">← Back to Kiosk</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminMain">
+  <div class="admin-shell">
+
+    <div class="title-bar">
+      <div class="title-bar-inner">
+        <span class="title-logo">SNAP STATION ADMIN</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span class="session-badge">● Session: active</span>
+          <button class="admin-btn danger" onclick="doLogout()">Log Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-section">
+      <h2>── Stats ──</h2>
+      <div id="statsBlock">Loading...</div>
+    </div>
+
+    <!-- Credits Per Print -->
+    <div class="admin-section">
+      <h2>── Credits Per Print ──</h2>
+      <div class="admin-row">
+        <label>Prints cost:</label>
+        <input type="number" id="costPerPrint" value="1" min="1" max="10">
+        <span style="color:#aaa;font-size:11px;">credit(s) per print</span>
+        <button class="admin-btn" onclick="saveCostPerPrint()">SAVE</button>
+      </div>
+    </div>
+
+    <!-- Generate PIN Batch -->
+    <div class="admin-section">
+      <h2>── Generate PIN Batch ──</h2>
+      <div class="admin-row">
+        <label>Count:</label>
+        <input type="number" id="batchCount" value="20" min="1" max="200">
+        <label>Credits:</label>
+        <select id="batchCredits">
+          <option value="1">1 print</option>
+          <option value="2">2 prints</option>
+          <option value="5">5 prints</option>
+          <option value="10">10 prints</option>
+        </select>
+        <button class="admin-btn" onclick="generateBatch()">GENERATE BATCH</button>
+      </div>
+      <div class="pin-list" id="pinListOutput">(no batch generated yet)</div>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="copyPins()">COPY ALL</button>
+        <button class="admin-btn" onclick="printPins()">PRINT LIST</button>
+      </div>
+    </div>
+
+    <!-- Attendant Override -->
+    <div class="admin-section">
+      <h2>── Attendant Override ──</h2>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="addCredits(1)">+1 Credit</button>
+        <button class="admin-btn" onclick="addCredits(5)">+5 Credits</button>
+        <button class="admin-btn" onclick="addCredits(10)">+10 Credits</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn danger" onclick="clearUsedPins()">Clear Used PIN History</button>
+      </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="admin-section">
+      <h2>── Change Admin Password ──</h2>
+      <div class="admin-row">
+        <input type="password" id="newPassword" placeholder="New password" style="width:180px;">
+        <input type="password" id="confirmPassword" placeholder="Confirm" style="width:180px;">
+        <button class="admin-btn" onclick="changePassword()">CHANGE</button>
+      </div>
+      <div id="passwordMsg" style="font-size:11px;color:#aaa;margin-top:6px;"></div>
+    </div>
+
+    <div style="text-align:center;margin:8px 0;">
+      <a href="snap-station.html" style="color:#444;font-size:10px;">← Back to Kiosk</a>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" style="display:none;"></div>
+
+<script src="snap-payment.js" type="module"></script>
+<script type="module">
+import { PaymentSystem, TEST_PINS } from './snap-payment.js';
+window.PaymentSystem = PaymentSystem;
+window.TEST_PINS = TEST_PINS;
+</script>
+<script>
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('loginPassword').value;
+  if (!pw) return;
+  // Wait for PaymentSystem to be available
+  setTimeout(() => {
+    if (!window.PaymentSystem) { alert('Loading... try again'); return; }
+    if (PaymentSystem.checkAdminPassword(pw)) {
+      sessionStorage.setItem('snapAdmin', '1');
+      document.getElementById('loginMain').style.display = 'none';
+      document.getElementById('adminMain').style.display = 'block';
+      refreshStats();
+    } else {
+      document.getElementById('loginError').textContent = 'Incorrect password';
+      document.getElementById('loginPassword').value = '';
+    }
+  }, 100);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('snapAdmin') === '1') {
+    document.getElementById('loginMain').style.display = 'none';
+    document.getElementById('adminMain').style.display = 'block';
+    setTimeout(refreshStats, 200);
+  }
+
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
+function doLogout() {
+  sessionStorage.removeItem('snapAdmin');
+  location.reload();
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function refreshStats() {
+  if (!window.PaymentSystem) { setTimeout(refreshStats, 200); return; }
+  const s = PaymentSystem.getStats();
+  document.getElementById('statsBlock').innerHTML = `
+    <div class="stat-row"><span>Total prints today</span><span class="val">${s.printsToday}</span></div>
+    <div class="stat-row"><span>Credits dispensed (total)</span><span class="val">${s.creditsDispensed}</span></div>
+    <div class="stat-row"><span>Used PINs in memory</span><span class="val">${s.usedPinCount}</span></div>
+    <div class="stat-row"><span>Current balance</span><span class="val">${s.currentBalance}</span></div>
+  `;
+  document.getElementById('costPerPrint').value = localStorage.getItem('costPerPrint') || '1';
+}
+
+// ─── PIN Batch ────────────────────────────────────────────────────────────────
+let generatedPins = [];
+
+function generateBatch() {
+  if (!window.PaymentSystem) return;
+  const count = parseInt(document.getElementById('batchCount').value) || 20;
+  const credits = parseInt(document.getElementById('batchCredits').value);
+  generatedPins = PaymentSystem.generateBatch(count, credits);
+  const label = credits === 1 ? '1 print' : `${credits} prints`;
+  document.getElementById('pinListOutput').textContent = generatedPins
+    .map(p => `${p}  (${label})`)
+    .join('\n');
+  showToast(`Generated ${count} PINs`);
+}
+
+function copyPins() {
+  if (!generatedPins.length) return;
+  navigator.clipboard.writeText(generatedPins.join('\n')).then(() => showToast('Copied!'));
+}
+
+function printPins() {
+  if (!generatedPins.length) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<pre style="font-size:13px;">${document.getElementById('pinListOutput').textContent}</pre>`);
+  w.document.close();
+  w.print();
+}
+
+// ─── Credits ──────────────────────────────────────────────────────────────────
+function addCredits(n) {
+  if (!window.PaymentSystem) return;
+  PaymentSystem.addCredits(n);
+  PaymentSystem.recordDispense(n);
+  refreshStats();
+  showToast(`+${n} credit${n > 1 ? 's' : ''} added`);
+}
+
+function saveCostPerPrint() {
+  const v = document.getElementById('costPerPrint').value;
+  localStorage.setItem('costPerPrint', v);
+  showToast('Cost per print saved');
+}
+
+function clearUsedPins() {
+  if (!window.PaymentSystem) return;
+  if (!confirm('Clear all used PIN history? This allows re-use of old PINs.')) return;
+  PaymentSystem.clearUsedPins();
+  refreshStats();
+  showToast('PIN history cleared');
+}
+
+// ─── Change Password ──────────────────────────────────────────────────────────
+function changePassword() {
+  const np = document.getElementById('newPassword').value;
+  const cp = document.getElementById('confirmPassword').value;
+  const msg = document.getElementById('passwordMsg');
+  if (!np) { msg.textContent = 'Enter a new password'; return; }
+  if (np !== cp) { msg.textContent = 'Passwords do not match'; return; }
+  if (!window.PaymentSystem) return;
+  PaymentSystem.setAdminPassword(np);
+  msg.textContent = '✓ Password changed';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTO;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTO);
+  toastTO = setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+</script>
+
+</body>
+</html>

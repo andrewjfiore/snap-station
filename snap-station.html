@@ -1,126 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta http-equiv="Permissions-Policy" content="gamepad=(self); camera=(self); microphone=()">
-    <title>Snap Station</title>
-    <!-- Removed Google Fonts for Utilitarian System Look -->
-    <link rel="stylesheet" href="snap-station.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="Permissions-Policy" content="camera=(self); microphone=()">
+  <title>Pokémon Snap Station</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="snap-station.css">
 </head>
-<body data-theme="video-rental">
-    <div class="emoji-wallpaper" id="emojiWallpaper"></div>
-    
-    <!-- Main Snap Station View -->
-    <div class="container" id="mainApp">
-        <header>
-            <h1>📷 Snap Station</h1>
-        </header>
+<body>
 
-        <div class="monitor-frame">
-            <div class="siren-container" id="sirenContainer" title="Click to toggle flashing" aria-label="Toggle siren" role="button" tabindex="0">
-                <span class="siren" id="siren">🚨</span>
-            </div>
-            
-            <div class="video-container" id="videoContainer" title="Scroll to zoom, drag to pan, double click to reset">
-                <video id="webcam" autoplay playsinline webkit-playsinline muted></video>
-                <div class="crt-overlay" id="crtOverlay"></div>
-                <div class="flash-overlay" id="flashOverlay"></div>
-                <div class="video-overlay">
-                    <div class="recording-indicator" id="recordingIndicator">
-                        <span class="dot"></span> <span>REC</span>
-                    </div>
-                    <div class="timer-display" id="timerDisplay">5</div>
-                </div>
-                <div class="no-camera" id="noCamera">
-                    <div class="no-camera-icon">📷</div>
-                    <p id="noCameraMessage">Camera access required</p>
-                    <p style="font-size: 0.9rem; margin-top: 10px;">Click "Start Camera" below</p>
-                </div>
-            </div>
+  <!-- Pikachu silhouette watermark -->
+  <div class="pika-watermark" aria-hidden="true">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+      <!-- Simplified Pikachu silhouette -->
+      <ellipse cx="100" cy="130" rx="55" ry="45"/>
+      <circle cx="100" cy="80" r="38"/>
+      <!-- Ears -->
+      <polygon points="65,50 50,10 80,45"/>
+      <polygon points="135,50 150,10 120,45"/>
+      <!-- Cheek circles -->
+      <circle cx="75" cy="92" r="10" fill="#FFD700" opacity="0.6"/>
+      <circle cx="125" cy="92" r="10" fill="#FFD700" opacity="0.6"/>
+      <!-- Tail -->
+      <polygon points="155,120 180,80 185,100 170,100 185,130"/>
+    </svg>
+  </div>
 
-            <div class="controls">
-                <button class="btn" id="startCameraBtn"><span class="btn-icon">📷</span>Start Camera</button>
-                <button class="btn" id="shareScreenBtn"><span class="btn-icon">🖥️</span>Share Screen</button>
-                <div class="ratio-toggle" id="ratioToggle">
-                    <button class="ratio-option active" data-ratio="16:9">16:9</button>
-                    <button class="ratio-option" data-ratio="4:3">4:3</button>
-                </div>
-                <button class="btn" id="fullscreenBtn" title="Toggle fullscreen"><span class="btn-icon" id="fullscreenIcon">⛶</span>Fullscreen</button>
-                <button class="btn btn-primary" id="screenshotBtn" disabled><span class="btn-icon">📸</span>Take Picture</button>
-                <button class="btn btn-primary" id="gifBtn" disabled><span class="btn-icon">🎬</span>Record GIF</button>
-                <button class="btn" id="saveProfileBtn" title="Save current settings and snaps"><span class="btn-icon">💾</span> Save Profile</button>
-                <button class="btn" id="loadProfileBtn" title="Load a saved profile"><span class="btn-icon">📂</span> Load Profile</button>
-                <input type="file" id="profileInput" style="display: none;" accept=".json">
-            </div>
-            
-            <div class="fx-controls">
-                <div class="tooltip-container">
-                    <div class="help-btn" id="helpBtn" tabindex="0" role="button" aria-label="Open station guide">?</div>
-                    <div class="tooltip-content" id="helpTooltip">
-                        <div class="tooltip-header">STATION GUIDE</div>
-                        <ul class="tooltip-list">
-                            <li><span class="tooltip-icon">🖱️</span><span><b>Zoom/Pan:</b> Scroll to zoom, Drag to move.</span></li>
-                            <li><span class="tooltip-icon">📸</span><span><b>Snap:</b> Click to Select. Use toolbar to act.</span></li>
-                            <li><span class="tooltip-icon">🎬</span><span><b>GIF:</b> Records 5s loop.</span></li>
-                            <li><span class="tooltip-icon">🎮</span><span><b>Gamepad:</b> L1+L2+R1+R2 to Toggle Mode.</span></li>
-                        </ul>
-                    </div>
-                </div>
+  <div class="kiosk-shell">
 
-                <button class="btn btn-sm btn-toggle" id="muteToggle">🔊 Sound On</button>
-                <button class="btn btn-sm btn-toggle" id="crtToggle">📺 CRT Mode</button>
-                <button class="btn btn-sm btn-toggle" id="mirrorToggle">Mirror Video</button>
-                
-                <div style="display: flex; align-items: center;">
-                    <label for="themeSelect" class="controls-label">🎨 Theme:</label>
-                    <select id="themeSelect" class="controls-select">
-                        <optgroup label="Color Themes" id="colorThemesGroup">
-                            <option value="video-rental" selected>Video Rental</option>
-                            <option value="dark">Dark</option>
-                            <option value="light">Light</option>
-                            <option value="retro">Retro</option>
-                        </optgroup>
-                        <optgroup label="Wallpaper Themes">
-                            <option value="hearts">Hearts & Bubbles 💖</option>
-                            <option value="vines">Vines & Flowers 🌿</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </div>
-
-            <div class="status-bar" id="statusBar"></div>
-
-            <div class="gallery-container">
-                <div class="gallery-header">
-                    <h3 class="gallery-title">Recent Snaps</h3>
-                    <span class="gallery-counter" id="galleryCounter">0 / 256</span>
-                </div>
-                <div class="gallery-actions">
-                    <button class="btn btn-sm" id="selectAllBtn">✅ Select All</button>
-                    <button class="btn btn-sm" id="sendToStickerBtn">📷 Send to Stickers</button>
-                    <button class="btn btn-sm" id="downloadBtn">⬇️ Download</button>
-                    <button class="btn btn-sm" id="deleteBtn">🗑️ Delete</button>
-                </div>
-                <div class="gallery" id="gallery">
-                    <div class="empty-gallery" id="emptyGallery">No snaps yet! Take a picture or video.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="gamepad-indicator" id="gamepadIndicator">
-            <span class="mode-icon" id="gamepadModeIcon">🎮</span>
-            <span id="gamepadModeText">Menu Mode</span>
-        </div>
-
-        <div class="undo-toast" id="undoToast">
-            <span id="toastMessage">Action Completed</span>
-        </div>
+    <!-- Title Bar -->
+    <div class="title-bar">
+      <div class="title-bar-inner">
+        <span class="title-logo">POKÉMON SNAP STATION</span>
+        <span class="title-credits" id="creditsDisplay">Credits: <strong id="creditCount">0</strong></span>
+      </div>
     </div>
 
-    <canvas id="captureCanvas"></canvas>
-    <script src="lib/gif.js"></script>
-    <script src="snap-station.js" defer></script>
+    <!-- Main Screen Bezel -->
+    <div class="screen-bezel">
+      <div class="screen-scanlines"></div>
+      <div class="screen-content">
+
+        <!-- Camera Preview -->
+        <div class="preview-section">
+          <div class="section-label">◀ CAMERA PREVIEW ▶</div>
+          <div class="video-container" id="videoContainer">
+            <video id="webcam" autoplay playsinline muted></video>
+            <div class="flash-overlay" id="flashOverlay"></div>
+            <div class="no-camera" id="noCamera">
+              <div class="no-camera-icon">📷</div>
+              <p>Camera not active</p>
+              <p class="hint">Press START CAMERA below</p>
+            </div>
+          </div>
+          <!-- Source Buttons -->
+          <div class="source-buttons">
+            <button class="src-btn" id="startCameraBtn">▶ CAMERA</button>
+            <button class="src-btn" id="shareScreenBtn">▶ SCREEN</button>
+            <button class="src-btn src-btn-stop" id="stopSourceBtn">◉ STOP</button>
+          </div>
+        </div>
+
+        <!-- Sticker Selection -->
+        <div class="sticker-section">
+          <div class="section-label">◀ STICKER SELECTION ▶</div>
+          <div class="sticker-grid" id="stickerGrid">
+            <!-- 16 sticker slots generated by JS -->
+          </div>
+          <div class="sticker-hint">Click to select (max 4 active for printing)</div>
+        </div>
+
+        <!-- Sticker Sheet Preview -->
+        <div class="sheet-preview-section" id="sheetPreviewSection" style="display:none;">
+          <div class="section-label">◀ STICKER SHEET PREVIEW ▶</div>
+          <canvas id="stickerSheetCanvas" class="sticker-sheet-canvas"></canvas>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="arcade-btn arcade-btn-red" id="takePhotoBtn" disabled>
+        <span class="btn-label">TAKE PHOTO</span>
+      </button>
+      <button class="arcade-btn arcade-btn-green" id="printBtn">
+        <span class="btn-label">PRINT NOW</span>
+      </button>
+      <button class="arcade-btn arcade-btn-blue" id="cricutBtn">
+        <span class="btn-label">CRICUT ↓</span>
+      </button>
+      <button class="arcade-btn arcade-btn-yellow settings-gear" id="settingsBtn">
+        <span class="btn-label">⚙ SETTINGS</span>
+      </button>
+    </div>
+
+    <!-- Credits / Insert Card Row -->
+    <div class="credit-row">
+      <div class="credit-dots" id="creditDots">
+        <!-- Rendered by JS -->
+      </div>
+      <button class="insert-card-btn" id="insertCardBtn">[ INSERT CARD ]</button>
+      <a href="admin.html" class="admin-link">STAFF ▸</a>
+    </div>
+
+  </div><!-- .kiosk-shell -->
+
+  <!-- ===== SETTINGS DRAWER ===== -->
+  <div class="drawer-overlay" id="settingsOverlay" style="display:none;"></div>
+  <div class="settings-drawer" id="settingsDrawer" style="display:none;">
+    <div class="drawer-header">
+      <span>⚙ PRINT SETTINGS</span>
+      <button class="drawer-close" id="settingsClose">✕</button>
+    </div>
+    <div class="drawer-body">
+      <label>Printer Type:
+        <select id="printerType">
+          <option value="selphy">Canon SELPHY (CP1300/CP1500)</option>
+          <option value="inkjet" selected>Standard Inkjet</option>
+          <option value="pro">Pro Printer (large format)</option>
+          <option value="generic">Generic</option>
+        </select>
+      </label>
+      <label>Paper Size:
+        <select id="paperSize">
+          <option value="4x6">4×6 Postcard</option>
+          <option value="letter">Letter (8.5×11)</option>
+          <option value="a4">A4</option>
+        </select>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="borderless"> Enable Borderless
+      </label>
+      <label>Copies:
+        <input type="number" id="copies" value="1" min="1" max="10">
+      </label>
+      <label>Print Quality:
+        <select id="printQuality">
+          <option value="high" selected>High</option>
+          <option value="medium">Medium</option>
+          <option value="draft">Draft</option>
+        </select>
+      </label>
+      <button class="drawer-save" id="saveSettings">SAVE SETTINGS</button>
+    </div>
+  </div>
+
+  <!-- ===== PAYMENT / PIN ENTRY SCREEN ===== -->
+  <div class="modal-overlay" id="paymentOverlay" style="display:none;">
+    <div class="payment-panel">
+      <div class="payment-header">INSERT CREDITS</div>
+      <div class="pin-display" id="pinDisplay">_ _ _ _ _ - _ _ _ _ _</div>
+      <div class="pin-error" id="pinError"></div>
+      <div class="numpad">
+        <button class="num-key" data-key="1">1</button>
+        <button class="num-key" data-key="2">2</button>
+        <button class="num-key" data-key="3">3</button>
+        <button class="num-key" data-key="4">4</button>
+        <button class="num-key" data-key="5">5</button>
+        <button class="num-key" data-key="6">6</button>
+        <button class="num-key" data-key="7">7</button>
+        <button class="num-key" data-key="8">8</button>
+        <button class="num-key" data-key="9">9</button>
+        <button class="num-key num-dash">-</button>
+        <button class="num-key" data-key="0">0</button>
+        <button class="num-key num-back" id="pinBackBtn">←</button>
+      </div>
+      <button class="validate-btn" id="validatePin">VALIDATE</button>
+      <div class="payment-balance">Credits remaining: <span id="payBalanceDisplay">0</span></div>
+      <button class="attendant-btn" id="attendantBtn">Ask Attendant for Help</button>
+      <button class="payment-cancel" id="paymentCancel">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- ===== ATTENDANT OVERRIDE MODAL ===== -->
+  <div class="modal-overlay" id="attendantOverlay" style="display:none;">
+    <div class="attendant-panel">
+      <div class="payment-header">ATTENDANT OVERRIDE</div>
+      <p>Enter admin password to add credits:</p>
+      <input type="password" id="attendantPassword" class="admin-password-input" placeholder="Password">
+      <div class="pin-error" id="attendantError"></div>
+      <div class="attendant-buttons" id="attendantButtons" style="display:none;">
+        <button class="override-btn" data-credits="1">+1 Credit</button>
+        <button class="override-btn" data-credits="5">+5 Credits</button>
+        <button class="override-btn" data-credits="10">+10 Credits</button>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:1rem;">
+        <button class="validate-btn" id="attendantLogin">ENTER</button>
+        <button class="payment-cancel" id="attendantClose">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SUCCESS TOAST ===== -->
+  <div class="toast" id="toast" style="display:none;"></div>
+
+  <canvas id="captureCanvas" style="display:none;"></canvas>
+
+  <script type="module">
+    import { PaymentSystem, TEST_PINS } from './snap-payment.js';
+    import { PrintManager } from './snap-printing.js';
+    import { CricutExporter } from './snap-cricut.js';
+    window.PaymentSystem = PaymentSystem;
+    window.TEST_PINS = TEST_PINS;
+    window.PrintManager = PrintManager;
+    window.CricutExporter = CricutExporter;
+    window.__snapModulesReady = true;
+  </script>
+  <script src="snap-station-ui.js" type="module"></script>
 </body>
 </html>
