@@ -206,7 +206,7 @@
                             <span class="credits-dots" id="creditsDots">●●●</span>
                             <span class="credits-count" id="creditsCount" data-credits-display>0</span>
                         </div>
-                        <button class="insert-card-btn pixel-font" id="insertCardBtn">INSERT CARD</button>
+                        <button class="insert-card-btn pixel-font" id="insertCardBtn">ATTENDANT PAY</button>
                         <button class="btn btn-sm admin-link-btn" id="adminLinkBtn" title="Admin Panel">⚙</button>
                     </div>
 
@@ -283,6 +283,7 @@
         <div class="payment-modal-inner">
             <div class="payment-title-bar pixel-font">INSERT CREDITS</div>
             <div class="payment-body">
+                <div class="payment-kawaii-note">🔒 Attendant-only console • cute card mode unlocked by passcode</div>
                 <div class="pin-display-area">
                     <div class="pin-display" id="pinDisplay">_____-_____</div>
                     <div class="pin-error" id="pinError"></div>
@@ -304,7 +305,7 @@
                 <button class="validate-btn pixel-font" id="validatePinBtn">VALIDATE</button>
                 <div class="payment-footer">
                     <span>Credits remaining: <strong id="creditsInModal" data-credits-display>0</strong></span>
-                    <button class="attendant-btn" id="attendantBtn">Ask Attendant for Help</button>
+                    <button class="attendant-btn" id="attendantBtn">Open Admin Dashboard</button>
                 </div>
                 <button class="close-payment-btn" id="closePaymentBtn">✕ Cancel</button>
             </div>
@@ -333,6 +334,7 @@
             printNowBtn.addEventListener('click', () => {
                 const settings = window._printSettingsUI ? window._printSettingsUI.getSettings() : {};
                 const printerType = settings.printerType || 'generic';
+                const creditCost = Math.max(1, parseInt(localStorage.getItem('snap-creditsPerPrint') || '1'));
                 const canvas = document.getElementById('captureCanvas');
                 if (!canvas || canvas.width === 0) {
                     // Try building a sheet from sticker slots
@@ -343,7 +345,9 @@
                     }
                 }
                 if (!PaymentSystem.spendCredit()) {
-                    window._paymentUI.show();
+                    if (window.AdminPanel && window.AdminPanel.promptAttendantOverride({ mode: 'dashboard' })) {
+                        alert('Use the admin dashboard to add credits, then return to print.');
+                    }
                     return;
                 }
                 const dataUrl = canvas && canvas.width > 0 ? canvas.toDataURL('image/png', 1.0) : null;
@@ -351,7 +355,7 @@
                     PrintManager.print(dataUrl, printerType, settings);
                 } else {
                     alert('No sticker sheet generated yet.');
-                    PaymentSystem.addCredits(1); // refund
+                    PaymentSystem.addCredits(creditCost); // refund
                 }
                 // Update credits display
                 document.querySelectorAll('[data-credits-display]').forEach(el => {
@@ -371,7 +375,9 @@
         // Admin link
         const adminBtn = document.getElementById('adminLinkBtn');
         if (adminBtn) adminBtn.addEventListener('click', () => {
-            window.open('/admin.html', '_blank');
+            if (window.AdminPanel && window.AdminPanel.promptAttendantOverride({ mode: 'dashboard' })) {
+                return;
+            }
         });
 
         // Update credits display on load

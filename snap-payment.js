@@ -56,10 +56,11 @@ class PaymentSystem {
 
   /** Spend 1 credit for a print. Returns true if successful. */
   static spendCredit() {
+    const cost = Math.max(1, parseInt(localStorage.getItem('snap-creditsPerPrint') || '1'));
     const bal = this.getBalance();
-    if (bal <= 0) return false;
-    localStorage.setItem('snapCredits', String(bal - 1));
-    this._trackPrint();
+    if (bal < cost) return false;
+    localStorage.setItem('snapCredits', String(bal - cost));
+    this._trackPrint(cost);
     return true;
   }
 
@@ -80,11 +81,12 @@ class PaymentSystem {
   }
 
   /** Stats tracking */
-  static _trackPrint() {
+  static _trackPrint(cost = 1) {
     const today = new Date().toDateString();
     const stats = JSON.parse(localStorage.getItem('snap-stats') || '{}');
     if (stats.date !== today) { stats.date = today; stats.prints = 0; }
     stats.prints = (stats.prints || 0) + 1;
+    stats.spent = (stats.spent || 0) + cost;
     localStorage.setItem('snap-stats', JSON.stringify(stats));
   }
 
@@ -101,6 +103,7 @@ class PaymentSystem {
     return {
       printsToday: (stats.date === today ? stats.prints : 0) || 0,
       creditsDispensed: stats.dispensed || 0,
+      creditsSpent: stats.spent || 0,
       usedPinCount: usedPins.length,
     };
   }
@@ -111,6 +114,46 @@ class PaymentSystem {
 }
 
 // ─── Payment UI ───────────────────────────────────────────────────────────────
+
+class AdminPanel {
+  static PASSCODE = '239239';
+  static UNLOCK_KEY = 'snap-admin-unlock-until';
+  static SESSION_MINUTES = 15;
+
+  static hasAccess() {
+    const until = parseInt(localStorage.getItem(this.UNLOCK_KEY) || '0');
+    return Number.isFinite(until) && Date.now() < until;
+  }
+
+  static grantAccess() {
+    const until = Date.now() + this.SESSION_MINUTES * 60 * 1000;
+    localStorage.setItem(this.UNLOCK_KEY, String(until));
+  }
+
+  static promptAttendantOverride(opts = {}) {
+    const mode = opts.mode || 'credits';
+    if (this.hasAccess()) {
+      if (mode === 'dashboard') window.open('/admin.html', '_blank');
+      return true;
+    }
+
+    const entered = window.prompt('Attendant passcode required (6 digits):');
+    if (entered === null) return false;
+
+    if (entered.trim() !== this.PASSCODE) {
+      window.alert('Incorrect passcode. Please ask an attendant.');
+      return false;
+    }
+
+    this.grantAccess();
+    if (mode === 'dashboard') {
+      window.open('/admin.html', '_blank');
+    } else {
+      window.alert('Attendant access unlocked for 15 minutes.');
+    }
+    return true;
+  }
+}
 
 class PaymentUI {
   constructor() {
@@ -198,6 +241,7 @@ class PaymentUI {
   }
 
   show() {
+    if (!AdminPanel.promptAttendantOverride({ mode: 'credits' })) return;
     this._pin = '';
     this._renderPin();
     if (this.pinError) { this.pinError.style.display = 'none'; this.pinError.style.color = '#ff4444'; }
@@ -212,3 +256,4 @@ class PaymentUI {
 // Export for use in other scripts
 window.PaymentSystem = PaymentSystem;
 window.PaymentUI = PaymentUI;
+window.AdminPanel = AdminPanel;
