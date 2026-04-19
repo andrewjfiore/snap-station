@@ -193,7 +193,16 @@ window.addEventListener('beforeunload', () => {
 });
 
 // --- Theming ---
-const emojiConfigs = { hearts: ['💖', '🫧', '💘', '🧼'], vines: ['🌿', '🌸', '🍃', '🌻'], '1-up': ['🍄', '⭐', '🪙', '🐢', '❓'] };
+const emojiConfigs = {
+    'video-rental': ['📼', '📺', '🎞️', '🎬', '📹', '🍿'],
+    'dark':         ['✨', '🌙', '⭐', '💫', '🌠', '🌌'],
+    'light':        ['☁️', '🌈', '🌞', '⚡', '🦋', '🌷'],
+    'retro':        ['🕹️', '🎮', '💾', '📼', '📟', '🧃'],
+    'hearts':       ['💖', '🫧', '💘', '🧼', '💕', '🌸'],
+    'vines':        ['🌿', '🌸', '🍃', '🌻', '🌼', '🌱'],
+    '1-up':         ['🍄', '⭐', '🪙', '🐢', '❓', '🧱']
+};
+const animClasses = ['', 'anim-drift', 'anim-bob', 'anim-sway'];
 
 function generateWallpaper(theme) {
     emojiWallpaper.innerHTML = '';
@@ -207,7 +216,10 @@ function generateWallpaper(theme) {
         span.style.left = `${Math.random() * 100}%`;
         span.style.top = `${Math.random() * 100}%`;
         span.style.animationDelay = `${Math.random() * 8}s`;
+        span.style.animationDuration = `${6 + Math.random() * 8}s`;
         span.style.fontSize = `${Math.random() * 20 + 16}px`;
+        const cls = animClasses[Math.floor(Math.random() * animClasses.length)];
+        if (cls) span.classList.add(cls);
         fragment.appendChild(span);
     }
     emojiWallpaper.appendChild(fragment);

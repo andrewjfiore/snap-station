@@ -36,13 +36,13 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     launchOptions: {
-      executablePath: '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
     },
     // Grant permissions that the app needs
     permissions: ['camera'],
     // Fake media for camera tests
     launchOptions: {
-      executablePath: '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
       args: [
         '--use-fake-device-for-media-stream',
         '--use-fake-ui-for-media-stream',
