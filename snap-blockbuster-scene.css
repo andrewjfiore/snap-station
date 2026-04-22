@@ -1,0 +1,86 @@
+/* snap-blockbuster-scene.css
+ *
+ * Vanishing-point Blockbuster rental-shelves backdrop. Pairs with the
+ * existing [data-theme="video-rental"] theme in snap-station.css.
+ * Activate by setting:
+ *   document.body.dataset.scene = 'blockbuster-shelves';
+ */
+
+body[data-scene="blockbuster-shelves"] {
+    background:
+        linear-gradient(180deg, #0c1836 0%, #1a264e 40%, #0c1836 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+body[data-scene="blockbuster-shelves"]::before,
+body[data-scene="blockbuster-shelves"]::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Floor + ceiling perspective lines converging at the vanishing point. */
+body[data-scene="blockbuster-shelves"]::before {
+    background:
+        /* Ceiling */
+        linear-gradient(180deg,
+            #0c1836 0%, #0c1836 18%, transparent 18%, transparent 100%),
+        /* Floor */
+        linear-gradient(0deg,
+            #0a0a1a 0%, #0a0a1a 20%, transparent 20%, transparent 100%),
+        /* Perspective rails, symmetric pairs converging at center */
+        repeating-linear-gradient(
+            to right,
+            transparent 0%, transparent 48%,
+            rgba(255, 203, 5, 0.06) 48%, rgba(255, 203, 5, 0.06) 52%,
+            transparent 52%, transparent 100%
+        );
+}
+
+/* Shelf units left and right, angled toward vanishing point. Each shelf
+ * is a tiling background built from a single gradient stacked vertically. */
+body[data-scene="blockbuster-shelves"]::after {
+    background:
+        /* Left shelf wall */
+        linear-gradient(100deg,
+            rgba(255, 203, 5, 0.18) 0%,
+            rgba(255, 203, 5, 0.05) 12%,
+            transparent 25%),
+        /* Right shelf wall */
+        linear-gradient(260deg,
+            rgba(255, 203, 5, 0.18) 0%,
+            rgba(255, 203, 5, 0.05) 12%,
+            transparent 25%),
+        /* Horizontal shelf rows, repeating */
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px, transparent 48px,
+            rgba(255, 255, 255, 0.02) 48px, rgba(255, 255, 255, 0.02) 50px
+        );
+}
+
+/* VHS box row placeholder: tiny bright rectangles running along each
+ * shelf to suggest spine-out rental tapes. */
+body[data-scene="blockbuster-shelves"] .container {
+    position: relative;
+    z-index: 1;
+}
+
+body[data-scene="blockbuster-shelves"] .kiosk-frame {
+    box-shadow:
+        0 0 0 2px #003791,
+        0 0 0 6px #ffcb05,
+        0 24px 48px rgba(0, 0, 0, 0.7),
+        0 0 80px rgba(255, 203, 5, 0.15);
+}
+
+/* Reduced-motion respect: suppress the subtle perspective breathing. */
+@media (prefers-reduced-motion: reduce) {
+    body[data-scene="blockbuster-shelves"]::before,
+    body[data-scene="blockbuster-shelves"]::after {
+        animation: none !important;
+    }
+}

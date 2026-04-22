@@ -1,0 +1,68 @@
+/* snap-theme-polish.css
+ *
+ * Tightens the existing Blockbuster (`video-rental`) and Mario Level 1
+ * (`1-up`) themes already defined in snap-station.css. No new theme
+ * tokens; only visual refinements on existing ones. Include after
+ * snap-station.css so these cascade.
+ */
+
+/* --- video-rental (Blockbuster) ------------------------------------ */
+[data-theme="video-rental"] .kiosk-title-bar {
+    background:
+        linear-gradient(90deg, #1a264e 0%, #003791 50%, #1a264e 100%),
+        repeating-linear-gradient(
+            45deg,
+            rgba(255, 203, 5, 0.08) 0px, rgba(255, 203, 5, 0.08) 2px,
+            transparent 2px, transparent 6px
+        );
+    border-bottom-color: #ffcb05;
+}
+[data-theme="video-rental"] .kiosk-title {
+    color: #ffcb05;
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(255, 203, 5, 0.5);
+    letter-spacing: 0.08em;
+}
+[data-theme="video-rental"] .arcade-btn.yellow {
+    background: linear-gradient(180deg, #ffe680 0%, #ffcb05 50%, #c99a00 100%);
+    box-shadow: 0 4px 0 #7a5c00;
+}
+
+/* --- 1-up (Mario Level 1) ------------------------------------------ */
+[data-theme="1-up"] .kiosk-frame {
+    box-shadow:
+        0 0 0 3px #000,
+        0 0 0 6px #fca044,
+        0 12px 36px rgba(0, 0, 0, 0.5);
+    border-color: #000;
+}
+[data-theme="1-up"] .kiosk-title-bar {
+    background: linear-gradient(90deg, #c84c0c 0%, #e45c10 50%, #c84c0c 100%);
+    border-bottom-color: #000;
+}
+[data-theme="1-up"] .kiosk-title {
+    color: #fff;
+    text-shadow:
+        2px 2px 0 #000,
+        4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Pokemon text styling on the default theme --------------------- */
+[data-theme="snap-station"] .kiosk-title,
+[data-theme="video-rental"] .kiosk-title {
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* --- Universal sticker slot polish --------------------------------- */
+/* Make the sticker grid feel more like a fresh peel-away sheet. */
+.sticker-slot {
+    background: #fffdf5;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.sticker-slot:hover:not(.empty) {
+    transform: translateY(-1px);
+}
+.sticker-slot.selected {
+    transform: translateY(-1px);
+}
