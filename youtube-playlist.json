@@ -1,0 +1,14 @@
+{
+  "description": "Pokemon Snap playthroughs for kiosk attract mode. Used by SnapCapture.YouTubeFrameSource. Replace with your own curated list; the kiosk randomly selects one on idle timeout.",
+  "version": 1,
+  "playthroughs": [
+    {
+      "title": "Placeholder - replace with licensed / self-recorded footage",
+      "video_id": "dQw4w9WgXcQ",
+      "start_seconds": 0,
+      "duration_seconds": 180,
+      "tags": ["placeholder"]
+    }
+  ],
+  "notes": "Do not ship copyrighted playthroughs in production kiosks without licensing. For in-store Blockbuster nostalgia, use self-recorded emulator footage of the NPFE ROM with the CRT overlay on; the emulator window is captured via SnapCapture.DisplayFrameSource, which also works for live demos."
+}
