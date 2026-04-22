@@ -1,0 +1,57 @@
+/* snap-crt.css
+ *
+ * Integer-scaled CRT scanline overlay. Supersedes the fractional 3px/4px
+ * scanline baked into `.video-container::after` in snap-station.css.
+ *
+ * Usage: include alongside snap-station.css in the HTML, then toggle via
+ *   videoContainer.classList.toggle('crt-on', userPref);
+ * CRT is **off by default** per the plan. When active, scanlines render
+ * on an even 2px/4px grid so they never sub-pixel shimmer on typical
+ * 1x/2x kiosk displays.
+ */
+
+/* Cancel the unconditional scanlines baked into snap-station.css. */
+.video-container::after {
+    content: none !important;
+    background: none !important;
+}
+
+/* Integer-scaled scanlines. 6px period: 4px clear + 2px dim. Aligned to
+ * device pixels; no fractional positions. */
+.video-container.crt-on::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background-image:
+        linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 4px,
+            rgba(0, 0, 0, 0.22) 4px,
+            rgba(0, 0, 0, 0.22) 6px
+        );
+    background-size: 100% 6px;
+    image-rendering: pixelated;
+}
+
+/* Optional phosphor-mask tint toggled with an additional class. */
+.video-container.crt-on.crt-phosphor::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.05) 0px,
+            rgba(255, 0, 0, 0.05) 2px,
+            rgba(0, 255, 0, 0.03) 2px,
+            rgba(0, 255, 0, 0.03) 4px,
+            rgba(0, 0, 255, 0.05) 4px,
+            rgba(0, 0, 255, 0.05) 6px
+        );
+    background-size: 6px 100%;
+}
