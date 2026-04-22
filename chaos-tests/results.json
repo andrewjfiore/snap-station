@@ -1,0 +1,170 @@
+[
+  {
+    "test": "localstorage/empty_string",
+    "category": "Resilience",
+    "severity": "\ud83d\udfe2",
+    "finding": "Graceful failure on corrupt state: Expecting value: line 1 column 1 (char 0)",
+    "suggestion": "Ensure UI shows recovery message, not blank screen",
+    "passed": true
+  },
+  {
+    "test": "localstorage/null_value",
+    "category": "Resilience",
+    "severity": "\ud83d\udfe2",
+    "finding": "Graceful failure on corrupt state: 'NoneType' object has no attribute 'get'",
+    "suggestion": "Ensure UI shows recovery message, not blank screen",
+    "passed": true
+  },
+  {
+    "test": "localstorage/plain_text",
+    "category": "Resilience",
+    "severity": "\ud83d\udfe2",
+    "finding": "Graceful failure on corrupt state: Expecting value: line 1 column 1 (char 0)",
+    "suggestion": "Ensure UI shows recovery message, not blank screen",
+    "passed": true
+  },
+  {
+    "test": "localstorage/truncated",
+    "category": "Resilience",
+    "severity": "\ud83d\udfe2",
+    "finding": "Graceful failure on corrupt state: Unterminated string starting at: line 1 column 50 (char 49)",
+    "suggestion": "Ensure UI shows recovery message, not blank screen",
+    "passed": true
+  },
+  {
+    "test": "localstorage/wrong_type_snaps",
+    "category": "Resilience",
+    "severity": "\ud83d\udfe2",
+    "finding": "Graceful failure on corrupt state: snaps must be array",
+    "suggestion": "Ensure UI shows recovery message, not blank screen",
+    "passed": true
+  },
+  {
+    "test": "localstorage/giant_array",
+    "category": "Performance",
+    "severity": "\ud83d\udfe1",
+    "finding": "100,000-null snap array accepted \u2014 could cause OOM/hang on render",
+    "suggestion": "Limit max snap count (e.g., 500) before importing",
+    "passed": false
+  },
+  {
+    "test": "xss/<script>alert(\"XSS\")</script>",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "XSS payload stored verbatim in snap metadata: <script>alert(\"XSS\")</script>",
+    "suggestion": "Sanitize all snap metadata fields before inserting into DOM. Use textContent instead of innerHTML for snap IDs/labels.",
+    "passed": false
+  },
+  {
+    "test": "xss/\"><img src=x onerror=alert(1)>",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "XSS payload stored verbatim in snap metadata: \"><img src=x onerror=alert(1)>",
+    "suggestion": "Sanitize all snap metadata fields before inserting into DOM. Use textContent instead of innerHTML for snap IDs/labels.",
+    "passed": false
+  },
+  {
+    "test": "xss/<svg/onload=alert(1)>",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "XSS payload stored verbatim in snap metadata: <svg/onload=alert(1)>",
+    "suggestion": "Sanitize all snap metadata fields before inserting into DOM. Use textContent instead of innerHTML for snap IDs/labels.",
+    "passed": false
+  },
+  {
+    "test": "xss/javascript:alert(document.cook",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "XSS payload stored verbatim in snap metadata: javascript:alert(document.cookie)",
+    "suggestion": "Sanitize all snap metadata fields before inserting into DOM. Use textContent instead of innerHTML for snap IDs/labels.",
+    "passed": false
+  },
+  {
+    "test": "data_url/wrong_mime",
+    "category": "Security",
+    "severity": "\ud83d\udd34",
+    "finding": "Non-image MIME type in data URL accepted",
+    "suggestion": "Whitelist only image/png, image/jpeg, image/gif, image/webp data URLs",
+    "passed": false
+  },
+  {
+    "test": "data_url/svg_xss",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "SVG data URL with onload handler stored \u2014 XSS if rendered as <img src>",
+    "suggestion": "Validate data URLs are image/* MIME type only; reject SVG data URLs",
+    "passed": false
+  },
+  {
+    "test": "data_url/huge_data_url",
+    "category": "Performance",
+    "severity": "\ud83d\udfe1",
+    "finding": "10MB data URL accepted \u2014 memory risk",
+    "suggestion": "Limit data URL size (e.g., reject > 5MB per snap, and total gallery > 50MB)",
+    "passed": false
+  },
+  {
+    "test": "data_url/script_url",
+    "category": "Security",
+    "severity": "\ud83d\udd34",
+    "finding": "javascript: URL in dataUrl field",
+    "suggestion": "Validate data URLs start with 'data:image/' prefix only",
+    "passed": false
+  },
+  {
+    "test": "memory/1000_snaps_gallery",
+    "category": "Performance",
+    "severity": "\ud83d\udfe2",
+    "finding": "1000-snap gallery: 208KB, serialize: 0.002s, parse: 0.002s",
+    "suggestion": "",
+    "passed": true
+  },
+  {
+    "test": "sticker_xss/nested_xss_in_stickers",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "XSS payload in sticker 'type' field stored verbatim",
+    "suggestion": "Whitelist sticker types to known emoji/strings; sanitize before DOM insertion",
+    "passed": false
+  },
+  {
+    "test": "url_param/xss_in_mode",
+    "category": "XSS",
+    "severity": "\ud83d\udd34",
+    "finding": "URL parameter could contain XSS payload: ?mode=<script>alert(1)</script>",
+    "suggestion": "Sanitize all URL params before using in DOM; use URL API and validate known param values",
+    "passed": false
+  },
+  {
+    "test": "url_param/path_traversal",
+    "category": "Security",
+    "severity": "\ud83d\udfe1",
+    "finding": "Path traversal attempt via URL param",
+    "suggestion": "Validate and whitelist all URL parameter values",
+    "passed": false
+  },
+  {
+    "test": "url_param/javascript_url",
+    "category": "Robustness",
+    "severity": "\ud83d\udfe2",
+    "finding": "URL param edge case: ?redirect=javascript:alert(1)",
+    "suggestion": "Handle gracefully",
+    "passed": false
+  },
+  {
+    "test": "url_param/huge_param",
+    "category": "Robustness",
+    "severity": "\ud83d\udfe2",
+    "finding": "URL param edge case: ?data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "suggestion": "Handle gracefully",
+    "passed": false
+  },
+  {
+    "test": "url_param/null_byte",
+    "category": "Robustness",
+    "severity": "\ud83d\udfe2",
+    "finding": "URL param edge case: ?mode=normal\u0000evil",
+    "suggestion": "Handle gracefully",
+    "passed": false
+  }
+]

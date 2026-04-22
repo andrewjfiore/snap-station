@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap Station Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue: #003791;
+            --yellow: #FFD700;
+            --dark: #1a1a2e;
+            --panel: #16213e;
+            --red: #cc0000;
+            --green: #00AA44;
+            --text: #ffffff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--blue);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .pixel-font { font-family: 'Press Start 2P', monospace; }
+        .admin-wrapper { width: 100%; max-width: 700px; }
+
+        /* Login screen */
+        .login-screen {
+            background: var(--panel);
+            border: 3px solid var(--yellow);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+        .login-screen h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.9rem;
+            color: var(--yellow);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        .login-screen input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px 16px;
+            background: var(--dark);
+            border: 2px solid var(--yellow);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .login-screen input:focus { outline: none; border-color: #fff; }
+        .login-error {
+            color: #ff4444;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        /* Admin content */
+        .admin-content { display: none; }
+        .admin-content.active { display: block; }
+
+        .admin-header {
+            background: var(--yellow);
+            color: #000;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-header h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75rem;
+        }
+
+        .admin-body {
+            background: var(--panel);
+            border: 3px solid var(--yellow);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+
+        .admin-section {
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.3);
+            padding: 20px 0;
+        }
+        .admin-section:last-child { border-bottom: none; }
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--yellow);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: 2px solid var(--yellow);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn:hover { background: var(--yellow); color: #000; }
+        .btn-red { border-color: var(--red); }
+        .btn-red:hover { background: var(--red); color: #fff; }
+        .btn-green { border-color: var(--green); }
+        .btn-green:hover { background: var(--green); color: #fff; }
+
+        .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+        label { font-size: 0.85rem; opacity: 0.8; }
+        input[type="number"], select {
+            padding: 8px 12px;
+            background: var(--dark);
+            border: 2px solid var(--yellow);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.9rem;
+            width: 80px;
+        }
+        select { width: auto; }
+        input:focus, select:focus { outline: none; border-color: #fff; }
+
+        .pin-output {
+            background: var(--dark);
+            border: 2px solid var(--yellow);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 250px;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+        .pin-output .pin-line { display: flex; justify-content: space-between; }
+        .pin-output .pin-tier { color: #aaa; font-size: 0.75rem; }
+
+        .pin-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .stat-box {
+            background: var(--dark);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--yellow); }
+        .stat-label { font-size: 0.75rem; opacity: 0.7; margin-top: 5px; }
+
+        /* Dev-only: test PIN loader */
+        .dev-only { display: none; }
+
+        @media (max-width: 500px) {
+            .admin-header h1 { font-size: 0.6rem; }
+            .pin-output { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="admin-wrapper">
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="adminPasswordPrompt">
+        <h1>SNAP STATION<br>ADMIN</h1>
+        <input type="password" id="adminPasswordInput" placeholder="Password" autocomplete="current-password">
+        <div class="login-error" id="loginError"></div>
+        <button class="btn" id="adminLoginBtn">Enter</button>
+        <p style="margin-top:20px; font-size:0.75rem; opacity:0.5;">
+            <a href="/snap-station.html" style="color: var(--yellow);">← Back to Kiosk</a>
+        </p>
+    </div>
+
+    <!-- Admin Content -->
+    <div class="admin-content" id="adminContent">
+        <div class="admin-header">
+            <h1>SNAP STATION ADMIN</h1>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span style="font-size:0.75rem;">Session: active</span>
+                <button class="btn" id="logoutBtn" style="padding:6px 12px; font-size:0.75rem;">Log Out</button>
+            </div>
+        </div>
+        <div class="admin-body">
+
+            <!-- Credits per print -->
+            <div class="admin-section">
+                <div class="section-title">Credits Per Print</div>
+                <div class="row">
+                    <label>Prints cost:</label>
+                    <input type="number" id="creditsPerPrint" value="1" min="1" max="10" style="width:60px;">
+                    <label>credit(s) per print</label>
+                    <button class="btn" id="saveCreditsPerPrint">Save</button>
+                </div>
+            </div>
+
+            <!-- Generate PIN Batch -->
+            <div class="admin-section">
+                <div class="section-title">Generate PIN Batch</div>
+                <div class="row">
+                    <label>Count:</label>
+                    <input type="number" id="pinCount" value="10" min="1" max="100" style="width:70px;">
+                    <label>Credits:</label>
+                    <select id="pinCredits">
+                        <option value="1">1 print</option>
+                        <option value="2">2 prints</option>
+                        <option value="5" selected>5 prints</option>
+                        <option value="10">10 prints</option>
+                    </select>
+                    <button class="btn btn-green" id="generateBatchBtn">Generate Batch</button>
+                </div>
+                <div id="pinOutput" class="pin-output" style="display:none;"></div>
+                <div class="pin-actions" id="pinActions" style="display:none;">
+                    <button class="btn" id="copyPinsBtn">Copy All</button>
+                    <button class="btn" id="printPinsBtn">Print</button>
+                </div>
+                <!-- Dev-only test PIN loader -->
+                <div class="dev-only" id="devSection">
+                    <button class="btn" id="loadTestPinsBtn" style="margin-top:10px; font-size:0.75rem;">Load Test PINs (dev)</button>
+                </div>
+            </div>
+
+            <!-- Attendant Override -->
+            <div class="admin-section">
+                <div class="section-title">Attendant Override</div>
+                <div class="row">
+                    <button class="btn btn-green" data-add-credits="1">Add 1 Credit</button>
+                    <button class="btn btn-green" data-add-credits="5">Add 5 Credits</button>
+                    <button class="btn btn-green" data-add-credits="10">Add 10 Credits</button>
+                    <button class="btn btn-red" id="clearPinHistoryBtn">Clear PIN History</button>
+                </div>
+                <div id="overrideMsg" style="font-size:0.8rem; margin-top:8px; min-height:20px;"></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="admin-section">
+                <div class="section-title">Stats</div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="statPrintsToday">0</div>
+                        <div class="stat-label">Prints Today</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statCreditsDispensed">0</div>
+                        <div class="stat-label">Credits Dispensed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statCurrentBalance">0</div>
+                        <div class="stat-label">Current Balance</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statUsedPins">0</div>
+                        <div class="stat-label">Used PINs</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-top:15px;">
+                <a href="/snap-station.html" style="color: var(--yellow); font-size:0.8rem;">← Back to Kiosk</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="snap-payment.js"></script>
+<script>
+(function() {
+    const DEFAULT_PASSWORD = '239239';
+    const HASH_KEY = 'snap-adminHash';
+
+    async function sha256(str) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function getStoredHash() {
+        let h = localStorage.getItem(HASH_KEY);
+        if (!h) {
+            h = await sha256(DEFAULT_PASSWORD);
+            localStorage.setItem(HASH_KEY, h);
+        }
+        return h;
+    }
+
+    async function checkPassword(pw) {
+        const hash = await sha256(pw);
+        const stored = await getStoredHash();
+        return hash === stored;
+    }
+
+    function showAdmin() {
+        document.getElementById('adminPasswordPrompt').style.display = 'none';
+        document.getElementById('adminContent').classList.add('active');
+        refreshStats();
+        loadCreditsPerPrint();
+        // Show dev section on localhost
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            document.getElementById('devSection').style.display = 'block';
+        }
+    }
+
+    // Login
+    document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+        const pw = document.getElementById('adminPasswordInput').value;
+        const ok = await checkPassword(pw);
+        if (ok) {
+            showAdmin();
+        } else {
+            const err = document.getElementById('loginError');
+            err.textContent = 'Incorrect password.';
+            document.getElementById('adminPasswordInput').value = '';
+        }
+    });
+
+    document.getElementById('adminPasswordInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('adminLoginBtn').click();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        document.getElementById('adminContent').classList.remove('active');
+        document.getElementById('adminPasswordPrompt').style.display = '';
+        document.getElementById('adminPasswordInput').value = '';
+    });
+
+    // Credits per print
+    function loadCreditsPerPrint() {
+        const v = localStorage.getItem('snap-creditsPerPrint') || '1';
+        document.getElementById('creditsPerPrint').value = v;
+    }
+    document.getElementById('saveCreditsPerPrint').addEventListener('click', () => {
+        const v = parseInt(document.getElementById('creditsPerPrint').value) || 1;
+        localStorage.setItem('snap-creditsPerPrint', String(v));
+        showMsg('overrideMsg', 'Saved!', '#00ff00');
+    });
+
+    // Generate PIN batch
+    document.getElementById('generateBatchBtn').addEventListener('click', () => {
+        const count = parseInt(document.getElementById('pinCount').value) || 10;
+        const credits = parseInt(document.getElementById('pinCredits').value) || 1;
+        const pins = [];
+        for (let i = 0; i < Math.min(count, 100); i++) {
+            pins.push(PaymentSystem.generatePin(credits));
+        }
+        renderPins(pins, credits);
+    });
+
+    function renderPins(pins, credits) {
+        const output = document.getElementById('pinOutput');
+        output.style.display = 'block';
+        output.innerHTML = pins.map(pin =>
+            `<div class="pin-line"><span>${pin}</span><span class="pin-tier">(${credits} print${credits !== 1 ? 's' : ''})</span></div>`
+        ).join('');
+        const actions = document.getElementById('pinActions');
+        actions.style.display = 'flex';
+        actions._pins = pins;
+    }
+
+    document.getElementById('copyPinsBtn').addEventListener('click', () => {
+        const pins = document.getElementById('pinActions')._pins || [];
+        navigator.clipboard.writeText(pins.join('\n')).then(() => {
+            showMsg('overrideMsg', 'PINs copied to clipboard!', '#00ff00');
+        });
+    });
+
+    document.getElementById('printPinsBtn').addEventListener('click', () => {
+        const pins = document.getElementById('pinActions')._pins || [];
+        const win = window.open('', '_blank');
+        win.document.write(`<html><head><style>
+            body { font-family: monospace; padding: 20px; }
+            h2 { margin-bottom: 20px; }
+            .pin { font-size: 1.1rem; margin: 8px 0; letter-spacing: 2px; }
+        </style></head><body>
+        <h2>Snap Station PINs</h2>
+        ${pins.map(p => `<div class="pin">${p}</div>`).join('')}
+        <script>window.onload=()=>{window.print();}<\/script>
+        </body></html>`);
+        win.document.close();
+    });
+
+    // Load test PINs (dev only)
+    document.getElementById('loadTestPinsBtn').addEventListener('click', async () => {
+        const mod = await import('./test-pins.js').catch(() => null);
+        if (!mod) {
+            showMsg('overrideMsg', 'Could not load test-pins.js', '#ff4444');
+            return;
+        }
+        const pins = mod.ALL_TEST_PINS;
+        renderPins(pins, '(mixed)');
+        showMsg('overrideMsg', `Loaded ${pins.length} test PINs`, '#00ff00');
+    });
+
+    // Attendant override buttons
+    document.querySelectorAll('[data-add-credits]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const n = parseInt(btn.dataset.addCredits);
+            PaymentSystem.addCredits(n);
+            refreshStats();
+            showMsg('overrideMsg', `+${n} credit${n !== 1 ? 's' : ''} added!`, '#00ff00');
+        });
+    });
+
+    document.getElementById('clearPinHistoryBtn').addEventListener('click', () => {
+        if (confirm('Clear all used PIN history? (Used PINs can be re-used after this.)')) {
+            PaymentSystem.clearUsedPins();
+            refreshStats();
+            showMsg('overrideMsg', 'PIN history cleared.', '#ffcc00');
+        }
+    });
+
+    function refreshStats() {
+        const stats = PaymentSystem.getStats();
+        const balance = PaymentSystem.getBalance();
+        document.getElementById('statPrintsToday').textContent = stats.printsToday;
+        document.getElementById('statCreditsDispensed').textContent = stats.creditsDispensed;
+        document.getElementById('statCurrentBalance').textContent = balance;
+        document.getElementById('statUsedPins').textContent = stats.usedPinCount;
+    }
+
+    function showMsg(id, msg, color) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = msg;
+        el.style.color = color;
+        setTimeout(() => { el.textContent = ''; }, 3000);
+    }
+
+    // Auto-show if already "logged in" this session
+    if (sessionStorage.getItem('snap-admin') === '1') {
+        showAdmin();
+    }
+})();
+</script>
+</body>
+</html>
