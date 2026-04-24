@@ -8,6 +8,10 @@
     --gap: 1mm;
     --grid-width: calc((var(--cell-width) * 4) + (var(--gap) * 3));
     --grid-height: calc((var(--cell-height) * 4) + (var(--gap) * 3));
+    --layout-cols: 4;
+    --layout-rows: 4;
+    --layout-cell-width: calc((var(--grid-width) - ((var(--layout-cols) - 1) * var(--gap))) / var(--layout-cols));
+    --layout-cell-height: calc((var(--grid-height) - ((var(--layout-rows) - 1) * var(--gap))) / var(--layout-rows));
 
     /* Touch & Spacing */
     --touch-target: 44px;
@@ -114,6 +118,7 @@ body {
     flex-direction: column;
     align-items: center;
     overflow-x: hidden;
+    line-height: clamp(1.2, 0.9vw + 0.95, 1.55);
 }
 
 h1 { display: none; } 
@@ -432,15 +437,15 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 
 #sticker-grid {
     display: grid;
-    grid-template-columns: repeat(4, var(--cell-width));
-    grid-template-rows: repeat(4, var(--cell-height));
+    grid-template-columns: repeat(var(--layout-cols), var(--layout-cell-width));
+    grid-template-rows: repeat(var(--layout-rows), var(--layout-cell-height));
     gap: var(--gap);
     width: var(--grid-width); height: var(--grid-height);
     z-index: 1; pointer-events: none; 
 }
 
 .cell {
-    width: var(--cell-width); height: var(--cell-height);
+    width: var(--layout-cell-width); height: var(--layout-cell-height);
     position: relative; overflow: hidden; background: #eee; pointer-events: auto;
     touch-action: none;
 }
@@ -455,7 +460,7 @@ option { background-color: #333; color: white; } /* Fix for white-on-white in so
 .overlay path { fill: none; stroke: white; stroke-width: 0.8px; vector-effect: non-scaling-stroke; filter: drop-shadow(0px 0px 1px rgba(0,0,0,0.3)); }
 
 .cell-effect-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; opacity: 0; transition: opacity 0.2s; }
-.crt-cell-overlay { background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 2px; mix-blend-mode: multiply; }
+.crt-cell-overlay { background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% var(--crt-scanline-step, 2px); mix-blend-mode: multiply; }
 .cell.crt-active .crt-cell-overlay { opacity: 1; }
 
 .cell.weathered-active img { filter: sepia(0.2) saturate(0.8) contrast(1.1) brightness(0.95); }

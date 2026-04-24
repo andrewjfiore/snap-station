@@ -55,7 +55,7 @@ Cross-frame transfer happens via `localStorage['snapstation-export']` and a
 
 | Path | Size | Note |
 |---|---|---|
-| `claude_design.zip` | 10.2 MB | Binary design artifact in git. Candidate for removal or git-lfs migration in a dedicated cleanup commit; not touched in Phase 0 because `git rm` is destructive. |
+| `archive/2026-04-23-pre-nintendo-refresh/claude_design.zip` | 10.2 MB | Archived binary design artifact moved out of active root during initial cleanup pass. |
 
 ## Branch hygiene
 

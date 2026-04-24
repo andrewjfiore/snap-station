@@ -7,12 +7,15 @@
     <meta http-equiv="Permissions-Policy" content="gamepad=(self); camera=(self); microphone=()">
     <title>Pokémon Snap Station</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Press+Start+2P&display=swap" rel="stylesheet">
     <!-- JSZip for Cricut export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <link rel="stylesheet" href="snap-station.css">
+    <link rel="stylesheet" href="snap-crt.css">
+    <link rel="stylesheet" href="snap-nfc-card.css">
+    <link rel="stylesheet" href="snap-blockbuster-scene.css">
 </head>
-<body data-theme="snap-station">
+<body data-theme="video-rental">
 
     <!-- Pikachu silhouette watermark -->
     <svg class="pikachu-watermark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -87,6 +90,9 @@
                             <button class="btn source-btn" id="shareScreenBtn">
                                 <span class="source-arrow">▶</span> SCREEN
                             </button>
+                            <button class="btn source-btn" id="demoYoutubeBtn" title="Load Pokémon Snap demo footage">
+                                <span class="source-arrow">▶</span> DEMO
+                            </button>
                             <div class="ratio-toggle" id="ratioToggle">
                                 <button class="ratio-option active" data-ratio="16:9">16:9</button>
                                 <button class="ratio-option" data-ratio="4:3">4:3</button>
@@ -127,8 +133,8 @@
                                 <label for="themeSelect" class="controls-label" style="font-size:0.7rem;">🎨</label>
                                 <select id="themeSelect" class="controls-select" style="font-size:0.75rem;padding:4px 6px;">
                                     <optgroup label="Color Themes" id="colorThemesGroup">
-                                        <option value="snap-station" selected>Snap Station</option>
-                                        <option value="video-rental">Video Rental</option>
+                                        <option value="snap-station">Snap Station</option>
+                                        <option value="video-rental" selected>Video Rental</option>
                                         <option value="dark">Dark</option>
                                         <option value="light">Light</option>
                                         <option value="retro">Retro</option>
@@ -207,6 +213,7 @@
                             <span class="credits-count" id="creditsCount" data-credits-display>0</span>
                         </div>
                         <button class="insert-card-btn pixel-font" id="insertCardBtn">ATTENDANT PAY</button>
+                        <div id="nfcCardMount" class="nfc-card-mount" aria-live="polite"></div>
                         <button class="btn btn-sm admin-link-btn" id="adminLinkBtn" title="Admin Panel">⚙</button>
                     </div>
 
@@ -248,6 +255,20 @@
                 </div>
             </div>
         </div>
+
+        <section class="demo-footage-panel" aria-label="Pokémon Snap demo footage">
+            <h3 class="demo-footage-title pixel-font">DEMO FOOTAGE REFERENCE</h3>
+            <div class="demo-footage-frame">
+                <iframe
+                    id="demoFootageIframe"
+                    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=0&autoplay=0&controls=1&modestbranding=1&rel=0&playsinline=1"
+                    title="Pokémon Snap playthrough reference"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen></iframe>
+            </div>
+        </section>
 
         <!-- Gallery Section (below kiosk) -->
         <div class="gallery-container">
@@ -317,6 +338,11 @@
     <script src="snap-payment.js"></script>
     <script src="snap-printing.js"></script>
     <script src="snap-cricut.js"></script>
+    <script src="snap-layouts.js" defer></script>
+    <script src="snap-capture.js" defer></script>
+    <script src="snap-preview.js" defer></script>
+    <script src="snap-nfc-card.js" defer></script>
+    <script src="snap-blockbuster-scene.js" defer></script>
     <script src="snap-station.js" defer></script>
     <script>
     // Bootstrap payment + print UI after DOM ready
@@ -344,23 +370,30 @@
                         return;
                     }
                 }
+                if (window.armNfcCredit && !window.nfcCreditArmed) {
+                    alert('Tap the NFC card to arm your print credit first.');
+                    return;
+                }
                 if (!PaymentSystem.spendCredit()) {
                     if (window.AdminPanel && window.AdminPanel.promptAttendantOverride({ mode: 'dashboard' })) {
                         alert('Use the admin dashboard to add credits, then return to print.');
                     }
                     return;
                 }
+                if (window.disarmNfcCredit) window.disarmNfcCredit();
                 const dataUrl = canvas && canvas.width > 0 ? canvas.toDataURL('image/png', 1.0) : null;
                 if (dataUrl) {
                     PrintManager.print(dataUrl, printerType, settings);
                 } else {
                     alert('No sticker sheet generated yet.');
                     PaymentSystem.addCredits(creditCost); // refund
+                    if (window.armNfcCredit) window.armNfcCredit();
                 }
                 // Update credits display
                 document.querySelectorAll('[data-credits-display]').forEach(el => {
                     el.textContent = PaymentSystem.getBalance();
                 });
+                if (window.syncNfcCardWithCredits) window.syncNfcCardWithCredits(PaymentSystem.getBalance());
             });
         }
 
@@ -385,6 +418,7 @@
             el.textContent = PaymentSystem.getBalance();
         });
         updateCreditsDots();
+        if (window.syncNfcCardWithCredits) window.syncNfcCardWithCredits(PaymentSystem.getBalance());
     });
 
     function updateCreditsDots() {
@@ -408,6 +442,7 @@
             el.textContent = bal;
         });
         updateCreditsDots();
+        if (window.syncNfcCardWithCredits) window.syncNfcCardWithCredits(bal);
     }, 500);
     </script>
 </body>
