@@ -136,6 +136,17 @@ const recordingIndicator = $('recordingIndicator');
 const timerDisplay = $('timerDisplay');
 const gamepadIndicator = $('gamepadIndicator');
 const EXPORT_CHANNEL = 'snapstation-sync';
+const previewController = window.SnapPreview ? window.SnapPreview.mount(videoContainer) : null;
+const nfcCardController = (function mountNfcCard() {
+    const host = $('nfcCardMount');
+    if (!host || !window.SnapNfcCard) return null;
+    try {
+        return window.SnapNfcCard.mount(host);
+    } catch (err) {
+        console.warn('NFC card mount failed', err);
+        return null;
+    }
+})();
 
 // --- Broadcast Channel ---
 let exportChannel = null;
@@ -163,6 +174,9 @@ window.isMirrored = false;
 window.zoomLevel = 1;
 window.panX = 0;
 window.panY = 0;
+window.nfcCreditArmed = false;
+window.demoPlaylist = [];
+window.demoIndex = 0;
 let recordingInterval = null, countdownInterval = null;
 let undoTimeout = null;
 let transformRAF = null;
@@ -215,8 +229,16 @@ function generateWallpaper(theme) {
 }
 
 themeSelect.addEventListener('change', (e) => {
-    document.body.setAttribute('data-theme', e.target.value);
-    generateWallpaper(e.target.value);
+    const nextTheme = e.target.value;
+    document.body.setAttribute('data-theme', nextTheme);
+    generateWallpaper(nextTheme);
+    if (window.SnapBlockbusterScene) {
+        if (nextTheme === 'video-rental') {
+            window.SnapBlockbusterScene.enable();
+        } else {
+            window.SnapBlockbusterScene.disable();
+        }
+    }
 });
 
 // --- Help Button Fix ---
@@ -269,6 +291,8 @@ $('muteToggle').addEventListener('click', function() {
 $('crtToggle').addEventListener('click', function() {
     window.crtEnabled = !window.crtEnabled;
     $('crtOverlay').classList.toggle('active', window.crtEnabled);
+    videoContainer.classList.toggle('crt-on', window.crtEnabled);
+    if (previewController) previewController.setCrt(window.crtEnabled);
     this.classList.toggle('active', window.crtEnabled);
     SoundFX.init();
 });
@@ -493,6 +517,42 @@ function updateUIForStream(active, type) {
 
 $('startCameraBtn').addEventListener('click', () => window.activeSource === 'camera' ? stopStream() : startStream('camera'));
 $('shareScreenBtn').addEventListener('click', () => window.activeSource === 'screen' ? stopStream() : startStream('screen'));
+$('demoYoutubeBtn')?.addEventListener('click', () => {
+    const iframe = document.getElementById('demoFootageIframe');
+    if (!iframe) return;
+    if (window.demoPlaylist.length > 0) {
+        const nextIndex = (window.demoIndex + 1) % window.demoPlaylist.length;
+        window.demoIndex = nextIndex;
+        setDemoFootage(window.demoPlaylist[nextIndex], nextIndex + 1, window.demoPlaylist.length);
+    }
+    iframe.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    iframe.focus({ preventScroll: true });
+    updateStatus('Demo footage ready below. Use SCREEN capture to frame against reference footage.');
+});
+
+function setDemoFootage(item, index = 1, total = 1) {
+    const iframe = document.getElementById('demoFootageIframe');
+    if (!iframe || !item?.video_id) return;
+    const start = Number.isFinite(item.start_seconds) ? Math.max(0, item.start_seconds) : 0;
+    iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(item.video_id)}?start=${start}&autoplay=0&controls=1&modestbranding=1&rel=0&playsinline=1`;
+    iframe.title = item.title || 'Pokémon Snap playthrough reference';
+    updateStatus(`Demo clip ${index}/${total}: ${item.title || 'Pokémon Snap reference'}`);
+}
+
+async function loadDemoPlaylist() {
+    try {
+        const response = await fetch('youtube-playlist.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`playlist fetch failed (${response.status})`);
+        const json = await response.json();
+        const entries = (json.playthroughs || []).filter((p) => p && typeof p.video_id === 'string' && p.video_id.trim().length > 0);
+        if (entries.length === 0) return;
+        window.demoPlaylist = entries;
+        window.demoIndex = 0;
+        setDemoFootage(entries[0], 1, entries.length);
+    } catch (err) {
+        console.warn('Demo playlist load failed, using static iframe fallback', err);
+    }
+}
 
 // --- Capture Logic ---
 function getCaptureParams() {
@@ -945,11 +1005,61 @@ Gamepad.init();
 
 // --- UI Utils ---
 function updateStatus(msg) { $('statusBar').textContent = msg; }
+function armNfcCredit() {
+    if (!window.PaymentSystem || window.PaymentSystem.getBalance() <= 0) {
+        window.nfcCreditArmed = false;
+        if (nfcCardController) {
+            nfcCardController.setArmed(false);
+            nfcCardController.setStatus('BUY CREDITS FIRST');
+        }
+        return false;
+    }
+    window.nfcCreditArmed = true;
+    if (nfcCardController) {
+        nfcCardController.setArmed(true);
+        nfcCardController.flash();
+        nfcCardController.setStatus('PRINT ARMED ✓');
+    }
+    updateStatus('NFC credit armed. Press PRINT NOW.');
+    return true;
+}
+
+function disarmNfcCredit() {
+    window.nfcCreditArmed = false;
+    if (nfcCardController) {
+        nfcCardController.setArmed(false);
+        nfcCardController.setStatus('TAP TO ARM PRINT');
+    }
+}
+
+function syncNfcCardWithCredits(balance) {
+    if (!nfcCardController) return;
+    if (balance > 0) {
+        nfcCardController.show(balance);
+        nfcCardController.setCredits(balance);
+        nfcCardController.setStatus(window.nfcCreditArmed ? 'PRINT ARMED ✓' : 'TAP TO ARM PRINT');
+    } else {
+        disarmNfcCredit();
+        nfcCardController.hide();
+    }
+}
+window.syncNfcCardWithCredits = syncNfcCardWithCredits;
+window.armNfcCredit = armNfcCredit;
+window.disarmNfcCredit = disarmNfcCredit;
+
+if (window.PaymentSystem) {
+    syncNfcCardWithCredits(window.PaymentSystem.getBalance());
+}
+if (nfcCardController) {
+    nfcCardController.onTap(() => armNfcCredit());
+}
+
 document.querySelectorAll('.ratio-option').forEach(b => b.addEventListener('click', function() {
     document.querySelectorAll('.ratio-option').forEach(o => o.classList.remove('active'));
     this.classList.add('active');
     window.currentRatio = this.dataset.ratio;
     videoContainer.classList.toggle('ratio-4-3', window.currentRatio === '4:3');
+    if (previewController) previewController.setAspect(window.currentRatio);
     SoundFX.init();
 }));
 
@@ -984,7 +1094,11 @@ window.addEventListener('keydown', e => {
     } else kIdx = 0;
 });
 
-generateWallpaper('video-rental');
+generateWallpaper(themeSelect?.value || 'snap-station');
+if (window.SnapBlockbusterScene && themeSelect?.value === 'video-rental') {
+    window.SnapBlockbusterScene.enable();
+}
+loadDemoPlaylist();
 
 // --- Video Filters ---
 window.currentFilter = 'none';

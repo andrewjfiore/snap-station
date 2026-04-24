@@ -39,6 +39,7 @@ function initStickerSheet() {
     const themeSelect = document.getElementById('theme-select');
     const bgSelect = document.getElementById('bg-select');
     const paperSizeSelect = document.getElementById('paper-size');
+    const layoutStyleSelect = document.getElementById('layout-style');
     const customBgInput = document.getElementById('custom-bg-input');
     const saveProjectBtn = document.getElementById('saveProjectBtn');
     const loadProjectBtn = document.getElementById('loadProjectBtn');
@@ -69,7 +70,10 @@ function initStickerSheet() {
     const bgPatterns = {
         hearts: `data:image/svg+xml;charset=utf-8,<svg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><rect width='40' height='40' fill='%23FFB6C1'/><text x='0' y='15' font-size='15'>❤️</text><text x='20' y='35' font-size='15'>❤️</text><text x='20' y='15' font-size='15'>🫧</text><text x='0' y='35' font-size='15'>🫧</text></svg>`,
         stripes: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='40' height='40' fill='%23FFCB05'/%3E%3Cpath d='M0 40 L40 0 L20 0 L0 20 Z M40 40 L40 20 L20 40 Z' fill='black'/%3E%3C/svg%3E`,
-        flowers: `data:image/svg+xml;charset=utf-8,<svg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><rect width='40' height='40' fill='%23C1FFB6'/><text x='0' y='15' font-size='15'>🌿</text><text x='20' y='35' font-size='15'>🌿</text><text x='20' y='15' font-size='15'>🌸</text><text x='0' y='35' font-size='15'>🌸</text></svg>`
+        flowers: `data:image/svg+xml;charset=utf-8,<svg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><rect width='40' height='40' fill='%23ffe6f3'/><text x='0' y='15' font-size='15'>🌸</text><text x='20' y='35' font-size='15'>🌼</text><text x='20' y='15' font-size='15'>🌷</text><text x='0' y='35' font-size='15'>🪻</text></svg>`,
+        vines: `data:image/svg+xml;charset=utf-8,<svg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'><rect width='48' height='48' fill='%23dff7d9'/><path d='M-2 42 C 8 22, 18 20, 26 3' stroke='%234ea650' stroke-width='3' fill='none'/><path d='M16 49 C 24 33, 34 27, 50 12' stroke='%2363b45f' stroke-width='3' fill='none'/><text x='7' y='18' font-size='12'>🌿</text><text x='27' y='40' font-size='12'>🌸</text></svg>`,
+        confetti: `data:image/svg+xml;charset=utf-8,<svg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><rect width='40' height='40' fill='%23fff7d6'/><circle cx='7' cy='9' r='2' fill='%23ff6b6b'/><circle cx='23' cy='6' r='2' fill='%233fa7ff'/><circle cx='34' cy='16' r='2' fill='%236fdc6f'/><circle cx='13' cy='27' r='2' fill='%23ffb347'/><circle cx='31' cy='33' r='2' fill='%23c280ff'/><circle cx='5' cy='34' r='2' fill='%23ff8ecf'/></svg>`,
+        stars: `data:image/svg+xml;charset=utf-8,<svg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><rect width='40' height='40' fill='%231b2e74'/><text x='3' y='14' font-size='11'>⭐</text><text x='21' y='10' font-size='10'>✨</text><text x='10' y='30' font-size='12'>🌟</text><text x='27' y='33' font-size='11'>⭐</text></svg>`
     };
 
     const stickerW = 26.6, stickerH = 20;
@@ -156,6 +160,10 @@ function initStickerSheet() {
         }
 
         setMode('quad');
+        applyLayoutStyle(layoutStyleSelect?.value || '4x4');
+        if (toggleCrtInput) toggleCrtInput.checked = false;
+        toggleCRT();
+        updateCrtIntegerScale();
 
         window.addEventListener('mousedown', handleGlobalMouseDown);
         window.addEventListener('mousemove', handleGlobalMouseMove);
@@ -184,6 +192,9 @@ function initStickerSheet() {
 
         if (paperSizeSelect) {
             paperSizeSelect.addEventListener('change', (event) => changePaperSize(event.target.value));
+        }
+        if (layoutStyleSelect) {
+            layoutStyleSelect.addEventListener('change', (event) => applyLayoutStyle(event.target.value));
         }
 
         if (customBgInput) {
@@ -294,6 +305,7 @@ function initStickerSheet() {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) checkForPendingImports();
         });
+        window.addEventListener('resize', updateCrtIntegerScale);
     }
 
     // Stamp list - dynamically generated
@@ -597,6 +609,34 @@ function initStickerSheet() {
              root.style.setProperty('--cell-width', '58.52mm'); root.style.setProperty('--cell-height', '44mm');
              root.style.setProperty('--gap', '2.2mm');
         }
+        updateCrtIntegerScale();
+    }
+
+    function applyLayoutStyle(layout) {
+        const root = document.documentElement;
+        const layouts = {
+            '4x4': { cols: 4, rows: 4 },
+            '1x16': { cols: 1, rows: 16 },
+            '16x1': { cols: 16, rows: 1 }
+        };
+        const next = layouts[layout] || layouts['4x4'];
+        root.style.setProperty('--layout-cols', String(next.cols));
+        root.style.setProperty('--layout-rows', String(next.rows));
+        updateCrtIntegerScale();
+        refreshGrid();
+    }
+
+    function updateCrtIntegerScale() {
+        const firstCell = document.querySelector('.cell');
+        if (!firstCell) return;
+        const px = Math.max(2, Math.floor(firstCell.clientHeight / 40));
+        document.documentElement.style.setProperty('--crt-scanline-step', `${px}px`);
+    }
+
+    function getCurrentCellAspect() {
+        const cell = document.querySelector('.cell');
+        if (!cell || !cell.clientWidth || !cell.clientHeight) return stickerW / stickerH;
+        return cell.clientWidth / cell.clientHeight;
     }
 
     function toggleWeathered() {
@@ -606,6 +646,7 @@ function initStickerSheet() {
 
     function toggleCRT() {
         const show = document.getElementById('toggle-crt').checked;
+        updateCrtIntegerScale();
         allCells().forEach(cell => cell.classList.toggle('crt-active', show));
     }
 
@@ -843,7 +884,7 @@ function initStickerSheet() {
             img.src = newUrl; img.style.display = 'block';
             cell.classList.add('has-image'); // Show controls
             const cropper = new Cropper(img, {
-                aspectRatio: stickerW / stickerH, viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false, modal: false, background: false,
+                aspectRatio: getCurrentCellAspect(), viewMode: 1, dragMode: 'move', autoCropArea: 1, restore: false, guides: false, center: false, highlight: false, cropBoxMovable: false, cropBoxResizable: false, toggleDragModeOnDblclick: false, minContainerWidth: 100, minContainerHeight: 75, checkCrossOrigin: false, modal: false, background: false,
                 ready: function() {
                     this.cropper.isCustomReady = true;
                     if (imgData.canvasData) {
@@ -1319,6 +1360,7 @@ function initStickerSheet() {
                 theme: document.body.getAttribute('data-theme'), // Use data attribute
                 bgValue: document.getElementById('bg-select').value,
                 paperSize: document.getElementById('paper-size').value,
+                layoutStyle: document.getElementById('layout-style')?.value || '4x4',
                 mode: window.currentMode, images: savedImages, stamps: stamps
             };
             const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
@@ -1352,6 +1394,13 @@ function initStickerSheet() {
                 if (data.theme) { document.getElementById('theme-select').value = data.theme; changeTheme(data.theme); }
                 if (data.bgValue) { document.getElementById('bg-select').value = data.bgValue; changeBackground(data.bgValue); }
                 if (data.paperSize) { document.getElementById('paper-size').value = data.paperSize; changePaperSize(data.paperSize); }
+                if (data.layoutStyle) {
+                    const layoutSel = document.getElementById('layout-style');
+                    if (layoutSel) {
+                        layoutSel.value = data.layoutStyle;
+                        applyLayoutStyle(data.layoutStyle);
+                    }
+                }
                 if (data.mode) setMode(data.mode);
 
                 if (Array.isArray(data.images)) {

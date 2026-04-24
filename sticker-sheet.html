@@ -118,6 +118,9 @@
                     <option value="hearts">Hearts</option>
                     <option value="stripes">Stripes</option>
                     <option value="flowers">Flowers</option>
+                    <option value="vines">Vines</option>
+                    <option value="confetti">Confetti</option>
+                    <option value="stars">Stars</option>
                     <option value="custom">Custom...</option>
                 </select>
                 <input type="file" id="custom-bg-input" accept="image/*" style="display:none" aria-label="Upload custom background">
@@ -128,6 +131,14 @@
                     <option value="4x6">4" x 6" (Recommended)</option>
                     <option value="hagaki">100mm x 148mm (Official)</option>
                     <option value="letter">8.5" x 11" (Letter)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Sticker Layout:</label>
+                <select id="layout-style">
+                    <option value="4x4" selected>4 × 4 (Classic)</option>
+                    <option value="1x16">1 × 16 (Strip)</option>
+                    <option value="16x1">16 × 1 (Banner)</option>
                 </select>
             </div>
         </div>
@@ -245,6 +256,8 @@
 </div>
 
 
+<script src="snap-layouts.js" defer></script>
+<script src="snap-capture.js" defer></script>
 <script src="sticker-sheet.js"></script>
 </body>
 </html>

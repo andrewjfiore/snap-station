@@ -6,11 +6,17 @@
  *   document.body.dataset.scene = 'blockbuster-shelves';
  */
 
+:root {
+    --bb-tilt-x: 0deg;
+    --bb-tilt-y: 0deg;
+}
+
 body[data-scene="blockbuster-shelves"] {
     background:
-        linear-gradient(180deg, #0c1836 0%, #1a264e 40%, #0c1836 100%);
+        radial-gradient(180% 90% at 50% -10%, rgba(255, 210, 64, 0.2) 0%, transparent 40%),
+        linear-gradient(180deg, #0a1b4c 0%, #132d72 34%, #0b1a44 100%);
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 body[data-scene="blockbuster-shelves"]::before,
@@ -20,50 +26,58 @@ body[data-scene="blockbuster-shelves"]::after {
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    transform-style: preserve-3d;
 }
 
 /* Floor + ceiling perspective lines converging at the vanishing point. */
 body[data-scene="blockbuster-shelves"]::before {
     background:
-        /* Ceiling */
-        linear-gradient(180deg,
-            #0c1836 0%, #0c1836 18%, transparent 18%, transparent 100%),
-        /* Floor */
-        linear-gradient(0deg,
-            #0a0a1a 0%, #0a0a1a 20%, transparent 20%, transparent 100%),
-        /* Perspective rails, symmetric pairs converging at center */
+        linear-gradient(180deg, rgba(6, 14, 42, 0.95) 0%, rgba(6, 14, 42, 0.95) 15%, transparent 30%),
+        linear-gradient(0deg, rgba(8, 10, 26, 0.94) 0%, rgba(8, 10, 26, 0.94) 22%, transparent 40%),
         repeating-linear-gradient(
-            to right,
-            transparent 0%, transparent 48%,
-            rgba(255, 203, 5, 0.06) 48%, rgba(255, 203, 5, 0.06) 52%,
-            transparent 52%, transparent 100%
+            92deg,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            transparent 1px 84px
+        ),
+        repeating-linear-gradient(
+            88deg,
+            rgba(255, 203, 5, 0.09) 0 2px,
+            transparent 2px 112px
         );
+    mask-image: radial-gradient(140% 120% at 50% 45%, #000 0 70%, transparent 100%);
+    transform: perspective(1100px) rotateX(calc(var(--bb-tilt-x) * -0.7)) rotateY(calc(var(--bb-tilt-y) * -0.7));
 }
 
-/* Shelf units left and right, angled toward vanishing point. Each shelf
- * is a tiling background built from a single gradient stacked vertically. */
+/* Shelf walls + fake rental boxes.
+   The repeating gradients simulate rows of VHS/box art facing camera while
+   converging toward the center vanishing point. */
 body[data-scene="blockbuster-shelves"]::after {
     background:
-        /* Left shelf wall */
-        linear-gradient(100deg,
-            rgba(255, 203, 5, 0.18) 0%,
-            rgba(255, 203, 5, 0.05) 12%,
-            transparent 25%),
-        /* Right shelf wall */
-        linear-gradient(260deg,
-            rgba(255, 203, 5, 0.18) 0%,
-            rgba(255, 203, 5, 0.05) 12%,
-            transparent 25%),
-        /* Horizontal shelf rows, repeating */
+        linear-gradient(102deg, rgba(255, 203, 5, 0.25) 0 2%, rgba(255, 203, 5, 0.08) 8%, transparent 16%),
+        linear-gradient(258deg, rgba(255, 203, 5, 0.25) 0 2%, rgba(255, 203, 5, 0.08) 8%, transparent 16%),
         repeating-linear-gradient(
-            to bottom,
-            transparent 0px, transparent 48px,
-            rgba(255, 255, 255, 0.02) 48px, rgba(255, 255, 255, 0.02) 50px
+            180deg,
+            rgba(0, 0, 0, 0) 0 46px,
+            rgba(255, 255, 255, 0.07) 46px 48px,
+            rgba(0, 0, 0, 0.22) 48px 49px,
+            rgba(0, 0, 0, 0) 49px 92px
+        ),
+        repeating-linear-gradient(
+            105deg,
+            rgba(255, 80, 80, 0.22) 0 14px,
+            rgba(100, 170, 255, 0.22) 14px 28px,
+            rgba(95, 235, 170, 0.16) 28px 40px,
+            rgba(255, 220, 90, 0.24) 40px 56px,
+            rgba(0, 0, 0, 0.16) 56px 60px
         );
+    background-size: 100% 100%, 100% 100%, 100% 100%, 180px 72px;
+    background-position: center, center, center, center;
+    opacity: 0.9;
+    mix-blend-mode: screen;
+    mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    transform: perspective(980px) rotateX(var(--bb-tilt-x)) rotateY(var(--bb-tilt-y)) scale(1.03);
 }
 
-/* VHS box row placeholder: tiny bright rectangles running along each
- * shelf to suggest spine-out rental tapes. */
 body[data-scene="blockbuster-shelves"] .container {
     position: relative;
     z-index: 1;
@@ -74,13 +88,14 @@ body[data-scene="blockbuster-shelves"] .kiosk-frame {
         0 0 0 2px #003791,
         0 0 0 6px #ffcb05,
         0 24px 48px rgba(0, 0, 0, 0.7),
-        0 0 80px rgba(255, 203, 5, 0.15);
+        0 0 80px rgba(255, 203, 5, 0.2);
 }
 
-/* Reduced-motion respect: suppress the subtle perspective breathing. */
 @media (prefers-reduced-motion: reduce) {
     body[data-scene="blockbuster-shelves"]::before,
     body[data-scene="blockbuster-shelves"]::after {
+        transition: none !important;
         animation: none !important;
+        transform: none !important;
     }
 }

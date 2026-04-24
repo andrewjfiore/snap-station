@@ -27,6 +27,7 @@
         '      <span></span><span></span><span></span>',
         '    </div>',
         '    <div class="nfc-card-brand">SNAP&nbsp;STATION</div>',
+        '    <div class="nfc-card-status" aria-live="polite">TAP TO ARM PRINT</div>',
         '    <div class="nfc-card-credits">',
         '      <span class="nfc-card-credits-label">CREDITS</span>',
         '      <span class="nfc-card-credits-value">0</span>',
@@ -41,6 +42,13 @@
         host.insertAdjacentHTML('beforeend', MARKUP);
         var card = host.querySelector('.nfc-card');
         var credits = card.querySelector('.nfc-card-credits-value');
+        var status = card.querySelector('.nfc-card-status');
+        var tapHandler = null;
+
+        card.addEventListener('click', function () {
+            if (!card.classList.contains('visible')) return;
+            if (typeof tapHandler === 'function') tapHandler();
+        });
 
         return {
             show: function (n) {
@@ -59,6 +67,9 @@
                 }, 600);
             },
             setCredits: function (n) { credits.textContent = String(n | 0); },
+            setStatus: function (text) { if (status) status.textContent = text; },
+            setArmed: function (armed) { card.classList.toggle('armed', !!armed); },
+            onTap: function (fn) { tapHandler = fn; },
             el: card
         };
     }

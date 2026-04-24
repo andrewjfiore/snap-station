@@ -122,10 +122,15 @@ body {
     display: flex; align-items: center; gap: 12px; flex: 1; justify-content: center;
 }
 .kiosk-title {
-    font-size: clamp(0.5rem, 2vw, 0.85rem);
-    color: var(--pikachu-yellow);
-    text-shadow: 2px 2px 0 rgba(0,0,0,0.8), 0 0 20px rgba(255,215,0,0.5);
-    letter-spacing: 0.05em;
+    font-family: 'Luckiest Guy', 'Press Start 2P', cursive;
+    font-size: clamp(0.7rem, 2.4vw, 1.25rem);
+    color: #ffd53d;
+    -webkit-text-stroke: 1.8px #1f4faf;
+    text-shadow:
+        0 3px 0 #13357a,
+        2px 4px 0 rgba(0,0,0,0.55),
+        0 0 18px rgba(255,220,110,0.45);
+    letter-spacing: 0.06em;
     white-space: nowrap;
 }
 .pokeball-icon {
@@ -608,6 +613,19 @@ body {
     box-shadow: 0 3px 0 #18214f;
     touch-action: manipulation;
 }
+.source-btn {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+[data-theme="video-rental"] .btn,
+[data-theme="video-rental"] .arcade-btn {
+    background-image: linear-gradient(180deg, #2d4f99 0%, #1d3470 100%);
+    border-color: #ffcb05;
+}
+[data-theme="video-rental"] .btn:hover,
+[data-theme="video-rental"] .arcade-btn:hover {
+    background-image: linear-gradient(180deg, #3d63b6 0%, #28448a 100%);
+}
 .keypad-btn:hover { background: linear-gradient(180deg, #4f66be 0%, #303d83 100%); border-color: #ffd84a; }
 .keypad-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #111; }
 .back-btn { color: #ff6666; }
@@ -729,3 +747,41 @@ body {
 .controls-select:hover { border-color: #fff; }
 .controls-select:focus { outline: none; }
 .controls-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* --- Phase: demo footage + NFC mount --- */
+.nfc-card-mount {
+    display: flex;
+    align-items: center;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.demo-footage-panel {
+    margin: 14px 0 0;
+    padding: 10px;
+    border: 2px solid var(--pikachu-yellow);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(8, 40, 110, 0.9), rgba(12, 16, 32, 0.95));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+.demo-footage-title {
+    margin: 0 0 8px;
+    color: var(--pikachu-yellow);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.demo-footage-frame {
+    aspect-ratio: 16 / 9;
+    border: 3px solid #ffd447;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.demo-footage-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
