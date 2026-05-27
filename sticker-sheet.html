@@ -626,6 +626,10 @@
                     <div class="save-separator"></div>
                     <button class="btn-green" onclick="saveOutput()">Save</button>
                 </div>
+
+                <button class="btn-green" onclick="saveOutput('print')" title="Send the sticker sheet to the print dialog">
+                    <span class="emoji-icon">🖨️</span> Print
+                </button>
             </div>
         </div>
     </div>
@@ -1505,8 +1509,8 @@
             reader.readAsText(file); event.target.value = ''; 
         }
 
-        window.saveOutput = async function() {
-            const format = document.getElementById('export-format').value;
+        window.saveOutput = async function(overrideFormat) {
+            const format = overrideFormat || document.getElementById('export-format').value;
             const loadingOverlay = document.getElementById('loading-overlay'); loadingOverlay.style.display = 'flex';
             document.body.classList.add('printing'); 
             document.querySelectorAll('.stamp-wrapper').forEach(el => el.classList.remove('selected')); activeStamp = null;
@@ -1580,6 +1584,38 @@
                     const orientation = pW > pH ? 'landscape' : 'portrait';
                     const pdf = new jspdf.jsPDF({ orientation: orientation, unit: 'mm', format: [pW, pH] });
                     pdf.addImage(imgData, 'PNG', 0, 0, pW, pH); pdf.save('snap-station-stickers.pdf');
+                } else if (format === 'print') {
+                    const imgData = canvas.toDataURL('image/png');
+                    const docStyle = getComputedStyle(document.documentElement);
+                    const pW = parseFloat(docStyle.getPropertyValue('--paper-width'));
+                    const pH = parseFloat(docStyle.getPropertyValue('--paper-height'));
+                    await new Promise((resolve) => {
+                        const iframe = document.createElement('iframe');
+                        iframe.setAttribute('aria-hidden', 'true');
+                        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+                        document.body.appendChild(iframe);
+                        const cleanup = () => { try { iframe.remove(); } catch (e) {} resolve(); };
+                        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Snap Station Stickers</title><style>
+                            @page { size: ${pW}mm ${pH}mm; margin: 0; }
+                            html, body { margin: 0; padding: 0; background: #fff; }
+                            img { display: block; width: ${pW}mm; height: ${pH}mm; }
+                            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                        </style></head><body><img alt="Sticker sheet" src="${imgData}"></body></html>`;
+                        const idoc = iframe.contentDocument || iframe.contentWindow.document;
+                        idoc.open(); idoc.write(html); idoc.close();
+                        const img = idoc.querySelector('img');
+                        const doPrint = () => {
+                            try {
+                                const win = iframe.contentWindow;
+                                win.focus(); win.print();
+                                const onAfter = () => { win.removeEventListener('afterprint', onAfter); cleanup(); };
+                                win.addEventListener('afterprint', onAfter);
+                                setTimeout(cleanup, 60000);
+                            } catch (e) { cleanup(); }
+                        };
+                        if (img && !img.complete) { img.onload = doPrint; img.onerror = doPrint; }
+                        else { doPrint(); }
+                    });
                 } else {
                     const mimeType = format === 'jpg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
                     canvas.toBlob(blob => {
