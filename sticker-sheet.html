@@ -513,19 +513,15 @@
         </div>
         <div class="guide-section">
             <h3>Kiss-Cut on Cricut / Silhouette</h3>
-            <p>Click <strong>🖨️✂️ Export for Cricut / Silhouette</strong> to download two paired files at the exact paper size:</p>
-            <ul>
-                <li><code>snap-station-stickers.png</code> &mdash; the printable sticker sheet (no cut lines printed onto the vinyl).</li>
-                <li><code>snap-station-cut.svg</code> &mdash; just the kiss-cut paths, registered to the same coordinates.</li>
-            </ul>
-            <p><strong>Cricut (Print Then Cut):</strong></p>
+            <p>Click <strong>🖨️✂️ Export for Cricut / Silhouette</strong> to download a single file, <code>snap-station-cricut.svg</code>. The printed sheet is embedded inside the SVG with the cut paths locked on top, so the photo and the kiss cuts are already perfectly aligned &mdash; no manual positioning on the mat.</p>
+            <p><strong>Cricut Design Space:</strong></p>
             <ol>
-                <li>Print the PNG onto 4&times;6 printable vinyl at <em>Actual Size / 100%</em> &mdash; no scaling.</li>
-                <li>In Design Space, <em>Upload</em> the SVG, place it on the canvas at the paper size, and set the operation to <strong>Cut</strong>.</li>
-                <li>Send to your Cricut and follow the on-screen mat-loading prompts. Design Space registers the cut against the printed sheet.</li>
+                <li><em>Upload</em> the SVG and add it to a new Canvas. Select everything and click <strong>Attach</strong> so the image and cuts stay registered.</li>
+                <li>Click <strong>Make It</strong> and choose <strong>Print Then Cut</strong>. Design Space adds its own registration marks to the print.</li>
+                <li>Print onto 4&times;6 printable vinyl at <em>Actual Size / 100%</em>, load the printed sheet on the mat, and send to your Cricut.</li>
             </ol>
-            <p><strong>Silhouette Studio (Print &amp; Cut):</strong> Open the PNG as the background, import the SVG on top, assign it as a cut line, then use <em>File &rarr; Print</em> followed by <em>Send</em>.</p>
-            <p>Each cell has ~1.25&nbsp;mm of bleed built in, so small registration errors won't show a white edge.</p>
+            <p><strong>Silhouette Studio (Print &amp; Cut):</strong> open the SVG, the image becomes the print layer and the paths become cut lines automatically. <em>File &rarr; Print</em> with registration marks, then <em>Send</em>.</p>
+            <p>If you'd rather supply the print and cut separately, use the smaller <strong>Cut SVG only</strong> button. Each cell has ~1.25&nbsp;mm of bleed built in.</p>
         </div>
         <div class="guide-section">
             <h3>Paste Images</h3>
@@ -914,10 +910,12 @@
         }
 
         // --- VECTOR SVG EXPORT (Cricut Design Space / Silhouette Studio compatible) ---
-        // Builds a single compound path containing all 16 kiss-cut shapes, in mm
-        // coordinates that match the printed PNG exactly. No paper outline (Cricut
-        // would cut it). Inkscape layer label lets Silhouette Studio tag it as Cut.
-        function buildCutSvg() {
+        // When called with imageDataUrl, the printed sheet is embedded as a raster
+        // layer inside the same SVG, locked under the cut paths. Uploading this one
+        // file to Cricut Design Space gives you a Print-Then-Cut design where the
+        // photo and the kiss cuts are already aligned -- the user never has to
+        // position the cuts by hand. Without imageDataUrl, returns a cut-only SVG.
+        function buildCutSvg(imageDataUrl) {
             const paperSelect = document.getElementById('paper-size').value;
             let pW_mm = 152.4, pH_mm = 101.6, scalingFactor = 1.0;
             if (paperSelect === 'hagaki') { pW_mm = 148; pH_mm = 100; }
@@ -954,9 +952,16 @@
                 }
             }
 
+            const imageLayer = imageDataUrl
+                ? `<g inkscape:groupmode="layer" inkscape:label="Print" id="print-layer">
+<image x="0" y="0" width="${pW_mm}" height="${pH_mm}" preserveAspectRatio="none" href="${imageDataUrl}" xlink:href="${imageDataUrl}"/>
+</g>
+`
+                : '';
+
             return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${pW_mm}mm" height="${pH_mm}mm" viewBox="0 0 ${pW_mm} ${pH_mm}">
-<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" fill="none" stroke="#000000" stroke-width="0.01">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${pW_mm}mm" height="${pH_mm}mm" viewBox="0 0 ${pW_mm} ${pH_mm}">
+${imageLayer}<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" fill="none" stroke="#000000" stroke-width="0.01">
 <path d="${d.trim()}"/>
 </g>
 </svg>`;
@@ -974,17 +979,14 @@
             triggerDownload(new Blob([svg], {type: 'image/svg+xml'}), 'snap-station-cut.svg');
         }
 
-        // --- CRICUT / SILHOUETTE BUNDLE ---
-        // Renders the print layer as a high-res PNG (no kiss-cut overlay) and the
-        // matching SVG cut file. User uploads the PNG to Cricut Design Space, picks
-        // "Print Then Cut", uploads the SVG as the cut shape, and DS adds its own
-        // registration marks at print time. Silhouette users do the equivalent in
-        // Studio. Cell geometry already bakes in ~1.25 mm of bleed on every side.
-        window.exportForCricut = async function() {
-            await saveOutput('png');
-            await new Promise(r => setTimeout(r, 600));
-            window.downloadCuttingTemplate();
-            showToast('Exported snap-station-stickers.png + snap-station-cut.svg. Open them in Cricut Design Space or Silhouette Studio.');
+        // --- CRICUT / SILHOUETTE COMBINED EXPORT ---
+        // Renders the print layer via the shared saveOutput pipeline, then embeds
+        // it inside the cut SVG so the user only uploads ONE file -- the image and
+        // the kiss-cut paths are already perfectly aligned to the same mm grid.
+        // In Cricut Design Space the user picks Print Then Cut and DS adds its own
+        // registration marks. Silhouette Studio handles it the same way.
+        window.exportForCricut = function() {
+            return saveOutput('cricut');
         }
 
         // --- PASTE FUNCTION ---
@@ -1637,6 +1639,11 @@
                     const orientation = pW > pH ? 'landscape' : 'portrait';
                     const pdf = new jspdf.jsPDF({ orientation: orientation, unit: 'mm', format: [pW, pH] });
                     pdf.addImage(imgData, 'PNG', 0, 0, pW, pH); pdf.save('snap-station-stickers.pdf');
+                } else if (format === 'cricut') {
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                    const svg = buildCutSvg(imgData);
+                    triggerDownload(new Blob([svg], {type: 'image/svg+xml'}), 'snap-station-cricut.svg');
+                    showToast('Saved snap-station-cricut.svg — upload this one file to Cricut Design Space and pick "Print Then Cut".');
                 } else if (format === 'print') {
                     const imgData = canvas.toDataURL('image/png');
                     const docStyle = getComputedStyle(document.documentElement);
