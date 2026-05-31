@@ -398,11 +398,18 @@
         .img-container { width: 100%; height: 100%; position: relative; }
         .img-container > img.source-image { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+        /* Hide Cropper.js's default blue crop-box outline/lines/handles while dragging */
+        .cropper-view-box { outline: 0 !important; box-shadow: none !important; }
+        .cropper-line, .cropper-point { background-color: transparent !important; opacity: 0 !important; }
+        .cropper-dashed { display: none !important; }
+        .cropper-center { display: none !important; }
+
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 10; opacity: 0; transition: opacity 0.2s;
         }
         .overlay.visible { opacity: 1; }
+        body.printing .overlay { display: none !important; }
         .overlay path { fill: none; stroke: white; stroke-width: 0.8px; vector-effect: non-scaling-stroke; filter: drop-shadow(0px 0px 1px rgba(0,0,0,0.3)); }
 
         .cell-effect-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; opacity: 0; transition: opacity 0.2s; }
@@ -505,8 +512,20 @@
             <p><strong>Double-click</strong> any sticker to reset its zoom and position.</p>
         </div>
         <div class="guide-section">
-            <h3>Cutting Template</h3>
-            <p>The "Download Cutting Template (SVG)" button generates a vector file compatible with cutting plotters such as the <strong>Cricut®</strong> or <strong>Silhouette™</strong>. This file contains the cut lines for the stickers.</p>
+            <h3>Kiss-Cut on Cricut / Silhouette</h3>
+            <p>Click <strong>🖨️✂️ Export for Cricut / Silhouette</strong> to download two paired files at the exact paper size:</p>
+            <ul>
+                <li><code>snap-station-stickers.png</code> &mdash; the printable sticker sheet (no cut lines printed onto the vinyl).</li>
+                <li><code>snap-station-cut.svg</code> &mdash; just the kiss-cut paths, registered to the same coordinates.</li>
+            </ul>
+            <p><strong>Cricut (Print Then Cut):</strong></p>
+            <ol>
+                <li>Print the PNG onto 4&times;6 printable vinyl at <em>Actual Size / 100%</em> &mdash; no scaling.</li>
+                <li>In Design Space, <em>Upload</em> the SVG, place it on the canvas at the paper size, and set the operation to <strong>Cut</strong>.</li>
+                <li>Send to your Cricut and follow the on-screen mat-loading prompts. Design Space registers the cut against the printed sheet.</li>
+            </ol>
+            <p><strong>Silhouette Studio (Print &amp; Cut):</strong> Open the PNG as the background, import the SVG on top, assign it as a cut line, then use <em>File &rarr; Print</em> followed by <em>Send</em>.</p>
+            <p>Each cell has ~1.25&nbsp;mm of bleed built in, so small registration errors won't show a white edge.</p>
         </div>
         <div class="guide-section">
             <h3>Paste Images</h3>
@@ -618,14 +637,18 @@
 
                 <div class="save-group">
                     <select id="export-format">
+                        <option value="jpg" selected>JPG</option>
                         <option value="png">PNG</option>
-                        <option value="jpg">JPG</option>
                         <option value="pdf">PDF</option>
                         <option value="gif">GIF</option>
                     </select>
                     <div class="save-separator"></div>
                     <button class="btn-green" onclick="saveOutput()">Save</button>
                 </div>
+
+                <button class="btn-green" onclick="saveOutput('print')" title="Send the sticker sheet to the print dialog">
+                    <span class="emoji-icon">🖨️</span> Print
+                </button>
             </div>
         </div>
     </div>
@@ -639,9 +662,14 @@
     <div id="stamp-layer"></div>
 </div>
 
-<button class="btn-project" onclick="downloadCuttingTemplate()" style="display:block; width:100%; max-width:800px; margin:20px auto; justify-content:center; background: var(--light-blue); color: var(--text);">
-    Download Cutting Template (SVG)
-</button>
+<div style="display:flex; gap:10px; max-width:800px; margin:20px auto; flex-wrap:wrap;">
+    <button class="btn-project" onclick="exportForCricut()" style="flex:2; min-width:240px; justify-content:center; background: var(--light-blue); color: var(--text);" title="Downloads a printable image plus a matching SVG kiss-cut path. Use with Cricut 'Print Then Cut' or Silhouette 'Print and Cut'.">
+        🖨️✂️ Export for Cricut / Silhouette
+    </button>
+    <button class="btn-project" onclick="downloadCuttingTemplate()" style="flex:1; min-width:200px; justify-content:center; background: var(--light-blue); color: var(--text);" title="SVG kiss-cut paths only (no printable layer).">
+        Cut SVG only
+    </button>
+</div>
 
 <div class="stamp-selector">
     <label>Add Stamp:</label>
@@ -885,49 +913,78 @@
             generateEmojiWallpaper(themeValue);
         }
 
-        // --- VECTOR SVG EXPORT ---
-        window.downloadCuttingTemplate = function() {
+        // --- VECTOR SVG EXPORT (Cricut Design Space / Silhouette Studio compatible) ---
+        // Builds a single compound path containing all 16 kiss-cut shapes, in mm
+        // coordinates that match the printed PNG exactly. No paper outline (Cricut
+        // would cut it). Inkscape layer label lets Silhouette Studio tag it as Cut.
+        function buildCutSvg() {
             const paperSelect = document.getElementById('paper-size').value;
             let pW_mm = 152.4, pH_mm = 101.6, scalingFactor = 1.0;
-
-            if (paperSelect === 'hagaki') {
-                pW_mm = 148; pH_mm = 100;
-            } else if (paperSelect === 'letter') {
-                pW_mm = 279.4; pH_mm = 215.9; scalingFactor = 2.2;
-            }
+            if (paperSelect === 'hagaki') { pW_mm = 148; pH_mm = 100; }
+            else if (paperSelect === 'letter') { pW_mm = 279.4; pH_mm = 215.9; scalingFactor = 2.2; }
 
             const cellW = 26.6, cellH = 20, gap = 1;
-            const effectiveCellW = cellW * scalingFactor;
-            const effectiveCellH = cellH * scalingFactor;
-            const effectiveGap = gap * scalingFactor;
+            const eCellW = cellW * scalingFactor;
+            const eCellH = cellH * scalingFactor;
+            const eGap = gap * scalingFactor;
+            const gridW = (eCellW * 4) + (eGap * 3);
+            const gridH = (eCellH * 4) + (eGap * 3);
+            const marginLeft = (pW_mm - gridW) / 2;
+            const marginTop = (pH_mm - gridH) / 2;
 
-            const gridTotalW = (effectiveCellW * 4) + (effectiveGap * 3);
-            const gridTotalH = (effectiveCellH * 4) + (effectiveGap * 3);
+            const sIX = innerX * scalingFactor;
+            const sIY = innerY * scalingFactor;
+            const sIW = innerW * scalingFactor;
+            const sIH = innerH * scalingFactor;
+            const sR  = radius * scalingFactor;
 
-            const marginLeft = (pW_mm - gridTotalW) / 2;
-            const marginTop = (pH_mm - gridTotalH) / 2;
+            const fmt = (n) => (Math.round(n * 1000) / 1000);
 
-            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${pW_mm}mm" height="${pH_mm}mm" viewBox="0 0 ${pW_mm} ${pH_mm}">`;
-            svgContent += `<rect x="0" y="0" width="${pW_mm}" height="${pH_mm}" fill="none" stroke="red" stroke-width="0.1" />`;
-            
+            let d = '';
             for (let r = 0; r < 4; r++) {
                 for (let c = 0; c < 4; c++) {
-                    const x = marginLeft + (c * (effectiveCellW + effectiveGap));
-                    const y = marginTop + (r * (effectiveCellH + effectiveGap));
-                    svgContent += `<g transform="translate(${x}, ${y}) scale(${scalingFactor})">`;
-                    svgContent += `<path d="${overlayPath}" fill="none" stroke="black" stroke-width="${0.1/scalingFactor}" />`;
-                    svgContent += `</g>`;
+                    const ox = marginLeft + (c * (eCellW + eGap)) + sIX;
+                    const oy = marginTop  + (r * (eCellH + eGap)) + sIY;
+                    const x0 = ox, y0 = oy, x1 = ox + sIW, y1 = oy + sIH;
+                    d += `M ${fmt(x0+sR)} ${fmt(y0)} `
+                       + `L ${fmt(x1-sR)} ${fmt(y0)} Q ${fmt(x1)} ${fmt(y0)} ${fmt(x1)} ${fmt(y0+sR)} `
+                       + `L ${fmt(x1)} ${fmt(y1-sR)} Q ${fmt(x1)} ${fmt(y1)} ${fmt(x1-sR)} ${fmt(y1)} `
+                       + `L ${fmt(x0+sR)} ${fmt(y1)} Q ${fmt(x0)} ${fmt(y1)} ${fmt(x0)} ${fmt(y1-sR)} `
+                       + `L ${fmt(x0)} ${fmt(y0+sR)} Q ${fmt(x0)} ${fmt(y0)} ${fmt(x0+sR)} ${fmt(y0)} Z `;
                 }
             }
-            svgContent += `</svg>`;
 
-            const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+            return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${pW_mm}mm" height="${pH_mm}mm" viewBox="0 0 ${pW_mm} ${pH_mm}">
+<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" fill="none" stroke="#000000" stroke-width="0.01">
+<path d="${d.trim()}"/>
+</g>
+</svg>`;
+        }
+
+        function triggerDownload(blob, filename) {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
-            link.download = 'cutting-template.svg';
-            link.click();
-            URL.revokeObjectURL(url);
+            link.href = url; link.download = filename; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        window.downloadCuttingTemplate = function() {
+            const svg = buildCutSvg();
+            triggerDownload(new Blob([svg], {type: 'image/svg+xml'}), 'snap-station-cut.svg');
+        }
+
+        // --- CRICUT / SILHOUETTE BUNDLE ---
+        // Renders the print layer as a high-res PNG (no kiss-cut overlay) and the
+        // matching SVG cut file. User uploads the PNG to Cricut Design Space, picks
+        // "Print Then Cut", uploads the SVG as the cut shape, and DS adds its own
+        // registration marks at print time. Silhouette users do the equivalent in
+        // Studio. Cell geometry already bakes in ~1.25 mm of bleed on every side.
+        window.exportForCricut = async function() {
+            await saveOutput('png');
+            await new Promise(r => setTimeout(r, 600));
+            window.downloadCuttingTemplate();
+            showToast('Exported snap-station-stickers.png + snap-station-cut.svg. Open them in Cricut Design Space or Silhouette Studio.');
         }
 
         // --- PASTE FUNCTION ---
@@ -1505,8 +1562,8 @@
             reader.readAsText(file); event.target.value = ''; 
         }
 
-        window.saveOutput = async function() {
-            const format = document.getElementById('export-format').value;
+        window.saveOutput = async function(overrideFormat) {
+            const format = overrideFormat || document.getElementById('export-format').value;
             const loadingOverlay = document.getElementById('loading-overlay'); loadingOverlay.style.display = 'flex';
             document.body.classList.add('printing'); 
             document.querySelectorAll('.stamp-wrapper').forEach(el => el.classList.remove('selected')); activeStamp = null;
@@ -1580,6 +1637,38 @@
                     const orientation = pW > pH ? 'landscape' : 'portrait';
                     const pdf = new jspdf.jsPDF({ orientation: orientation, unit: 'mm', format: [pW, pH] });
                     pdf.addImage(imgData, 'PNG', 0, 0, pW, pH); pdf.save('snap-station-stickers.pdf');
+                } else if (format === 'print') {
+                    const imgData = canvas.toDataURL('image/png');
+                    const docStyle = getComputedStyle(document.documentElement);
+                    const pW = parseFloat(docStyle.getPropertyValue('--paper-width'));
+                    const pH = parseFloat(docStyle.getPropertyValue('--paper-height'));
+                    await new Promise((resolve) => {
+                        const iframe = document.createElement('iframe');
+                        iframe.setAttribute('aria-hidden', 'true');
+                        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+                        document.body.appendChild(iframe);
+                        const cleanup = () => { try { iframe.remove(); } catch (e) {} resolve(); };
+                        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Snap Station Stickers</title><style>
+                            @page { size: ${pW}mm ${pH}mm; margin: 0; }
+                            html, body { margin: 0; padding: 0; background: #fff; }
+                            img { display: block; width: ${pW}mm; height: ${pH}mm; }
+                            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                        </style></head><body><img alt="Sticker sheet" src="${imgData}"></body></html>`;
+                        const idoc = iframe.contentDocument || iframe.contentWindow.document;
+                        idoc.open(); idoc.write(html); idoc.close();
+                        const img = idoc.querySelector('img');
+                        const doPrint = () => {
+                            try {
+                                const win = iframe.contentWindow;
+                                win.focus(); win.print();
+                                const onAfter = () => { win.removeEventListener('afterprint', onAfter); cleanup(); };
+                                win.addEventListener('afterprint', onAfter);
+                                setTimeout(cleanup, 60000);
+                            } catch (e) { cleanup(); }
+                        };
+                        if (img && !img.complete) { img.onload = doPrint; img.onerror = doPrint; }
+                        else { doPrint(); }
+                    });
                 } else {
                     const mimeType = format === 'jpg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
                     canvas.toBlob(blob => {
