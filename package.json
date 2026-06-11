@@ -1,0 +1,18 @@
+{
+  "name": "snap-station",
+  "version": "1.0.0",
+  "description": "A modern recreation of the Pokemon Snap Station",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:phone": "playwright test --project=phone",
+    "test:tablet": "playwright test --project=tablet",
+    "test:laptop": "playwright test --project=laptop",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

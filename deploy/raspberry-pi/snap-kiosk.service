@@ -1,0 +1,15 @@
+[Unit]
+Description=Snap Station kiosk (Chromium full-screen)
+After=graphical.target snap-print-server.service
+Wants=snap-print-server.service
+
+[Service]
+Type=simple
+User=kiosk
+Environment=DISPLAY=:0
+ExecStart=/opt/snap-station/chromium-kiosk.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

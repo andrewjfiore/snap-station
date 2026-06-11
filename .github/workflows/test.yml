@@ -1,0 +1,47 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [phone, tablet, laptop]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project=${{ matrix.project }}
+        env:
+          CI: true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+
+  # The product is plain static files: a fresh clone must serve as-is, with no
+  # package install and no build step. This job proves it with a dumb server.
+  no-build-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Serve repo root with a plain static server
+        run: |
+          python3 -m http.server 8080 &
+          sleep 1
+          for page in index.html classic.html snap-station.html sticker-sheet.html; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/$page")
+            echo "$page -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+          # runtime must not reference CDNs or node_modules
+          ! grep -l "node_modules\|cdnjs.cloudflare\|unpkg.com\|jsdelivr\|fonts.googleapis" \
+              index.html classic.html snap-station.html sticker-sheet.html

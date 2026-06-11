@@ -1,0 +1,390 @@
+/* ===== App shell ===== */
+.app {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr;
+  place-items: stretch;
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in oklab, var(--cabinet) 40%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, var(--cabinet-2) 0%, #000 120%);
+  overflow: hidden;
+}
+/* Floor grid removed — no vanishing-point / perspective lines behind kiosk */
+
+/* ===== Layout modes =====
+   desktop: full cabinet view
+   tablet: cabinet frame shrunk, controls inline
+   phone: modern app chrome w/ cabinet-peek up top
+*/
+.stage {
+  position: relative;
+  width: min(1440px, 100%);
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px;
+  overflow: hidden;
+}
+@media (max-width: 1100px) {
+  .stage { grid-template-columns: 200px 1fr 200px; gap: 10px; padding: 10px; }
+}
+@media (max-width: 860px) {
+  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); gap: 0; padding: 8px; overflow: hidden; }
+  .rail { display: none; }
+  .rail.open-drawer { display: flex; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.85); backdrop-filter: blur(8px); padding: 20px; flex-direction: column; overflow-y: auto; }
+  .drawer-toggle { display: inline-flex !important; }
+}
+@media (max-width: 640px) {
+  .stage { padding: 4px; }
+}
+.drawer-toggle { display: none; position: fixed; top: 10px; right: 10px; z-index: 510; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #111; align-items: center; justify-content: center; box-shadow: var(--sh-md); }
+
+/* ===== Cabinet (main) ===== */
+.cabinet {
+  position: relative;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--cabinet) 110%, #fff 0%) 0%,
+      var(--cabinet) 50%,
+      var(--cabinet-2) 100%);
+  border-radius: var(--r-2xl);
+  padding: 28px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.08),
+    inset 0 -6px 20px rgba(0,0,0,.35),
+    var(--sh-lg);
+  isolation: isolate;
+}
+.cabinet::before {
+  /* molded plastic sheen */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(80% 50% at 50% -10%, rgba(255,255,255,.1) 0%, transparent 60%),
+    radial-gradient(40% 30% at 10% 110%, rgba(0,0,0,.35) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.cabinet > * { position: relative; z-index: 1; }
+@media (max-width: 1100px) {
+  .cabinet { padding: 12px; border-radius: var(--r-lg); }
+}
+@media (max-width: 860px) {
+  .cabinet { grid-column: 1; padding: 10px; border-radius: var(--r-md); min-height: 0; }
+}
+
+/* ===== Cabinet header (nameplate) ===== */
+.nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+.nameplate .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  /* room for the chunky 3D drop-shadow */
+  padding: 8px 6px 14px 0;
+}
+@media (max-width: 1100px) {
+  .nameplate { margin-bottom: 10px; }
+  .nameplate .badge { font-size: 9px; padding: 6px 10px; }
+  .nameplate .led { font-size: 12px; min-width: 60px; padding: 4px 8px; }
+}
+@media (max-width: 640px) {
+  /* Hide STATION badge on phone, keep wordmark + CR LED */
+  .nameplate .badge { display: none; }
+}
+.nameplate .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--chrome) 30%, transparent);
+  color: var(--ink);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent);
+  text-transform: uppercase;
+}
+.nameplate .logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--step-2);
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.nameplate .logo .mark {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), var(--sh-sm);
+  position: relative;
+}
+.nameplate .logo .mark::after {
+  content: "";
+  position: absolute; inset: 7px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--cabinet) 80%, #000);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 30%, transparent);
+}
+.nameplate .cluster {
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* LED counter */
+.led {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  background: #0a0a0a;
+  color: var(--accent);
+  text-shadow: 0 0 8px color-mix(in oklab, var(--accent) 70%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset 0 2px 8px rgba(0,0,0,.9);
+  letter-spacing: 0.08em;
+  min-width: 74px;
+  text-align: center;
+}
+
+/* ===== CRT Screen ===== */
+.crt-shell {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  background: #0b0b0e;
+  border-radius: var(--r-xl);
+  padding: 16px;
+  box-shadow:
+    inset 0 0 0 3px #050506,
+    inset 0 0 0 4px color-mix(in oklab, var(--chrome) 55%, #000),
+    inset 0 3px 12px rgba(0,0,0,.8);
+  display: flex;
+  flex-direction: column;
+}
+.crt-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-lg);
+  background: var(--screen-bg);
+  box-shadow:
+    inset 0 0 0 2px #000,
+    inset 0 0 60px rgba(0,0,0,.85),
+    inset 0 0 160px color-mix(in oklab, var(--crt) 6%, transparent);
+  overflow: hidden;
+}
+/* screen curvature + scanlines */
+.crt-frame::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 20;
+  background:
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.35) 100%),
+    radial-gradient(60% 30% at 50% -10%, rgba(255,255,255,.08) 0%, transparent 50%);
+  border-radius: inherit;
+}
+.crt-frame::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 21;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 1px, transparent 1px 3px);
+  opacity: calc(var(--crt-intensity, .55) * 0.9);
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+}
+.crt-frame.no-scanlines::after { opacity: 0; }
+
+/* Power indicator LED */
+.power-led {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-3);
+  box-shadow: 0 0 8px var(--accent-3), 0 0 2px rgba(255,255,255,.9) inset;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+
+/* ===== Cabinet bottom deck (controls & printer) ===== */
+.deck {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .deck { grid-template-columns: 1fr; }
+}
+.printer-slot {
+  background: #09090a;
+  border-radius: var(--r-md);
+  padding: 8px 14px;
+  color: var(--ink-100);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,.9);
+  min-height: 42px;
+  text-transform: uppercase;
+}
+.printer-slot .mouth {
+  flex: 1;
+  height: 4px;
+  background: #000;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.9);
+}
+
+/* Physical buttons */
+.pad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.big-btn {
+  --c: var(--accent);
+  position: relative;
+  height: 44px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--c) 130%, #fff 0%) 0%, var(--c) 50%, color-mix(in oklab, var(--c) 70%, #000) 100%);
+  color: #111;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: var(--sh-btn-rest), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -4px 0 rgba(0,0,0,.25);
+  transform: translateY(0);
+  transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  user-select: none;
+}
+.big-btn:active {
+  transform: translateY(4px);
+  box-shadow: var(--sh-btn-press), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.3);
+}
+.big-btn.num { --c: var(--accent-3); }
+.big-btn.red { --c: var(--accent-2); color: #fff; }
+.big-btn.blue { --c: var(--crt); }
+
+/* ===== Side rails ===== */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+.rail.left { grid-column: 1; }
+.rail.right { grid-column: 3; }
+
+.panel {
+  background: color-mix(in oklab, var(--cabinet) 70%, #000);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), var(--sh-md);
+  border: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+}
+.panel h3 {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 70%, transparent);
+  margin-bottom: 12px;
+}
+
+/* ===== Top status bar (mobile) ===== */
+.topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--cabinet);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  box-shadow: var(--sh-sm);
+}
+@media (max-width: 640px) {
+  .topbar { display: flex; }
+  .cabinet { padding: 8px; }
+  .crt-shell { padding: 10px; }
+  .deck { margin-top: 10px; }
+}
+
+/* ===== Editor + Checkout MAX mode =====
+   Content-dense screens — expand the CRT into the cabinet, collapse
+   the ornamental deck (big buttons + printer slot), and let the stage grow wider.
+   The kiosk frame stays visible but gets out of the way.
+*/
+.app[data-screen="editor"] .stage,
+.app[data-screen="checkout"] .stage {
+  width: min(1760px, 100%);
+}
+.app[data-screen="editor"] .cabinet,
+.app[data-screen="checkout"] .cabinet {
+  padding: 14px 16px 12px;
+  border-radius: var(--r-xl);
+}
+.app[data-screen="editor"] .nameplate,
+.app[data-screen="checkout"] .nameplate {
+  margin-bottom: 8px;
+  min-height: 32px;
+}
+.app[data-screen="editor"] .nameplate .logo,
+.app[data-screen="checkout"] .nameplate .logo {
+  padding: 2px 0 6px 0;
+}
+.app[data-screen="editor"] .snap-wordmark.sm,
+.app[data-screen="checkout"] .snap-wordmark.sm { font-size: 20px; }
+.app[data-screen="editor"] .crt-shell,
+.app[data-screen="checkout"] .crt-shell {
+  padding: 8px;
+  border-radius: var(--r-lg);
+}
+.app[data-screen="editor"] .deck,
+.app[data-screen="checkout"] .deck { display: none; }
+/* On small screens, collapse the left rail too to give the designer full width */
+@media (max-width: 1280px) {
+  .app[data-screen="editor"] .stage,
+  .app[data-screen="checkout"] .stage {
+    grid-template-columns: 1fr;
+  }
+  .app[data-screen="editor"] .rail,
+  .app[data-screen="checkout"] .rail { display: none; }
+  .app[data-screen="editor"] .rail.open-drawer,
+  .app[data-screen="checkout"] .rail.open-drawer { display: flex; }
+  .app[data-screen="editor"] .drawer-toggle,
+  .app[data-screen="checkout"] .drawer-toggle { display: inline-flex; }
+}
