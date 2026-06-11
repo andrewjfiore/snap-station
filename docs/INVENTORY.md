@@ -8,11 +8,15 @@ working tree.
 
 | Path | Role | Origin |
 | --- | --- | --- |
-| `index.html` | Kiosk app shell (React, full attract→print flow) | snap-kiosk playground (user upload), adapted |
+| `index.html` | Kiosk app shell (React, attract → 5-step wizard) | structure per `pokemon-snap-station-designsystem.html` (user's design system) |
 | `classic.html` | Tab shell for the classic two-page suite | formerly `index.html` (pre-kiosk) |
 | `snap-station.html` | Classic capture page (webcam/screen, zoom/pan/mirror, GIF, gallery) | original playground upload + PRs #22–23 |
 | `sticker-sheet.html` | Classic sticker composer (Cropper.js, stamps, exports) | original playground upload + PRs #22–23 |
-| `kiosk/` | Kiosk JSX screens/components + CSS design system | snap-kiosk playground (user upload), adapted |
+| `kiosk/css/designsystem.css` | The design system's full CSS, transplanted verbatim (+two fixes: shimmer transform, btn overflow clip) | `pokemon-snap-station-designsystem.html` |
+| `kiosk/css/app.css` | App glue: wizard chrome, sticky footer, phone-width fixes | new |
+| `kiosk/screens/` | Attract + wizard steps 1–5 (markup transplanted from the design-system tabs) | design system + logic from the earlier kiosk port |
+| `kiosk/components/` | UI kit (toasts, score popup, error tiers, keypad), icons, attendant panel, adjust modal, sticker canvas | design system + earlier kiosk port |
+| `kiosk/lib/` | hooks (storage/keyboard/gamepad/idle), 300-DPI sheet renderer | earlier kiosk port (unchanged geometry) |
 | `js/` | Shared framework-agnostic UMD modules (single source of truth) | extracted from classic pages + restored from `99f7fe8` |
 | `lib/vendor/` | Self-hosted third-party libraries (exact pinned files) | npm registry (versions in `docs/DEPLOYMENT.md`) |
 | `assets/fonts/` | Self-hosted woff2 fonts + `fonts.css` (all OFL-licensed) | Google Fonts (latin subsets) |
@@ -41,7 +45,8 @@ working tree.
 ## Local-only assets (user's machine, not in this repo)
 
 - `ui_designsystem/` — snap-kiosk playground source, `pokemon-snap-station-designsystem.html`
-  showcase, sticker layout reference PNGs, original-hardware measurements. The playground was
-  merged into `kiosk/` in this repo; the rest is design reference.
+  (the UI spec the kiosk follows — its CSS lives in `kiosk/css/designsystem.css`), sticker
+  layout reference PNGs, original-hardware measurements. The snap-kiosk playground contributed
+  the logic wiring; the design system defines the look and screen structure.
 - `snap_station_emu_project/`, `rom_decomp/` — ROM/emulator reverse-engineering work; lives in
   the separate `snap-station-emu` project, out of scope for this repo.
