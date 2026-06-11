@@ -6,21 +6,16 @@
     <meta http-equiv="Permissions-Policy" content="gamepad=(self), clipboard-read=(self)">
 
     <title>Sticker Sheet Creator</title>
-    <!-- External Libs -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- External Libs (self-hosted) -->
+    <link rel="stylesheet" href="lib/vendor/cropper.min.css" />
+    <script src="lib/vendor/cropper.min.js"></script>
+    <script src="lib/vendor/html2canvas.min.js"></script>
+    <script src="lib/vendor/jspdf.umd.min.js"></script>
     <!-- GIF Encoder -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-    
-    <!-- Fonts for Stamps (Google Fonts) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Pacifico&family=Permanent+Marker&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="lib/vendor/gif.js"></script>
+
+    <!-- Fonts for Stamps (self-hosted) -->
+    <link href="assets/fonts/fonts.css" rel="stylesheet">
 
     <style>
         /* --- CORE VARIABLES --- */
@@ -1417,7 +1412,7 @@ ${imageLayer}<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" f
                 // --- X BUTTON (DELETE) ---
                 const delBtn = document.createElement('div'); 
                 delBtn.className = 'btn-delete'; 
-                delBtn.innerHTML = '<i class="fas fa-times"></i>'; 
+                delBtn.innerHTML = '<span aria-hidden="true">✕</span>';
                 delBtn.title = 'Remove Image';
                 delBtn.onclick = (e) => { 
                     e.stopPropagation(); 
@@ -1426,7 +1421,7 @@ ${imageLayer}<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" f
                 
                 const refreshIconBox = document.createElement('div');
                 refreshIconBox.className = 'refresh-icon-box';
-                refreshIconBox.innerHTML = '<i class="fas fa-sync"></i>'; 
+                refreshIconBox.innerHTML = '<span aria-hidden="true">↻</span>';
                 
                 const labelText = document.createElement('span'); 
                 if (mode === 'single') labelText.innerHTML = `Upload Files<br><small>(JPG, PNG, GIF)</small>`;
@@ -1572,7 +1567,7 @@ ${imageLayer}<g inkscape:groupmode="layer" inkscape:label="Cut" id="cut-layer" f
 
             const cells = document.querySelectorAll('.cell'); const tempImages = [];
             let gifWorkerUrl = null;
-            if(format === 'gif') { try { const blob = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js').then(r => r.blob()); gifWorkerUrl = URL.createObjectURL(blob); } catch(e) {} }
+            if(format === 'gif') { try { const blob = await fetch('lib/vendor/gif.worker.js').then(r => r.blob()); gifWorkerUrl = URL.createObjectURL(blob); } catch(e) {} }
 
             if(format !== 'gif') {
                 cells.forEach((cell, index) => {
