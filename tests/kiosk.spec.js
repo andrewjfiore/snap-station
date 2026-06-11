@@ -129,6 +129,21 @@ test.describe('Kiosk', () => {
     expect(await page.evaluate(() => window.SnapStore.getCredits())).toBe(5);
   });
 
+  test('reduced motion disables the shelves parallax', async ({ browser, baseURL }) => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await ctx.newPage();
+    await page.addInitScript(() => localStorage.clear());
+    await page.goto(baseURL + KIOSK);
+    await page.waitForSelector('[data-screen="attract"]', { timeout: 20000 });
+    await expect(page.locator('.scene-decor.shelves-3d')).toBeVisible();
+    await page.mouse.move(100, 100);
+    await page.mouse.move(600, 400);
+    await page.waitForTimeout(300);
+    const tilt = await page.locator('.scene-decor.shelves-3d').evaluate(el => el.style.getPropertyValue('--bb-tilt-x'));
+    expect(tilt).toBe(''); // parallax handler never attached under reduced motion
+    await ctx.close();
+  });
+
   test('classic interop: snapstation-export payload imports into the gallery', async ({ page }) => {
     const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
     await page.addInitScript((img) => {
