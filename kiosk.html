@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pokémon Snap Station</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+
+<script src="lib/vendor/react.production.min.js"></script>
+<script src="lib/vendor/react-dom.production.min.js"></script>
+<script src="lib/vendor/babel.min.js"></script>
+
+<link rel="stylesheet" href="kiosk/css/tokens.css">
+<link rel="stylesheet" href="kiosk/css/cabinet.css">
+<link rel="stylesheet" href="kiosk/css/decor.css">
+<link rel="stylesheet" href="kiosk/css/screens.css">
+<link rel="stylesheet" href="kiosk/css/editor.css">
+<link rel="stylesheet" href="kiosk/css/kiosk.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    // Tweak defaults — persisted by the host (seeds ss.v1.settings on first boot)
+    window.__TWEAKS__ = /*EDITMODE-BEGIN*/{
+      "theme": "videoRental",
+      "cabinetVisible": "auto",
+      "crtIntensity": 0,
+      "soundOn": true,
+      "chromeStyle": "brushed",
+      "bezelRadius": 15,
+      "scanlines": false,
+      "rentalShelves": true
+    }/*EDITMODE-END*/;
+  </script>
+
+  <!-- Shared kiosk modules (plain scripts, define window globals) -->
+  <script src="js/sticker-constants.js"></script>
+  <script src="js/sticker-export.js"></script>
+  <script src="js/snap-store.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/payment.js"></script>
+  <script src="js/capture-sources.js"></script>
+  <script src="js/attendant-lock.js"></script>
+
+  <!-- Kiosk app (JSX via babel-standalone) -->
+  <script type="text/babel" src="kiosk/lib/themes.jsx"></script>
+  <script type="text/babel" src="kiosk/lib/hooks.jsx"></script>
+  <script type="text/babel" src="kiosk/lib/sheetRender.jsx"></script>
+  <script type="text/babel" src="kiosk/components/Cabinet.jsx"></script>
+  <script type="text/babel" src="kiosk/components/Decor.jsx"></script>
+  <script type="text/babel" src="kiosk/components/CRT.jsx"></script>
+  <script type="text/babel" src="kiosk/components/EmojiWallpaper.jsx"></script>
+  <script type="text/babel" src="kiosk/components/StickerCanvas.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/AttractScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/CaptureScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/GalleryScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/EditorScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/CheckoutScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/screens/PrintScreen.jsx"></script>
+  <script type="text/babel" src="kiosk/components/Tweaks.jsx"></script>
+  <script type="text/babel" src="kiosk/app.jsx"></script>
+</body>
+</html>

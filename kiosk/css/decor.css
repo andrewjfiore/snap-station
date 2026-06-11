@@ -1,0 +1,132 @@
+/* ===== Decor: Flat kid-friendly wallpaper ===== */
+/* No perspective, no vanishing point. Just a tiled pattern behind the kiosk. */
+
+.app[data-decor="rentalShelves"]::before { display: none; }
+
+.app[data-decor="rentalShelves"] .scene-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  opacity: .85;
+}
+
+/* Kiosk-brand wallpaper: large "SNAP" wordmarks + sticker motifs, tiled. */
+.scene-decor .wallpaper {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in oklab, var(--cabinet-2) 82%, #000);
+  background-image:
+    /* Chunky "SNAP" strip — repeats horizontally */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 180' preserveAspectRatio='xMidYMid slice'><text x='20' y='130' font-family='Lilita One, Fredoka, Arial Black, sans-serif' font-weight='900' font-size='140' fill='rgba(255,255,255,0.07)' letter-spacing='12' stroke='rgba(255,255,255,0.04)' stroke-width='3'>SNAP · STATION · </text></svg>"),
+    /* Kiss-cut sticker corner marks */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><g stroke='rgba(255,255,255,0.07)' stroke-width='1.2' fill='none'><rect x='12' y='12' width='36' height='24' rx='4'/><rect x='72' y='84' width='36' height='24' rx='4'/></g></svg>"),
+    /* Camera aperture rings */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1.5'><circle cx='40' cy='40' r='18'/><circle cx='40' cy='40' r='10'/><circle cx='160' cy='160' r='18'/><circle cx='160' cy='160' r='10'/></g></svg>");
+  background-size: 900px 180px, 120px 120px, 200px 200px;
+  background-repeat: repeat-x, repeat, repeat;
+  background-position: 0 30%, 0 0, 0 0;
+  animation: wallpaperDrift 120s linear infinite;
+}
+
+/* Soft vignette to focus on the kiosk */
+.scene-decor .vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 55%,
+      transparent 0%,
+      transparent 30%,
+      rgba(0,0,0,.25) 70%,
+      rgba(0,0,0,.55) 100%);
+}
+
+/* Warm floor band at bottom — no perspective, just a color shift */
+.scene-decor .floor {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 34%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    color-mix(in oklab, var(--cabinet-2) 50%, #000) 100%);
+}
+
+@keyframes wallpaperDrift {
+  from { background-position: 0 30%, 0 0, 0 0; }
+  to   { background-position: -900px 30%, 120px 120px, 200px 200px; }
+}
+
+/* Hide legacy shelf / VHS markup if still rendered */
+.scene-decor .room,
+.scene-decor .back-wall,
+.scene-decor .shelf-wall,
+.scene-decor .shelf,
+.scene-decor .vhs,
+.scene-decor .ceiling { display: none !important; }
+
+/* ===== NFC card (token stack) — kept ===== */
+.nfc-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.586 / 1;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.4),
+    inset 0 -2px 0 rgba(0,0,0,.2),
+    0 4px 12px rgba(0,0,0,.35);
+  color: var(--ink-on-paper);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: var(--font-kid);
+  overflow: hidden;
+}
+.nfc-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(255,255,255,.08) 0 2px, transparent 2px 10px);
+  pointer-events: none;
+}
+.nfc-card .chip {
+  width: 26px; height: 20px;
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, #ffd98e, #b48747),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 1px, transparent 1px 5px);
+  background-blend-mode: overlay;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.3);
+}
+.nfc-card .nfc-title {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.nfc-card .nfc-sub { font-size: 10px; opacity: .7; }
+.nfc-card .wave {
+  position: absolute;
+  right: 8px; top: 8px;
+  width: 18px; height: 18px;
+  border-right: 2px solid rgba(0,0,0,.45);
+  border-radius: 0 50% 50% 0;
+  transform: rotate(-45deg);
+}
+.nfc-card .wave::before,
+.nfc-card .wave::after {
+  content: "";
+  position: absolute;
+  right: 4px; top: 2px;
+  width: 10px; height: 10px;
+  border-right: 2px solid rgba(0,0,0,.3);
+  border-radius: 0 50% 50% 0;
+}
+.nfc-card .wave::after {
+  right: 8px; top: 5px;
+  width: 4px; height: 4px;
+}
