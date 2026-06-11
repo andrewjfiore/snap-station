@@ -314,9 +314,19 @@ function AttendantDrawer({ attendant, patchAttendant, tweaks, setTweaks, credits
                    onChange={e => setTweaks({...tweaks, scanlines: e.target.checked})}/>
           </div>
           <div className="att-row">
-            <label htmlFor="att-shelves">Wallpaper</label>
-            <input id="att-shelves" type="checkbox" checked={tweaks.rentalShelves !== false}
-                   onChange={e => setTweaks({...tweaks, rentalShelves: e.target.checked})}/>
+            <label htmlFor="att-shelves">Backdrop</label>
+            <select id="att-shelves"
+                    value={tweaks.rentalShelves === false ? 'none' : (tweaks.decorStyle || 'shelves')}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setTweaks(v === 'none'
+                        ? {...tweaks, rentalShelves: false}
+                        : {...tweaks, rentalShelves: true, decorStyle: v});
+                    }}>
+              <option value="shelves">Rental shelves (3D)</option>
+              <option value="lobby">Lobby wallpaper</option>
+              <option value="none">None</option>
+            </select>
           </div>
           <div className="att-row">
             <label htmlFor="att-chrome">Chrome style</label>

@@ -61,6 +61,7 @@
     scanlines: false,
     bezelRadius: 15,
     rentalShelves: true,
+    decorStyle: 'shelves',   // 'shelves' (forced-perspective) | 'lobby' (flat wallpaper)
     cabinetVisible: 'auto',
     chromeStyle: 'brushed',
     printServerUrl: '',

@@ -1,9 +1,41 @@
-// Flat kid-friendly wallpaper (replaces prior forced-perspective shelves)
+// Backdrop decor. Two styles:
+//   'shelves' — forced-perspective Blockbuster rental shelves with pointer
+//               parallax (restored from the reverted snap-blockbuster-scene)
+//   'lobby'   — flat kid-friendly tiled wallpaper
 
-function RentalShelves() {
+function RentalShelves({ style = 'shelves' }) {
+  const ref = React.useRef(null);
+
+  // Subtle parallax tilt (max ±1.2°); disabled under prefers-reduced-motion.
+  React.useEffect(() => {
+    if (style !== 'shelves') return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const MAX_TILT_DEG = 1.2;
+    const onMove = (e) => {
+      const el = ref.current;
+      if (!el) return;
+      const cx = (e.clientX / window.innerWidth) - 0.5;
+      const cy = (e.clientY / window.innerHeight) - 0.5;
+      el.style.setProperty('--bb-tilt-x', (cy * MAX_TILT_DEG).toFixed(2) + 'deg');
+      el.style.setProperty('--bb-tilt-y', (-cx * MAX_TILT_DEG).toFixed(2) + 'deg');
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, [style]);
+
+  if (style === 'lobby') {
+    return (
+      <div className="scene-decor" aria-hidden="true">
+        <div className="wallpaper"/>
+        <div className="floor"/>
+        <div className="vignette"/>
+      </div>
+    );
+  }
   return (
-    <div className="scene-decor" aria-hidden="true">
-      <div className="wallpaper"/>
+    <div ref={ref} className="scene-decor shelves-3d" aria-hidden="true">
+      <div className="bb-perspective"/>
+      <div className="bb-shelves"/>
       <div className="floor"/>
       <div className="vignette"/>
     </div>

@@ -144,8 +144,8 @@ function App() {
   };
 
   return (
-    <div className="app" data-screen={screen} data-screen-label={`snap-kiosk-${screen}`} data-decor={settings.rentalShelves !== false ? 'rentalShelves' : 'none'}>
-      {settings.rentalShelves !== false && <RentalShelves/>}
+    <div className="app" data-screen={screen} data-screen-label={`snap-kiosk-${screen}`} data-decor={settings.rentalShelves !== false ? (settings.decorStyle || 'shelves') : 'none'}>
+      {settings.rentalShelves !== false && <RentalShelves style={settings.decorStyle || 'shelves'}/>}
       <button className="drawer-toggle" onClick={() => { SoundFX.click(); setDrawerOpen(!drawerOpen); }} title="Menu">☰</button>
       <Cabinet tweaks={settings} setTweaks={setSettingsWithPersist}
                screen={screen} setScreen={(s) => { setScreen(s); setDrawerOpen(false); }}
