@@ -31,12 +31,25 @@ function PrintScreen({ setScreen, sheet, snaps }) {
     SnapStore.setAttendant({ stats: { ...att.stats, prints: ((att.stats && att.stats.prints) || 0) + 1 } });
   };
 
+  // Kiosk deployments set a print-server URL in the attendant drawer
+  // (deploy/print-server). Try it first; fall back to the browser dialog.
   const doSystemPrint = () => {
     if (busy) return;
     SoundFX.click();
     setBusy('print');
     renderSheet()
-      .then(canvas => StickerExport.printSheetImage(canvas.toDataURL('image/png'), paper.w, paper.h))
+      .then(canvas => {
+        const serverUrl = (SnapStore.getSettings().printServerUrl || '').trim();
+        if (!serverUrl) return StickerExport.printSheetImage(canvas.toDataURL('image/png'), paper.w, paper.h);
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('PNG encode failed.')), 'image/png');
+        })
+          .then(blob => StickerExport.printViaServer(serverUrl, blob, { media: paperId }))
+          .catch(err => {
+            console.warn('Print server unreachable, falling back to browser dialog:', err);
+            return StickerExport.printSheetImage(canvas.toDataURL('image/png'), paper.w, paper.h);
+          });
+      })
       .then(() => { setBusy(''); bumpPrintStats(); SoundFX.confirm(); })
       .catch(fail);
   };

@@ -19,6 +19,31 @@ const SHEET_FILTER_CSS = {
 // stored in px relative to that stage, so print scales them by canvasW / 720.
 const STAGE_REF_W = 720;
 
+// --- Photo source normalization -------------------------------------------
+// A sourceMap entry is one of:
+//   'url'                                  plain photo, default framing
+//   { src: 'url', pos: {zoom, fx, fy} }    photo with adjusted framing
+//   { gradient: [a,b], label }             demo poster
+// pos semantics (shared with the live preview and the Adjust modal):
+//   zoom >= 1 multiplies the cover-fit scale; fx/fy in [0,1] choose which
+//   image fraction sits at the same box fraction (0.5/0.5 = centered cover).
+const DEFAULT_POS = { zoom: 1, fx: 0.5, fy: 0.5 };
+
+function sheetSrcOf(entry) {
+  if (typeof entry === 'string') return entry;
+  if (entry && typeof entry.src === 'string') return entry.src;
+  return null;
+}
+function sheetPosOf(entry) {
+  const p = (entry && typeof entry === 'object' && entry.pos) || {};
+  return {
+    zoom: Math.max(1, Number(p.zoom) || 1),
+    fx: Math.min(1, Math.max(0, p.fx == null ? 0.5 : Number(p.fx))),
+    fy: Math.min(1, Math.max(0, p.fy == null ? 0.5 : Number(p.fy))),
+  };
+}
+window.SheetSource = { srcOf: sheetSrcOf, posOf: sheetPosOf, DEFAULT_POS };
+
 function sheetRoundRectPath(ctx, x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -70,8 +95,11 @@ function renderSheetToCanvas(sheet, snaps) {
 
   // Preload every raster source up front so a failure rejects before we draw.
   const imagePromises = groupsNeeded
-    .filter(g => typeof sources[g] === 'string')
-    .map(g => sheetLoadImage(sources[g]).then(img => { sources[g] = { img }; }));
+    .filter(g => sheetSrcOf(sources[g]) !== null)
+    .map(g => {
+      const pos = sheetPosOf(sources[g]);
+      return sheetLoadImage(sheetSrcOf(sources[g])).then(img => { sources[g] = { img, pos }; });
+    });
 
   const fontsReady = (document.fonts && document.fonts.ready)
     ? document.fonts.ready.catch(() => {})
@@ -104,10 +132,14 @@ function renderSheetToCanvas(sheet, snaps) {
       ctx.clip();
       if (src.img) {
         const img = src.img;
-        const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        const pos = src.pos || DEFAULT_POS;
+        const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight) * pos.zoom;
         const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+        // image fraction fx/fy pinned to the same box fraction (0.5 = centered)
+        const dx = x - (dw - w) * pos.fx;
+        const dy = y - (dh - h) * pos.fy;
         if (filterCss) ctx.filter = filterCss;
-        ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+        ctx.drawImage(img, dx, dy, dw, dh);
         ctx.filter = 'none';
       } else if (src.gradient) {
         const grad = ctx.createLinearGradient(x, y, x + w, y + h); // ≈ CSS 135deg

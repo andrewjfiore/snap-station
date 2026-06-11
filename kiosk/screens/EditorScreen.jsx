@@ -67,6 +67,7 @@ function snapToSource(pick) {
 function EditorScreen({ setScreen, selection, snaps, sheet, setSheet }) {
   // --- Source images: one per group. quad=4 groups, single=1, unique=16.
   const [sourceMap, setSourceMap] = useState(sheet.sourceMap || {});
+  const [adjusting, setAdjusting] = useState(null); // group index being reframed
   // --- Stamps
   const [stamps, setStamps] = useState(sheet.stamps || []);
   // --- Text input
@@ -297,8 +298,8 @@ function EditorScreen({ setScreen, selection, snaps, sheet, setSheet }) {
         <div className="sk-sources">
           {sourceArr.map((url, g) => {
             const isGrad = url && typeof url === 'object' && url.gradient;
-            const isUrl = typeof url === 'string';
-            const slotStyle = isUrl ? {background: `url(${url}) center/cover`}
+            const photoSrc = SheetSource.srcOf(url);
+            const slotStyle = photoSrc ? {background: `url(${photoSrc}) center/cover`}
                             : isGrad ? {background: `linear-gradient(135deg, ${url.gradient[0]}, ${url.gradient[1]})`}
                             : {};
             return (
@@ -325,6 +326,11 @@ function EditorScreen({ setScreen, selection, snaps, sheet, setSheet }) {
                     </div>
                   )}
                 </div>
+                {photoSrc && (
+                  <button className="sk-source-adj"
+                          onClick={() => { SoundFX.click(); setAdjusting(g); }}
+                          title="Adjust framing">✎</button>
+                )}
                 {url && (
                   <button className="sk-source-del"
                           onClick={() => clearGroup(g)} title="Clear">×</button>
@@ -333,6 +339,17 @@ function EditorScreen({ setScreen, selection, snaps, sheet, setSheet }) {
             );
           })}
         </div>
+
+        {adjusting != null && SheetSource.srcOf(sourceMap[adjusting]) && (
+          <AdjustModal
+            src={SheetSource.srcOf(sourceMap[adjusting])}
+            pos={sourceMap[adjusting] && sourceMap[adjusting].pos}
+            onChange={(pos) => {
+              const src = SheetSource.srcOf(sourceMap[adjusting]);
+              setSourceMap(prev => ({ ...prev, [adjusting]: { src, pos } }));
+            }}
+            onClose={() => setAdjusting(null)}/>
+        )}
 
         {/* Options row */}
         <div className="sk-options">

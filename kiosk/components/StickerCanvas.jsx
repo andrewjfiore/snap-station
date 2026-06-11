@@ -162,18 +162,36 @@ function StickerCanvas({
   );
 }
 
+// Renders a photo with the shared pos model ({zoom, fx, fy}); the CSS
+// object-position + transform-origin combination keeps image-fraction fx/fy
+// pinned to the same box fraction — the exact invariant the 300-DPI canvas
+// renderer uses, so preview and print always agree.
+function PosImg({ src, pos, draggable = false }) {
+  const p = SheetSource.posOf({ src, pos });
+  return (
+    <img className="sk-cell-photo" src={src} alt="" draggable={false}
+         style={{
+           objectPosition: `${p.fx * 100}% ${p.fy * 100}%`,
+           transform: p.zoom !== 1 ? `scale(${p.zoom})` : 'none',
+           transformOrigin: `${p.fx * 100}% ${p.fy * 100}%`,
+         }}/>
+  );
+}
+window.PosImg = PosImg;
+
 function StickerCell({ i, c, sheet, onClick }) {
   const { KISS_INNER_W, KISS_INNER_H, KISS_R } = STICKER_DIMS;
   const innerWPct = (KISS_INNER_W / 26.6) * 100;
   const innerHPct = (KISS_INNER_H / 20)   * 100;
   const radiusPct = (KISS_R / 26.6) * 100;
 
-  // url may be: null, a string (URL), or { gradient: [a,b], label }
+  // url may be: null, a string (URL), { src, pos } (adjusted photo),
+  // or { gradient: [a,b], label } (demo poster)
+  const photoSrc = SheetSource.srcOf(c.url);
+  const isGrad = !photoSrc && c.url && c.url.gradient;
   let bg = 'rgba(0,0,0,.06)';
   let labelTxt = null;
-  if (typeof c.url === 'string') {
-    bg = `url(${c.url}) center/cover no-repeat`;
-  } else if (c.url && c.url.gradient) {
+  if (isGrad) {
     bg = `linear-gradient(135deg, ${c.url.gradient[0]}, ${c.url.gradient[1]})`;
     labelTxt = c.url.label;
   }
@@ -186,7 +204,10 @@ function StickerCell({ i, c, sheet, onClick }) {
              height: `${innerHPct}%`,
              borderRadius: `${radiusPct}%`,
              background: bg,
+             overflow: 'hidden',
+             position: 'relative',
            }}>
+        {photoSrc && <PosImg src={photoSrc} pos={c.url && c.url.pos}/>}
         {!c.url && (
           <div className="sk-cell-empty">
             <span>{String(c.group + 1).padStart(2,'0')}</span>
