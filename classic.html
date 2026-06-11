@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snap Studio</title>
+    <title>Snap Station — Classic</title>
     <style>
         :root {
             --bg: #1a264e;
@@ -35,6 +35,7 @@
         }
         
         .tab {
+            min-height: 44px;   /* full-height tap target inside the 44px bar */
             padding: 10px 20px;
             background: transparent;
             border: none;
@@ -73,6 +74,15 @@
             transition: opacity 0.3s;
         }
         
+        .kiosk-link {
+            display: flex; align-items: center; gap: 6px;
+            margin-right: 10px; padding: 6px 12px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            color: var(--accent, #ffcb05); text-decoration: none;
+            border: 1px solid rgba(255, 203, 5, 0.5);
+        }
+        .kiosk-link:hover { background: rgba(255, 203, 5, 0.15); }
+
         .transfer-indicator.visible { opacity: 1; }
         .transfer-indicator.has-data { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         
@@ -109,6 +119,7 @@
             <span class="tab-icon">🖨️</span><span class="tab-label">Sticker Sheet</span>
         </button>
         <div class="spacer"></div>
+        <a class="kiosk-link" href="index.html" title="Switch to the kiosk experience">🕹️ Kiosk Mode</a>
         <div class="transfer-indicator" id="transferIndicator">
             <span id="transferText">No snaps queued</span>
         </div>

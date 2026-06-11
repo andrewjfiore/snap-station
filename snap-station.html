@@ -393,7 +393,7 @@
                     <button class="ratio-option" data-ratio="4:3">4:3</button>
                 </div>
                 <button class="btn" id="fullscreenBtn" title="Toggle fullscreen"><span class="btn-icon" id="fullscreenIcon">⛶</span>Fullscreen</button>
-                <button class="btn btn-primary" id="screenshotBtn" disabled><span class="btn-icon">📸</span>Screenshot</button>
+                <button class="btn btn-primary" id="screenshotBtn" disabled><span class="btn-icon">📸</span>Take Picture</button>
                 <button class="btn btn-primary" id="gifBtn" disabled><span class="btn-icon">🎬</span>Record GIF</button>
                 <button class="btn" id="saveProfileBtn" title="Save current settings and snaps"><span class="btn-icon">💾</span> Save Profile</button>
                 <button class="btn" id="loadProfileBtn" title="Load a saved profile"><span class="btn-icon">📂</span> Load Profile</button>
@@ -444,7 +444,7 @@
                 </div>
                 <div class="gallery-actions">
                     <button class="btn btn-sm" id="selectAllBtn">✅ Select All</button>
-                    <button class="btn btn-sm" id="sendToStickerBtn">📷 Send to Editor</button>
+                    <button class="btn btn-sm" id="sendToStickerBtn">📷 Send to Stickers</button>
                     <button class="btn btn-sm" id="downloadBtn">⬇️ Download</button>
                     <button class="btn btn-sm" id="deleteBtn">🗑️ Delete</button>
                 </div>
@@ -752,6 +752,49 @@
             if (!window.activeSource) return;
             window.zoomLevel = 1; window.panX = 0; window.panY = 0; updateTransform();
         });
+
+        // --- Touch: pinch to zoom, one-finger pan when zoomed, double-tap reset.
+        // The container sets touch-action:none, so without these handlers touch
+        // devices had a dead viewfinder (mouse/wheel only).
+        let touchState = null;
+        let lastTapTime = 0;
+        const touchDist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        videoContainer.addEventListener('touchstart', (e) => {
+            if (!window.activeSource) return;
+            if (e.touches.length === 2) {
+                touchState = { kind: 'pinch', startDist: touchDist(e.touches), startZoom: window.zoomLevel };
+            } else if (e.touches.length === 1) {
+                const now = Date.now();
+                if (now - lastTapTime < 300) { // double-tap reset
+                    window.zoomLevel = 1; window.panX = 0; window.panY = 0; updateTransform();
+                    touchState = null; lastTapTime = 0; return;
+                }
+                lastTapTime = now;
+                if (window.zoomLevel > 1) {
+                    touchState = {
+                        kind: 'pan',
+                        startX: e.touches[0].clientX - window.panX,
+                        startY: e.touches[0].clientY - window.panY,
+                    };
+                }
+            }
+        }, { passive: true });
+        videoContainer.addEventListener('touchmove', (e) => {
+            if (!touchState) return;
+            e.preventDefault();
+            if (touchState.kind === 'pinch' && e.touches.length === 2) {
+                const ratio = touchDist(e.touches) / touchState.startDist;
+                window.zoomLevel = Math.min(Math.max(touchState.startZoom * ratio, 1), 5);
+                if (window.zoomLevel === 1) { window.panX = 0; window.panY = 0; }
+                updateTransform();
+            } else if (touchState.kind === 'pan' && e.touches.length === 1) {
+                window.panX = e.touches[0].clientX - touchState.startX;
+                window.panY = e.touches[0].clientY - touchState.startY;
+                updateTransform();
+            }
+        }, { passive: false });
+        videoContainer.addEventListener('touchend', () => { touchState = null; });
+        videoContainer.addEventListener('touchcancel', () => { touchState = null; });
 
         // --- Camera & Stream ---
         async function startStream(type) {

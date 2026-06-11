@@ -44,4 +44,4 @@ jobs:
           done
           # runtime must not reference CDNs or node_modules
           ! grep -l "node_modules\|cdnjs.cloudflare\|unpkg.com\|jsdelivr\|fonts.googleapis" \
-              index.html classic.html snap-station.html sticker-sheet.html kiosk.html 2>/dev/null
+              index.html classic.html snap-station.html sticker-sheet.html

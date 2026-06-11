@@ -74,9 +74,10 @@ test.describe('Kiosk', () => {
     await page.locator('.share-btn', { hasText: 'Cut-only SVG' }).click();
     expect((await cutDownload).suggestedFilename()).toMatch(/\.svg$/);
 
-    // prints stat incremented
+    // session stat incremented when the kiosk left attract (prints only
+    // increment on a real Print action, not on SVG/PNG downloads)
     const att = await page.evaluate(() => JSON.parse(localStorage.getItem('ss.v1.attendant')));
-    expect(att.stats.prints).toBeGreaterThan(0);
+    expect(att.stats.sessions).toBeGreaterThan(0);
   });
 
   test('keyboard shortcuts navigate screens', async ({ page }) => {

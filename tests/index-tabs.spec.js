@@ -1,10 +1,12 @@
-// Index page (tab switching, iframes, transfer indicator) tests
+// Classic tab shell (tab switching, iframes, transfer indicator) tests.
+// The shell moved from index.html to classic.html when the kiosk app took
+// over the site root.
 const { test, expect } = require('@playwright/test');
 const { isTouch, interact } = require('./helpers');
 
-test.describe('Index Page & Tabs', () => {
+test.describe('Classic Shell & Tabs', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/classic.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(500);
   });
 
