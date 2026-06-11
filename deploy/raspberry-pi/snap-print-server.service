@@ -1,0 +1,16 @@
+[Unit]
+Description=Snap Station print server (CUPS bridge)
+After=network.target cups.service
+Requires=cups.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/snap-station/print-server.js
+Restart=on-failure
+RestartSec=2
+Environment=SNAP_PRINT_PORT=47002
+User=snap
+Group=lp
+
+[Install]
+WantedBy=multi-user.target
