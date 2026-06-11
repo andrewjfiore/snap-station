@@ -15,6 +15,12 @@ and print it with real kiss-cut geometry measured from an original sticker sheet
 | `snap-station.html` | Classic capture page — webcam or any window (emulator!) via screen share, zoom/pan/mirror, GIF recording, gallery, send-to-stickers |
 | `sticker-sheet.html` | Classic composer — per-cell cropping, emoji/text stamps, JPG/PNG/PDF/GIF/Print export, **one-file Cricut/Silhouette Print-Then-Cut SVG** |
 
+![Attract screen, Video Rental theme](docs/screenshots/kiosk-attract-videoRental.png)
+
+| Designer | Mario Level theme |
+| --- | --- |
+| ![Editor](docs/screenshots/kiosk-editor-videoRental.png) | ![Mario theme](docs/screenshots/kiosk-attract-marioLevel.png) |
+
 ## Run it
 
 No build step. No npm. Static files only.
