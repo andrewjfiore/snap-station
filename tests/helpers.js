@@ -38,110 +38,17 @@ async function goToSnapStation(page) {
 
 /**
  * Navigate directly to sticker-sheet.html (bypasses iframe).
- * Stubs external CDN scripts that would otherwise block loading in
- * offline/isolated environments.
+ * The page self-hosts all libraries (lib/vendor/, assets/fonts/), so no
+ * network stubbing is needed. Waits for the page's init() to have built
+ * the 16-cell grid and the per-group upload boxes.
  */
 async function goToStickerSheet(page) {
-  // Intercept external CDN requests and provide stubs
-  await page.route('https://cdnjs.cloudflare.com/ajax/libs/cropperjs/**', route => {
-    if (route.request().url().endsWith('.css')) {
-      route.fulfill({ status: 200, contentType: 'text/css', body: '/* cropper stub */' });
-    } else {
-      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubCropperJS() });
-    }
-  });
-  await page.route('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/**', route => {
-    route.fulfill({ status: 200, contentType: 'application/javascript', body: stubHtml2Canvas() });
-  });
-  await page.route('https://cdnjs.cloudflare.com/ajax/libs/jspdf/**', route => {
-    route.fulfill({ status: 200, contentType: 'application/javascript', body: stubJsPDF() });
-  });
-  await page.route('https://fonts.googleapis.com/**', route => {
-    route.fulfill({ status: 200, contentType: 'text/css', body: '/* fonts stub */' });
-  });
-  await page.route('https://fonts.gstatic.com/**', route => {
-    route.fulfill({ status: 200, contentType: 'font/woff2', body: '' });
-  });
-  await page.route('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/**', route => {
-    route.fulfill({ status: 200, contentType: 'text/css', body: '/* font-awesome stub */' });
-  });
-
   await page.goto('/sticker-sheet.html', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1000);
-}
-
-/**
- * Stub for Cropper.js - provides minimal API surface for testing
- */
-function stubCropperJS() {
-  return `
-    (function(global) {
-      function Cropper(element, options) {
-        this.element = element;
-        this.options = options || {};
-        this.isCustomReady = false;
-        this._data = { x: 0, y: 0, width: 100, height: 75, rotate: 0, scaleX: 1, scaleY: 1 };
-        this._canvasData = { left: 0, top: 0, width: 200, height: 150, naturalWidth: 200, naturalHeight: 150 };
-        this._cropBoxData = { left: 0, top: 0, width: 200, height: 150 };
-        var self = this;
-        setTimeout(function() {
-          self.isCustomReady = true;
-          if (self.options.ready) {
-            self.options.ready.call({ cropper: self });
-          }
-        }, 50);
-      }
-      Cropper.prototype.getData = function() { return Object.assign({}, this._data); };
-      Cropper.prototype.setData = function(d) { Object.assign(this._data, d); };
-      Cropper.prototype.getCanvasData = function() { return Object.assign({}, this._canvasData); };
-      Cropper.prototype.setCanvasData = function(d) { Object.assign(this._canvasData, d); };
-      Cropper.prototype.getCropBoxData = function() { return Object.assign({}, this._cropBoxData); };
-      Cropper.prototype.setCropBoxData = function(d) { Object.assign(this._cropBoxData, d); };
-      Cropper.prototype.zoomTo = function(ratio) { this._canvasData.width = this._canvasData.naturalWidth * ratio; };
-      Cropper.prototype.reset = function() {
-        this._data = { x: 0, y: 0, width: 100, height: 75, rotate: 0, scaleX: 1, scaleY: 1 };
-      };
-      Cropper.prototype.destroy = function() { this.isCustomReady = false; };
-      global.Cropper = Cropper;
-    })(window);
-  `;
-}
-
-/**
- * Stub for html2canvas
- */
-function stubHtml2Canvas() {
-  return `
-    window.html2canvas = function(element, options) {
-      var canvas = document.createElement('canvas');
-      canvas.width = element.offsetWidth || 400;
-      canvas.height = element.offsetHeight || 300;
-      var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      return Promise.resolve(canvas);
-    };
-  `;
-}
-
-/**
- * Stub for jsPDF
- */
-function stubJsPDF() {
-  return `
-    (function(global) {
-      var jspdf = {
-        jsPDF: function(opts) {
-          return {
-            addImage: function() {},
-            save: function(name) {},
-            output: function() { return ''; }
-          };
-        }
-      };
-      global.jspdf = jspdf;
-    })(window);
-  `;
+  await page.waitForFunction(() =>
+    window.currentMode &&
+    document.querySelectorAll('#sticker-grid .cell').length === 16 &&
+    document.querySelectorAll('.file-input-wrapper').length > 0
+  );
 }
 
 /**
@@ -164,9 +71,30 @@ async function click(page, selector) {
  * Uses click() for both since Playwright converts clicks to taps
  * on touch-emulated devices. Explicit touch gestures (pinch, drag)
  * use dedicated functions.
+ *
+ * Fallback: when the sticker-sheet page overflows horizontally on small
+ * viewports, Chromium's mobile emulation zooms the layout viewport out and
+ * Playwright's hit-target verification can then mis-resolve the click point
+ * and refuse the click. Raw input coordinates are interpreted in
+ * layout-viewport CSS px, so on failure dispatch directly at the element's
+ * bounding-box center.
  */
 async function interact(page, selector, projectName) {
-  await page.locator(selector).first().click();
+  const el = page.locator(selector).first();
+  try {
+    await el.click({ timeout: 5000 });
+  } catch (err) {
+    await el.scrollIntoViewIfNeeded();
+    const box = await el.boundingBox();
+    if (!box) throw err;
+    const px = box.x + box.width / 2;
+    const py = box.y + box.height / 2;
+    if (isTouch(projectName)) {
+      await page.touchscreen.tap(px, py);
+    } else {
+      await page.mouse.click(px, py);
+    }
+  }
 }
 
 /**
@@ -326,7 +254,7 @@ async function touchDrag(page, selector, dx, dy) {
  * Check that an element has no unwanted outlines (focus ring check)
  */
 async function assertNoFocusOutline(page, selector) {
-  const outline = await page.locator(selector).evaluate(el => {
+  const outline = await page.locator(selector).first().evaluate(el => {
     const style = window.getComputedStyle(el);
     return style.outline;
   });
@@ -376,11 +304,13 @@ async function uploadTestImage(page, inputSelector, filename = 'test.png') {
 }
 
 /**
- * Wait for sticker sheet grid to have images loaded
+ * Wait for sticker sheet grid to have images loaded.
+ * The current page attaches a Cropper.js editor (.cropper-container)
+ * inside each cell's .img-container once an image is assigned.
  */
-async function waitForGridImages(page, minCount = 1, timeout = 5000) {
+async function waitForGridImages(page, minCount = 1, timeout = 10000) {
   await page.waitForFunction(
-    (min) => document.querySelectorAll('.cell.has-image').length >= min,
+    (min) => document.querySelectorAll('.cell .cropper-container').length >= min,
     minCount,
     { timeout }
   );

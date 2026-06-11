@@ -1,8 +1,8 @@
 // Snap Station feature tests - runs on all three device sizes
 const { test, expect } = require('@playwright/test');
 const {
-  isTouch, interact, goToSnapStation, pinchZoom, doubleTap,
-  scrollWheel, mouseDrag, touchDrag, assertNoFocusOutline,
+  isTouch, interact, goToSnapStation,
+  scrollWheel, mouseDrag, assertNoFocusOutline,
 } = require('./helpers');
 
 test.describe('Snap Station', () => {
@@ -141,57 +141,11 @@ test.describe('Snap Station', () => {
   });
 
   // ─── Video Zoom/Pan (Touch) ───
-
-  test('pinch-to-zoom changes zoom level on touch devices', async ({ page }, testInfo) => {
-    if (!isTouch(testInfo.project.name)) {
-      test.skip();
-      return;
-    }
-    await interact(page, '#startCameraBtn', testInfo.project.name);
-    await page.waitForTimeout(1000);
-
-    const initialZoom = await page.evaluate(() => window.zoomLevel);
-    await pinchZoom(page, '#videoContainer', 2.0);
-    await page.waitForTimeout(200);
-
-    const newZoom = await page.evaluate(() => window.zoomLevel);
-    expect(newZoom).toBeGreaterThan(initialZoom);
-  });
-
-  test('touch drag pans when zoomed', async ({ page }, testInfo) => {
-    if (!isTouch(testInfo.project.name)) {
-      test.skip();
-      return;
-    }
-    await interact(page, '#startCameraBtn', testInfo.project.name);
-    await page.waitForTimeout(1000);
-
-    // Set zoom > 1 for pan to work
-    await page.evaluate(() => { window.zoomLevel = 2; });
-    await touchDrag(page, '#videoContainer', 40, 20);
-    await page.waitForTimeout(200);
-
-    const panX = await page.evaluate(() => window.panX);
-    const panY = await page.evaluate(() => window.panY);
-    // At least one axis should have moved
-    expect(Math.abs(panX) + Math.abs(panY)).toBeGreaterThan(0);
-  });
-
-  test('double-tap resets zoom on touch', async ({ page }, testInfo) => {
-    if (!isTouch(testInfo.project.name)) {
-      test.skip();
-      return;
-    }
-    await interact(page, '#startCameraBtn', testInfo.project.name);
-    await page.waitForTimeout(1000);
-
-    await page.evaluate(() => { window.zoomLevel = 3; window.panX = 50; });
-    await doubleTap(page, '#videoContainer');
-    await page.waitForTimeout(300);
-
-    const zoom = await page.evaluate(() => window.zoomLevel);
-    expect(zoom).toBe(1);
-  });
+  // The current page only wires wheel/mouse/dblclick (plus gamepad) to the
+  // video container - it has no touchstart/touchmove gesture handlers.
+  // dropped: touch pinch-to-zoom not in current page (reverted in PR #21)
+  // dropped: touch-drag panning not in current page (reverted in PR #21)
+  // dropped: double-tap zoom reset not in current page (reverted in PR #21)
 
   // ─── Screenshot Capture ───
 
