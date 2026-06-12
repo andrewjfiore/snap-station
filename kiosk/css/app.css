@@ -872,3 +872,16 @@ body.a11y .capture-overlay__sub { color: #333; }
 .att-token.is-used { opacity: .45; text-decoration: line-through; }
 .att-token-credits { max-width: 70px; }
 .att-theme-row { display: flex; gap: 10px; }
+
+/* The ritual-styles block (v4) predates the spec's reduced-motion collapse —
+   cover its animated pieces explicitly. */
+@media (prefers-reduced-motion: reduce) {
+  .attract-start,
+  .cart-cart,
+  .cart-insert,
+  .attract-pb-pulse,
+  .dyesub__wash,
+  .dyesub__head,
+  .snap-led__dot,
+  .credit-pill.bump { animation: none !important; transition: none !important; }
+}
