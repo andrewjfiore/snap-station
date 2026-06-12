@@ -753,7 +753,7 @@ body.a11y .capture-overlay__sub { color: #333; }
   /* photo slots: 16-mini drops to 2-up; hints make room (inline grid style
      loses to the !important here on purpose) */
   .ap-slots { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
-  .ap-slots[data-layout="single"] { grid-template-columns: 1fr !important; }
+  .ap-slots[data-layout="single"], .ap-slots[data-layout="big"] { grid-template-columns: 1fr !important; }
   .ap-slot__hint { display: none; }
   .ap-slot__circle { width: 56px; height: 56px; }
   .capture-viewfinder { aspect-ratio: 3/4; max-height: 48vh; }
@@ -804,3 +804,35 @@ body.a11y .capture-overlay__sub { color: #333; }
 .collection-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .addcredits__foot { display: flex; justify-content: flex-end; margin-top: 16px; }
 .ac-feedback.is-error { color: var(--snap-red); font-weight: 800; }
+
+/* === v4 capture additions === */
+.fx-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fx-chip {
+  border: 1.5px solid #dcd6c4; border-radius: 999px;
+  background: rgba(255,255,255,.75);
+  font: 800 12px/1 Mulish, sans-serif; color: #4a4636;
+  padding: 9px 14px; cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.fx-chip.on { background: var(--snap-red); border-color: var(--snap-red); color: #fff; }
+.capture-smile {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,.92); color: #1a1a1a;
+  font: 800 13px/1 Mulish, sans-serif;
+  padding: 8px 14px; border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(12,20,70,.25);
+  pointer-events: none;
+}
+.capture-crt-lines {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 1px, transparent 1px 4px);
+}
+.rec-dot {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; align-items: center; gap: 6px;
+  font: 800 11px/1 Barlow, sans-serif; letter-spacing: .12em; color: #fff;
+  background: rgba(0,0,0,.55); border-radius: 999px; padding: 6px 10px;
+}
+.rec-dot .d { width: 8px; height: 8px; border-radius: 50%; background: var(--snap-red); animation: rec-blink 1s infinite; }
+@keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .rec-dot .d { animation: none; } }

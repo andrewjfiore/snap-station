@@ -50,7 +50,7 @@ function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid }) {
   const attendant = SnapStore.getAttendant();
   const freePlay = !!attendant.freePlay;
   const price = attendant.pricePerSheetCents;
-  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
   const paper = PAPER_SIZES.find((p) => p.id === sheet.paperId) || PAPER_SIZES[0];
 
   const [stage, setStage] = useState('method'); // method | amount | confirm | processing | done

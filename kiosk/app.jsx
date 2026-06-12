@@ -107,10 +107,10 @@ function App() {
   }, []));
 
   // Gallery write path: capture → SnapStore + React mirror.
-  const handleCapture = useCallback((dataUrl) => {
+  const handleCapture = useCallback((dataUrl, kind) => {
     const entry = {
       id: 'snap-' + Date.now() + '-' + Math.floor(Math.random() * 1e6),
-      dataUrl, kind: 'photo', ts: Date.now(),
+      dataUrl, kind: kind === 'gif' ? 'gif' : 'photo', ts: Date.now(),
     };
     SnapStore.addToGallery(entry);
     setSnaps((prev) => [entry, ...prev].slice(0, SnapStore.GALLERY_CAP));
@@ -158,7 +158,7 @@ function App() {
   // Step-2 exit guard: at least one photo, and empty slots are filled
   // round-robin from the chosen ones so the preview matches the print exactly.
   const tryLeaveStep2 = useCallback(() => {
-    const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+    const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
     const map = sheet.sourceMap || {};
     const filledKeys = [];
     for (let g = 0; g < layout.groups; g++) if (map[g]) filledKeys.push(g);

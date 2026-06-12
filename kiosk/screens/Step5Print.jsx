@@ -14,7 +14,7 @@ function Step5Print({ sheet, snaps, order, onStartOver, onPrintAnother }) {
 
   const paperId = sheet.paperId || '4x6';
   const paper = PAPER_SIZES.find((p) => p.id === paperId) || PAPER_SIZES[0];
-  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
 
   // Simulated kiosk print cycle: progress pokéballs, then "All set!".
   // Stats: prints bump once per authorized sheet.
@@ -91,7 +91,7 @@ function Step5Print({ sheet, snaps, order, onStartOver, onPrintAnother }) {
     setBusy('cricut');
     renderSheet()
       .then((canvas) => {
-        const svg = StickerExport.buildCutSvg({ paperId, imageDataUrl: canvas.toDataURL('image/png') });
+        const svg = StickerExport.buildCutSvg({ paperId, layoutId: sheet.layoutId, imageDataUrl: canvas.toDataURL("image/png") });
         StickerExport.triggerDownload(new Blob([svg], { type: 'image/svg+xml' }),
           `snap-station-print-then-cut-${paperId}.svg`);
         setBusy('');
@@ -103,7 +103,7 @@ function Step5Print({ sheet, snaps, order, onStartOver, onPrintAnother }) {
   const doCutOnly = () => {
     SoundFX.click();
     try {
-      const svg = StickerExport.buildCutSvg({ paperId, registrationMarks: true });
+      const svg = StickerExport.buildCutSvg({ paperId, layoutId: sheet.layoutId, registrationMarks: true });
       StickerExport.triggerDownload(new Blob([svg], { type: 'image/svg+xml' }),
         `snap-station-cut-only-${paperId}.svg`);
       SoundFX.confirm();

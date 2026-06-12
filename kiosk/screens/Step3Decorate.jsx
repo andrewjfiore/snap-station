@@ -48,7 +48,7 @@ function DcRailBtn({ icon, label, onClick, disabled }) {
 }
 
 function Step3Decorate({ sheet, setSheet, updateSheet }) {
-  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
   const stamps = sheet.stamps || [];
   const [tab, setTab] = useState('stickers');
   const [category, setCategory] = useState('favorites');
@@ -180,7 +180,9 @@ function Step3Decorate({ sheet, setSheet, updateSheet }) {
                              setImageForGroup={setImageForGroup}/>
             </div>
             <div className="dc-stage-meta">
-              {paper.w} × {paper.h} mm · landscape · 16 stickers ({STICKER_DIMS.STK_W} × {STICKER_DIMS.STK_H} mm each)
+              {paper.w} × {paper.h} mm · landscape · {layout.id === 'big'
+                ? '1 big sticker'
+                : `16 stickers (${STICKER_DIMS.STK_W} × ${STICKER_DIMS.STK_H} mm each)`}
             </div>
           </div>
 

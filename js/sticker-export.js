@@ -22,7 +22,9 @@
   // cutters/workflows that want printed registration (Silhouette manual setups).
   function buildCutSvg(opts) {
     opts = opts || {};
-    var g = C.getSheetGeometry(opts.paperId || '4x6', 'single');
+    // layoutId picks the cut paths: grid layouts share the 16-cell kiss cuts;
+    // 'big' (design system v4) cuts one full-envelope rounded rect.
+    var g = C.getSheetGeometry(opts.paperId || '4x6', opts.layoutId || 'single');
     var pW = g.paper.w, pH = g.paper.h;
 
     var d = '';

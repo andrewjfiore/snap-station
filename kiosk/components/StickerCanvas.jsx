@@ -59,7 +59,7 @@ function StickerCanvas({
   setImageForGroup, // (groupIdx, url) => void
 }) {
   const paper = PAPER_SIZES.find(p => p.id === sheet.paperId) || PAPER_SIZES[0];
-  const layout = SHEET_LAYOUTS.find(l => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find(l => l.id === sheet.layoutId) || SHEET_LAYOUTS.find(l => l.id === 'quad');
   const { STK_W, STK_H, GAP, KISS_INNER_W, KISS_INNER_H, KISS_R } = STICKER_DIMS;
 
   // physical grid in mm, centered on paper
@@ -71,11 +71,15 @@ function StickerCanvas({
   // Fit to container — we use the container's width/height via CSS
   // and size everything in the sheet via %.
 
-  // Each of the 16 cells pulls its source from mapping[i] -> sources[that group]
-  const cellData = Array.from({length: 16}, (_, i) => {
-    const g = layout.mapping[i];
-    return { group: g, url: sources[g] || null };
-  });
+  // Cells pull their source from mapping[i] → sources[group]. The v4 'big'
+  // layout is a single full-envelope cell; grid layouts are the 4×4.
+  const isBig = layout.id === 'big';
+  const cellData = isBig
+    ? [{ group: 0, url: sources[0] || null }]
+    : Array.from({length: 16}, (_, i) => {
+        const g = layout.mapping[i];
+        return { group: g, url: sources[g] || null };
+      });
 
   // Drag / resize / rotate state
   const stageRef = useRef(null);
@@ -181,19 +185,19 @@ function StickerCanvas({
                width:  `${(gridW / paper.w) * 100}%`,
                height: `${(gridH / paper.h) * 100}%`,
                display: 'grid',
-               gridTemplateColumns: 'repeat(4, 1fr)',
-               gridTemplateRows:    'repeat(4, 1fr)',
-               gap: `${(GAP / paper.w) * 100}%`,
+               gridTemplateColumns: isBig ? '1fr' : 'repeat(4, 1fr)',
+               gridTemplateRows:    isBig ? '1fr' : 'repeat(4, 1fr)',
+               gap: isBig ? 0 : `${(GAP / paper.w) * 100}%`,
              }}>
           {cellData.map((c, i) => (
-            <StickerCell key={i} i={i} c={c} sheet={sheet}
+            <StickerCell key={i} i={i} c={c} sheet={sheet} big={isBig}
                          onClick={() => cellClick(c.group)}/>
           ))}
         </div>
 
         {/* Kiss-cut overlay */}
         {sheet.kissCut && (
-          <KissCutOverlay paper={paper}/>
+          <KissCutOverlay paper={paper} layoutId={layout.id}/>
         )}
 
         {/* Stamps layer */}
@@ -226,11 +230,17 @@ function PosImg({ src, pos, draggable = false }) {
 }
 window.PosImg = PosImg;
 
-function StickerCell({ i, c, sheet, onClick }) {
-  const { KISS_INNER_W, KISS_INNER_H, KISS_R } = STICKER_DIMS;
-  const innerWPct = (KISS_INNER_W / 26.6) * 100;
-  const innerHPct = (KISS_INNER_H / 20)   * 100;
-  const radiusPct = (KISS_R / 26.6) * 100;
+function StickerCell({ i, c, sheet, big, onClick }) {
+  const { STK_W, STK_H, GAP, KISS_INNER_W, KISS_INNER_H, KISS_R, KISS_OFF_X, KISS_OFF_Y, COLS, ROWS } = STICKER_DIMS;
+  // Kiss-cut inset as a fraction of this cell's own box. For 'big' the box is
+  // the whole grid envelope, with the same per-edge insets as a grid cell.
+  const cellW = big ? STK_W * COLS + GAP * (COLS - 1) : STK_W;
+  const cellH = big ? STK_H * ROWS + GAP * (ROWS - 1) : STK_H;
+  const kissW = big ? cellW - KISS_OFF_X * 2 : KISS_INNER_W;
+  const kissH = big ? cellH - KISS_OFF_Y - (STK_H - KISS_INNER_H - KISS_OFF_Y) : KISS_INNER_H;
+  const innerWPct = (kissW / cellW) * 100;
+  const innerHPct = (kissH / cellH) * 100;
+  const radiusPct = (KISS_R / cellW) * 100;
 
   // url may be: null, a string (URL), { src, pos } (adjusted photo),
   // or { gradient: [a,b], label } (demo poster)
@@ -270,34 +280,19 @@ function StickerCell({ i, c, sheet, onClick }) {
   );
 }
 
-function KissCutOverlay({ paper }) {
-  const { STK_W, STK_H, GAP, KISS_INNER_W, KISS_INNER_H, KISS_R } = STICKER_DIMS;
-  const gridW = STK_W * 4 + GAP * 3;
-  const gridH = STK_H * 4 + GAP * 3;
-  const mLeft = (paper.w - gridW) / 2;
-  const mTop  = (paper.h - gridH) / 2;
-
-  const innerX = (STK_W - KISS_INNER_W) / 2;
-  const innerY = (STK_H - KISS_INNER_H) / 2;
-
-  const rects = [];
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
-      const x = mLeft + c * (STK_W + GAP) + innerX;
-      const y = mTop  + r * (STK_H + GAP) + innerY;
-      rects.push(
-        <rect key={`${r}-${c}`} x={x} y={y}
-              width={KISS_INNER_W} height={KISS_INNER_H}
-              rx={KISS_R} ry={KISS_R}
-              fill="none" stroke="#e11d48" strokeWidth="0.2"
-              strokeDasharray="0.8,0.5"/>
-      );
-    }
-  }
-
+// Geometry-driven: getSheetGeometry handles grid layouts and the v4 'big'
+// full-envelope sticker with the same code path as print and cut export.
+function KissCutOverlay({ paper, layoutId }) {
+  const geo = getSheetGeometry(paper.id, layoutId);
   return (
     <svg className="sk-kiss-cut" viewBox={`0 0 ${paper.w} ${paper.h}`} preserveAspectRatio="none">
-      {rects}
+      {geo.cells.map((cell, i) => (
+        <rect key={i} x={cell.kiss.x} y={cell.kiss.y}
+              width={cell.kiss.w} height={cell.kiss.h}
+              rx={cell.kiss.r} ry={cell.kiss.r}
+              fill="none" stroke="#e11d48" strokeWidth="0.2"
+              strokeDasharray="0.8,0.5"/>
+      ))}
     </svg>
   );
 }

@@ -71,7 +71,7 @@ function sheetLoadImage(src) {
 function renderSheetToCanvas(sheet, snaps) {
   sheet = sheet || {};
   // Resolve layout exactly like the editor UI (unknown id falls back to quad).
-  const layout = SHEET_LAYOUTS.find(l => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find(l => l.id === sheet.layoutId) || SHEET_LAYOUTS.find(l => l.id === 'quad');
   const geo = getSheetGeometry(sheet.paperId || '4x6', layout.id);
   const paper = geo.paper;
   const dpi = STICKER_DIMS.DPI || 300;
