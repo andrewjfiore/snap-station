@@ -16,15 +16,23 @@ const WIZ_STEPS = [
   { n: 5, label: 'Print' },
 ];
 
-// settings.theme → html.theme-* class (designsystem.css custom-property overrides).
-const THEME_CLASSES = ['theme-blockbuster', 'theme-n64', 'theme-switch', 'theme-arcade-pss'];
+// SnapTheme (design system v4): user theme dots override the three core
+// custom properties. Distinct from the design tab's showcase theme cards.
+const SNAP_THEMES = {
+  snap:   { red: '#EE1515', red2: '#C41313', night: '#0C1446' },
+  ocean:  { red: '#1F6FEB', red2: '#1453B0', night: '#06122e' },
+  grape:  { red: '#7A5CFF', red2: '#5a3fd6', night: '#1a0f3a' },
+  mint:   { red: '#13A36B', red2: '#0e7d52', night: '#06251a' },
+  sunset: { red: '#FF7043', red2: '#e8512a', night: '#2a1206' },
+  berry:  { red: '#C0272D', red2: '#7A1115', night: '#3a0d12' },
+};
 function applyTheme(theme) {
-  const el = document.documentElement;
-  THEME_CLASSES.forEach((c) => el.classList.remove(c));
-  if (theme && theme !== 'pokemon-center' && THEME_CLASSES.includes('theme-' + theme)) {
-    el.classList.add('theme-' + theme);
-  }
-  el.setAttribute('data-theme', theme || 'pokemon-center');
+  const t = SNAP_THEMES[theme] || SNAP_THEMES.snap;
+  const s = document.documentElement.style;
+  s.setProperty('--snap-red', t.red);
+  s.setProperty('--snap-red-2', t.red2);
+  s.setProperty('--night', t.night);
+  document.documentElement.setAttribute('data-theme', theme || 'snap');
 }
 
 function App() {
@@ -53,6 +61,8 @@ function App() {
   const patchAttendant = useCallback((patch) => setAttendantState(SnapStore.setAttendant(patch)), []);
   const [pinOpen, setPinOpen] = useState(false);
   const [attendantOpen, setAttendantOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [addCreditsOpen, setAddCreditsOpen] = useState(null); // null | {need, view, onDone}
 
   // Theme + body flags
   useEffect(() => { applyTheme(settings.theme); SoundFX.setEnabled(settings.soundOn); }, [settings]);
@@ -252,6 +262,9 @@ function App() {
       {screen === 'attract' ? (
         <AttractScreen
           onStart={startSession}
+          onCollection={() => setCollectionOpen(true)}
+          onToken={() => setAddCreditsOpen({ view: 'code' })}
+          theme={settings.theme} setTheme={(t) => setSettingsWithPersist({ theme: t })}
           a11y={a11y} setA11y={setA11y}
           soundOn={!!settings.soundOn}
           toggleSound={() => {
@@ -354,6 +367,29 @@ function App() {
           onExit={() => { setAttendantOpen(false); setScreen('attract'); setStep(1); }}
           onClose={() => { SoundFX.back(); setAttendantOpen(false); }}/>
       )}
+
+      {collectionOpen && (
+        <CollectionOverlay snaps={snaps}
+          onStart={() => { setCollectionOpen(false); startSession(); }}
+          onClose={() => setCollectionOpen(false)}/>
+      )}
+
+      {addCreditsOpen && (
+        <AddCreditsOverlay
+          need={addCreditsOpen.need || 0}
+          initialView={addCreditsOpen.view || 'card'}
+          onDone={() => {
+            const cb = addCreditsOpen.onDone;
+            setAddCreditsOpen(null);
+            refreshCredits();
+            if (cb) cb();
+          }}
+          onClose={() => { setAddCreditsOpen(null); refreshCredits(); }}/>
+      )}
+
+      {/* Persistent print-credit balance (hidden on attract: the entries cover it) */}
+      {screen !== 'attract' && <CreditPill credits={credits}/>}
+      <SnapLeds/>
     </div>
   );
 }

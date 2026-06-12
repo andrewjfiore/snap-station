@@ -774,3 +774,33 @@ body.a11y .capture-overlay__sub { color: #333; }
      pushed the value column past the viewport edge. Let them shrink+wrap. */
   .pv-row__label, .pv-row__value { min-width: 0; overflow-wrap: anywhere; }
 }
+
+/* === v4 additions: generic overlay + collection grid + addcredits footer === */
+.overlay-scrim {
+  position: fixed; inset: 0; z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8,10,30,.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 20px;
+}
+.overlay-card {
+  width: min(520px, 96vw); max-height: 92vh; overflow: auto;
+  background: var(--cream); border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(8,10,30,.5);
+  padding: 26px;
+}
+.overlay-card--wide { width: min(720px, 96vw); }
+.overlay-title { font: 900 24px/1.1 Barlow, sans-serif; color: var(--ink); margin: 0 0 6px; }
+.overlay-sub { font: 600 14px/1.5 Mulish, sans-serif; color: #6d675a; margin: 0 0 16px; }
+.overlay-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.collection-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px; max-height: 46vh; overflow: auto; padding: 2px;
+}
+.collection-cell {
+  aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
+  background: #fff; box-shadow: 0 3px 10px rgba(20,22,60,.12);
+}
+.collection-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.addcredits__foot { display: flex; justify-content: flex-end; margin-top: 16px; }
+.ac-feedback.is-error { color: var(--snap-red); font-weight: 800; }

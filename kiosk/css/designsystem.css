@@ -5,6 +5,8 @@
   --night:       #0C1446;
   --nintendo:    #1F3EAF;
   --pika:        #FFCB05;
+  --poke-blue:   #2A75BB;   /* official Pokémon logo outline blue */
+  --poke-navy:   #003A70;   /* official Pokémon navy (3D drop) */
   --black:       #111111;
   --warm-gray:   #B7B1A6;
   --success:     #2E7D32;
@@ -209,9 +211,10 @@ body::after {
   font-style: italic;
   font-size: 48px;
   letter-spacing: .02em;
-  color: var(--nintendo);
-  -webkit-text-stroke: 2px var(--pika);
+  color: var(--pika);
+  -webkit-text-stroke: 4px var(--poke-blue);
   paint-order: stroke fill;
+  text-shadow: 2px 2px 0 var(--poke-navy), 0 5px 9px rgba(0,0,0,.20);
   line-height: .95;
   margin: 0;
   transition: transform .3s ease;
@@ -438,18 +441,16 @@ body::after {
   justify-content: flex-start;
   border-color: rgba(255,255,255,0.35);
   box-shadow: 0 2px 6px color-mix(in srgb, var(--snap-red) 18%, transparent), inset 0 1px 0 rgba(255,255,255,0.3);
-  overflow: hidden; /* clip the shimmer sweep to the pill */
 }
+.btn-primary { overflow: hidden; /* clip the shimmer sweep to the pill */ }
 .btn-primary::before {
-  /* shimmer sweep — animates transform (not `left`) so the element's box
-     never changes; an unclipped `left` sweep kept Playwright's stability
-     check (and the compositor) busy forever */
+  /* shimmer sweep (animates transform so the element box never changes) */
   content: '';
   position: absolute;
   top: 0; bottom: 0; left: -60%;
   width: 55%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
-  transform: translateX(0) skewX(-20deg);
+  transform: skewX(-20deg);
   animation: shimmer 3.4s ease-in-out infinite;
   animation-delay: 1.2s;
   pointer-events: none;
@@ -1354,23 +1355,43 @@ body::after {
   color: var(--snap-red);
   letter-spacing: .1em;
 }
-/* Hagaki reference: 4 cols x 3 rows, 26.6 x 20 mm cells, 1 mm gap, 2.75 mm die-cut radius */
+/* Hagaki reference: 152.4×101.6 mm paper, 4×4 grid of 26.6×20 mm cells,
+   1 mm kiss-cut gap, 2.75 mm die-cut radius, ~21.5/9.3 mm paper margins.
+   The .sticker-sheet wrapper provides the paper aspect; .sticker-grid sits
+   centered with the correct percentage margins inside it. */
+/* Design-system sticker-sheet showcase. Pinned at 50% of real (3in × 2in).
+   The .printed-photo/.sticker-sheet/.alert-dialog shared rule above gives
+   it 18px corners; override to 0 because real photo paper is guillotined,
+   not rounded. */
+.sticker-sheet {
+  aspect-ratio: 152.4 / 101.6;
+  width: 3in;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 0 !important;
+  position: relative;
+}
 .sticker-grid {
+  /* Absolute positioning, top/bottom % uses HEIGHT, left/right % uses WIDTH.
+     This guarantees the cells inside come out at the correct 1.33 aspect. */
+  position: absolute;
+  top: 9.15%; bottom: 9.15%;
+  left: 14.1%; right: 14.1%;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-  padding: 0;
-  background: rgba(255,255,255,0.42);
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.45);
-  padding: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows:    repeat(4, minmax(0, 1fr));
+  column-gap: 0.656%;                    /* 1mm / 152.4mm */
+  row-gap: 0.984%;                       /* 1mm / 101.6mm */
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 .sticker-grid .cell {
-  aspect-ratio: 26.6 / 20;      /* individual sticker cell landscape */
-  border-radius: 10.3%;          /* 2.75 / 26.6 ≈ 10.3% die-cut radius */
+  border-radius: 10.3%;                  /* 2.75mm / 26.6mm */
   background: rgba(255,255,255,0.35);
+  border: 1px dashed rgba(255,255,255,0.55);
   display: flex; align-items: center; justify-content: center;
-  font-size: 8.5px;
+  font-size: 9px;
   font-family: 'Barlow', sans-serif;
   color: #6a6a6a;
   font-weight: 700;
@@ -1378,11 +1399,26 @@ body::after {
   transition: transform .2s, background .2s;
   text-align: center;
   padding: 2px;
+  min-width: 0; min-height: 0;
 }
 .sticker-grid .cell:hover {
   transform: scale(1.08);
   background: rgba(255,255,255,0.7);
   color: var(--snap-red);
+}
+/* Tiny "kiss cut" annotation pin on the design system example */
+.sticker-sheet::after {
+  content: 'kiss-cut · 1 mm gap · 4×4 · 26.6×20 mm';
+  position: absolute;
+  bottom: 4px; left: 8px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #999;
+  opacity: .85;
+  pointer-events: none;
 }
 
 /* ---------- Alert dialog ---------- */
@@ -1831,7 +1867,7 @@ body::after {
 }
 
 /* ================================================================
-   Page Tabs — top-level switch between Design System and Payment Flow
+   Page Tabs, top-level switch between Design System and Payment Flow
    ================================================================ */
 .page-tabs {
   position: relative;
@@ -1879,7 +1915,7 @@ body::after {
 .canvas.page:not(.is-active) { display: none !important; }
 
 /* ================================================================
-   Payment Flow page — reuses tokens, toasts, buttons, dock, pokéballs
+   Payment Flow page, reuses tokens, toasts, buttons, dock, pokéballs
    ================================================================ */
 #page-payment {
   grid-template-columns: minmax(0, 1fr);
@@ -2020,7 +2056,7 @@ body::after {
 }
 .amt-chip.is-active .amt-chip__sub { color: var(--snap-red); }
 
-/* Status toasts — reuse existing .toast; wrapper just stacks them */
+/* Status toasts, reuse existing .toast; wrapper just stacks them */
 .status-stack { display: flex; flex-direction: column; gap: 6px; }
 .status-stack .toast { margin: 0; }
 
@@ -2151,32 +2187,63 @@ body::after {
 }
 .sheet-carousel__arrow:hover { color: var(--snap-red); border-color: var(--snap-red); }
 .sheet-thumb {
-  flex: 1;
-  max-width: 120px;
-  aspect-ratio: 26.6/20;
+  /* Pinned at 25% of real (1.5in × 1in), payment thumbnail context.
+     All sticker-sheet representations use the SAME proportions:
+       paper 152.4 × 101.6 mm (aspect 1.5)
+       4×4 grid of 26.6 × 20 mm cells (aspect 1.33)
+       21.5 / 9.3 mm paper margins (14.1% / 9.15%)
+       1 mm kiss-cut gap (0.66% of paper width, 0.984% of paper height)
+       2.75 mm cell die-cut radius (10.3% of cell width)
+     Outer corners are SQUARE (no border-radius). Real photo paper is
+     guillotined, not die-cut on the outside. */
+  width: 1.5in;
+  max-width: 100%;
+  aspect-ratio: 152.4 / 101.6;
   background: rgba(255,255,255,0.7);
   border: 1px solid #e0dac7;
-  border-radius: 8px;
-  padding: 3px;
+  border-radius: 0;
+  position: relative;
+}
+.sheet-thumb__grid {
+  /* Absolute positioning so top/bottom % use HEIGHT (not width like padding %).
+     Without this trick, vertical paper margin renders too small and cells
+     come out at 1.5 ratio instead of the correct 1.33. */
+  position: absolute;
+  top: 9.15%; bottom: 9.15%;
+  left: 14.1%; right: 14.1%;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows:    repeat(4, minmax(0, 1fr));
+  column-gap: 0.656%;                    /* 1mm / 152.4mm */
+  row-gap: 0.984%;                       /* 1mm / 101.6mm */
 }
 .sheet-thumb__cell {
   background: rgba(240, 234, 217, 0.6);
-  border-radius: 3px;
+  border-radius: 10.3%;                  /* 2.75mm / 26.6mm die-cut corner */
   min-width: 0;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 7px;
-  font-family: 'Barlow', sans-serif;
-  color: #888;
-  font-weight: 700;
   overflow: hidden;
 }
+/* In the "4 photos" layout (the default in the wizard), each unique
+   photo fills a 2×2 quadrant of stickers. Tint each quadrant with
+   the same colors used on the Decorate step so the visual lineage
+   from photos → printed stickers is obvious. */
+.sheet-thumb__cell:nth-child(1),
+.sheet-thumb__cell:nth-child(2),
+.sheet-thumb__cell:nth-child(5),
+.sheet-thumb__cell:nth-child(6)   { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
+.sheet-thumb__cell:nth-child(3),
+.sheet-thumb__cell:nth-child(4),
+.sheet-thumb__cell:nth-child(7),
+.sheet-thumb__cell:nth-child(8)   { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
+.sheet-thumb__cell:nth-child(9),
+.sheet-thumb__cell:nth-child(10),
+.sheet-thumb__cell:nth-child(13),
+.sheet-thumb__cell:nth-child(14)  { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
+.sheet-thumb__cell:nth-child(11),
+.sheet-thumb__cell:nth-child(12),
+.sheet-thumb__cell:nth-child(15),
+.sheet-thumb__cell:nth-child(16)  { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
 .sheet-meta { text-align: center; font-size: 11px; font-weight: 700; color: #1a1a1a; margin-top: 6px; }
 .sheet-meta__sub { font-size: 10px; color: #6a6a6a; font-weight: 600; }
 
@@ -2646,51 +2713,65 @@ body::after {
   border: 1px solid #b5af9c;
 }
 
-/* Cash instructions — bills illustration */
+/* Cash instructions, bills illustration */
 .bills-illo {
   display: flex; justify-content: center;
-  gap: 4px;
-  padding: 6px 0;
+  gap: 6px;
+  padding: 8px 0;
 }
 .bill {
-  width: 34px; height: 22px;
-  border-radius: 3px;
-  border: 1.2px solid #333;
+  width: 50px; height: 30px;
+  border-radius: 4px;
   position: relative;
   font-family: 'Barlow', sans-serif;
-  font-weight: 800;
-  font-size: 9px;
-  color: #222;
+  font-weight: 900;
+  font-size: 11px;
+  color: #f3fff0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 3px 5px;
   transform: rotate(var(--tilt, -4deg));
+  box-shadow: 0 3px 8px rgba(0,0,0,.32), inset 0 0 0 1px rgba(0,0,0,.22);
+  text-shadow: 0 1px 1px rgba(0,0,0,.35);
+  overflow: hidden;
 }
 .bill::before {
   content: '';
   position: absolute;
-  inset: 2px;
-  border: 0.5px solid currentColor;
-  border-radius: 2px;
-  opacity: .4;
+  inset: 3px;
+  border: 1px solid rgba(243,255,240,.55);
+  border-radius: 3px;
+  pointer-events: none;
 }
-.bill--1  { background: #C6DBAE; --tilt: -8deg; }
-.bill--5  { background: #E8C89C; --tilt: 4deg; margin-top: -3px; }
-.bill--10 { background: #BAE0B6; --tilt: -3deg; }
-.bill--20 { background: #9EC89E; --tilt: 6deg; margin-top: -4px; }
+.bill::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 52%;
+  transform: translate(-50%,-50%);
+  width: 38%; height: 60%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.34), rgba(255,255,255,.06) 70%);
+  border: 1px solid rgba(243,255,240,.45);
+}
+.bill--1  { background: linear-gradient(135deg, #5f9168 0%, #3f7a4a 100%); --tilt: -8deg; }
+.bill--5  { background: linear-gradient(135deg, #6b8f8a 0%, #46716b 100%); --tilt: 4deg;  margin-top: -3px; }
+.bill--10 { background: linear-gradient(135deg, #7d8a55 0%, #5a6f3a 100%); --tilt: -3deg; }
+.bill--20 { background: linear-gradient(135deg, #57926a 0%, #357a4d 100%); --tilt: 6deg;  margin-top: -4px; }
 .coin-row {
   display: flex; justify-content: center; gap: 4px; margin-top: -4px;
 }
 .coin {
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-radius: 50%;
-  background: #D6B25B;
-  border: 1px solid #8A6E28;
+  background: radial-gradient(circle at 38% 34%, #f0d588, #C7A008 70%, #8A6E28);
+  border: 1px solid #6f5618;
   position: relative;
-  font-size: 7px;
+  font-size: 8px;
   display: flex; align-items: center; justify-content: center;
   color: #4a3a15;
-  font-weight: 800;
+  font-weight: 900;
+  box-shadow: 0 2px 4px rgba(0,0,0,.25);
 }
 
 .cash-text { font-size: 11px; font-weight: 700; color: #1a1a1a; text-align: center; }
@@ -3050,9 +3131,10 @@ body::after {
 }
 .admin-sidebar__top .pokemon-logo {
   font-size: 34px;
-  color: var(--nintendo);
-  -webkit-text-stroke: 2px var(--pika);
+  color: var(--pika);
+  -webkit-text-stroke: 3px var(--poke-blue);
   paint-order: stroke fill;
+  text-shadow: 2px 2px 0 var(--poke-navy);
   margin: 0;
 }
 .admin-sidebar__top .snap-station {
@@ -4383,7 +4465,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .microcopy--muted { color: #6a6a6a; font-weight: 600; font-size: 12px; }
 
 /* ================================================================
-   Attract Screen — full-bleed, pulsing pokeball, tap-to-start
+   Attract Screen, full-bleed, pulsing pokeball, tap-to-start
    ================================================================ */
 #page-attract {
   padding: 0;
@@ -4427,12 +4509,12 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   font-style: italic;
   font-size: clamp(40px, 4vw + 22px, 68px);
   letter-spacing: -.01em;
-  color: var(--nintendo);
-  -webkit-text-stroke: 3px var(--pika);
+  color: var(--pika);
+  -webkit-text-stroke: 5px var(--poke-blue);
   paint-order: stroke fill;
   line-height: .95;
   margin: 0;
-  text-shadow: 0 6px 0 rgba(0,0,0,.12);
+  text-shadow: 3px 3px 0 var(--poke-navy), 0 8px 0 rgba(0,0,0,.10);
 }
 .attract-sub {
   font-family: 'Barlow', sans-serif;
@@ -4517,7 +4599,207 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .attract-foot button svg { width: 14px; height: 14px; }
 
 /* ================================================================
-   Capture States — overlay guidance patterns
+   Live Capture hero (the real, kid-friendly capture step in the flow)
+   ================================================================ */
+.snapcap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 0 4px;
+}
+.snapcap__title {
+  font-family: 'Mulish', sans-serif;
+  font-weight: 900;
+  font-size: clamp(26px, 2vw + 16px, 38px);
+  color: #1a1a1a;
+  margin: 0;
+  text-align: center;
+}
+.snapcap__sub {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #6b6452;
+  margin: -8px 0 0;
+  text-align: center;
+}
+.snapcap__viewport {
+  position: relative;
+  width: min(560px, 88vw);
+  aspect-ratio: 4 / 3;
+  max-height: 46vh;            /* keep the viewfinder from pushing the CTA below the fold */
+  border-radius: 28px;
+  overflow: hidden;
+  background: #0b1020;
+  border: 6px solid #fff;
+  box-shadow: 0 20px 50px rgba(12,20,70,.28), inset 0 0 0 3px rgba(12,20,70,.15);
+}
+.snapcap__video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);            /* selfie mirror, friendlier for kids */
+}
+.snapcap__video.no-mirror { transform: none; }
+/* friendly fallback shown when no camera is available */
+.snapcap__fallback {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #a7d0ff 0%, #7ec481 60%, #3c7f3b 100%);
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+.snapcap.is-fallback .snapcap__fallback { display: flex; }
+.snapcap.is-fallback .snapcap__video { display: none; }
+.snapcap__fallback svg { width: 76px; height: 76px; opacity: .9; }
+.snapcap__fallback-ghost { width: 90px; height: 120px; opacity: .8; }
+.snapcap__fallback-text { font-family: 'Barlow', sans-serif; font-weight: 800; font-size: 18px; }
+.snapcap__fallback-hint { font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 13px; opacity: .85; }
+/* corner brackets, reused look from the design states */
+.snapcap__brackets span {
+  position: absolute; width: 46px; height: 46px;
+  border: 4px solid rgba(255,255,255,.92);
+  border-radius: 4px;
+}
+.snapcap__brackets span:nth-child(1) { top: 18px; left: 18px; border-right: 0; border-bottom: 0; }
+.snapcap__brackets span:nth-child(2) { top: 18px; right: 18px; border-left: 0; border-bottom: 0; }
+.snapcap__brackets span:nth-child(3) { bottom: 18px; left: 18px; border-right: 0; border-top: 0; }
+.snapcap__brackets span:nth-child(4) { bottom: 18px; right: 18px; border-left: 0; border-top: 0; }
+.snapcap__flash {
+  position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none;
+}
+.snapcap__flash.fire { animation: snapFlash .4s ease; }
+@keyframes snapFlash { 0% { opacity: 0; } 12% { opacity: .9; } 100% { opacity: 0; } }
+.snapcap__hint-pill {
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+  background: rgba(12,20,70,.66); color: #fff;
+  font-family: 'Barlow', sans-serif; font-weight: 800; font-size: 15px;
+  padding: 8px 18px; border-radius: 999px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.snapcap__hint-pill svg { width: 18px; height: 18px; }
+
+/* the big round shutter, sized for small hands */
+.snapcap__upload-primary {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: min(420px, 92%); margin: 4px auto 0; padding: 18px 24px;
+  border: 0; border-radius: 18px; cursor: pointer;
+  background: var(--snap-red); color: #fff;
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 19px;
+  box-shadow: 0 8px 22px rgba(238,21,21,.32);
+  transition: transform .12s, filter .15s;
+}
+.snapcap__upload-primary svg { width: 24px; height: 24px; }
+.snapcap__upload-primary:hover { filter: brightness(1.05); }
+.snapcap__upload-primary:active { transform: scale(.97); }
+.snapcap__or {
+  display: flex; align-items: center; gap: 12px;
+  width: min(420px, 92%); margin: 14px auto 2px;
+  color: #a59b80;
+  font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.snapcap__or::before, .snapcap__or::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,.1); }
+.snapcap__shutter {
+  width: 104px; height: 104px;
+  border-radius: 50%;
+  border: 7px solid #fff;
+  background: var(--snap-red);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 10px 26px rgba(238,21,21,.4), inset 0 0 0 4px var(--snap-red);
+  transition: transform .12s ease, box-shadow .12s ease;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.snapcap__shutter:hover { transform: scale(1.04); }
+.snapcap__shutter:active { transform: scale(.94); }
+.snapcap__shutter svg { width: 46px; height: 46px; color: #fff; }
+.snapcap__shutter:disabled { background: var(--warm-gray); box-shadow: none; cursor: default; }
+.snapcap__shutter-label {
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 15px; color: #1a1a1a;
+  margin-top: -6px;
+}
+
+/* captured snaps strip */
+.snapcap__strip {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; justify-content: center;
+  min-height: 72px;
+  width: min(680px, 92vw);
+}
+.snapcap__thumb {
+  position: relative;
+  width: 84px; height: 63px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(12,20,70,.18);
+  background: #0b1020;
+  animation: snapPop .3s cubic-bezier(.22,1.2,.4,1) both;
+}
+@keyframes snapPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.snapcap__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.snapcap__thumb-del {
+  position: absolute; top: 2px; right: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(12,20,70,.78); color: #fff; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1;
+}
+.snapcap__strip-empty {
+  font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 14px; color: #9a937f;
+}
+.snapcap__actions {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center;
+  position: sticky; bottom: 8px; z-index: 6;
+  padding: 12px 16px; border-radius: 22px;
+  background: rgba(246,242,231,0.86);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(20,22,70,.12);
+}
+/* big, friendly primary "next" */
+.snapcap__next {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 18px 34px;
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 20px;
+  background: var(--success); color: #fff; border: 0; border-radius: 18px;
+  cursor: pointer; box-shadow: 0 10px 24px rgba(46,125,50,.34);
+  transition: transform .12s ease, filter .12s ease;
+}
+.snapcap__next:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.snapcap__next:disabled { background: var(--warm-gray); box-shadow: none; cursor: default; transform: none; filter: none; }
+.snapcap__next svg { width: 24px; height: 24px; }
+.snapcap__redo {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 16px 24px;
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 16px;
+  background: #fff; color: #444; border: 1.5px solid #e0dac7; border-radius: 16px; cursor: pointer;
+}
+.snapcap__redo svg { width: 20px; height: 20px; }
+/* divider above the design-reference states */
+.snapcap-divider {
+  width: 100%; text-align: center; margin: 26px 0 4px;
+  font-family: 'Barlow', sans-serif; font-weight: 800; font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase; color: #b1aa97;
+  display: flex; align-items: center; gap: 14px;
+}
+.snapcap-divider::before, .snapcap-divider::after {
+  content: ''; flex: 1; height: 1px; background: #e3ddca;
+}
+@media (max-width: 760px) {
+  .snapcap__shutter { width: 88px; height: 88px; }
+  .snapcap__next { font-size: 18px; padding: 16px 26px; }
+}
+
+
+/* ================================================================
+   Capture States, overlay guidance patterns
    ================================================================ */
 #page-capture {
   padding: 28px 30px;
@@ -4661,7 +4943,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 }
 
 /* ================================================================
-   Sticker Sheet UX — kiosk curation flow
+   Sticker Sheet UX, kiosk curation flow
    ================================================================ */
 #page-sticker-ux {
   padding: 24px 28px 28px;
@@ -4794,17 +5076,18 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   display: flex;
   flex-direction: column;
 }
-.wiz-step-view { display: none; flex-direction: column; gap: 18px; }
+.wiz-step-view { display: none; flex-direction: column; gap: 14px; }
 .wiz-step-view.is-active { display: flex; }
 .wiz-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
+  gap: 4px;
+  margin-bottom: 2px;
 }
 .wiz-hero__icon {
-  width: 76px; height: 76px;
+  width: 60px; height: 60px;
   display: flex; align-items: center; justify-content: center;
   position: relative;
 }
@@ -4812,8 +5095,8 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .wiz-hero__title {
   font-family: 'Mulish', sans-serif;
   font-weight: 900;
-  font-size: clamp(22px, 2.4vw + 16px, 32px);
-  margin: 4px 0 0;
+  font-size: clamp(20px, 2.0vw + 14px, 28px);
+  margin: 2px 0 0;
   color: #1a1a1a;
   letter-spacing: -.01em;
 }
@@ -4821,7 +5104,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   margin: 0;
   font-family: 'Barlow', sans-serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #6b6452;
   max-width: 540px;
 }
@@ -4858,28 +5141,29 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   box-shadow: 0 12px 32px rgba(37,99,235,.28);
   transform: translateY(-2px);
 }
+/* Selection check moved to the top-right corner so it never sits on top
+   of the card's own subtitle (was bottom-center, overlapping the text). */
 .layout-card.is-selected::after {
   content: '';
   position: absolute;
-  bottom: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 46px; height: 46px;
+  top: 10px; right: 10px; left: auto; bottom: auto;
+  transform: none;
+  width: 30px; height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, #3B7CFF 0%, var(--info-blue) 100%);
-  border: 4px solid var(--cream);
-  box-shadow: 0 8px 20px rgba(37,99,235,.55), 0 2px 4px rgba(37,99,235,.3);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(37,99,235,.5);
+  z-index: 3;
 }
 .layout-card.is-selected::before {
   content: '';
   position: absolute;
-  bottom: -3px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-45deg);
-  width: 18px; height: 10px;
-  border-left: 3.5px solid #fff;
-  border-bottom: 3.5px solid #fff;
-  z-index: 2;
+  top: 19px; right: 18px; left: auto; bottom: auto;
+  transform: rotate(-45deg);
+  width: 12px; height: 7px;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  z-index: 4;
 }
 .layout-card__badge {
   position: absolute;
@@ -4901,32 +5185,82 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   white-space: nowrap;
 }
 .layout-card__badge svg { width: 12px; height: 12px; fill: var(--pika); }
+/* Layout chooser thumbnails, physically-accurate previews.
+   - aspect-ratio matches the real 4×6 paper (152.4 × 101.6 mm = 1.5)
+   - 9.15% / 14.1% paper margins (same as .sheet-thumb / .pv-preview-box)
+   - 0.66% kiss-cut gap between the 16 stickers
+   - sharp postcard-style corners (was 12px; real postcards aren't smartphone-rounded)
+   - cells inherit the 26.6 × 20 mm = 1.33 ratio because the outer container
+     plus these margins/gaps geometrically force it. */
 .layout-card__preview {
-  width: 100%;
-  aspect-ratio: 3/2;
+  /* Pinned at 25% of real (1.5in × 1in), fits inside the chooser card.
+     SQUARE corners, real photo paper has guillotined edges, not rounded. */
+  width: 1.5in;
+  max-width: 100%;
+  margin: 0 auto;
+  aspect-ratio: 152.4 / 101.6;
   background: #fafaf2;
-  border-radius: 12px;
+  border-radius: 0;
   border: 1.5px solid #ece5cf;
+  overflow: hidden;
+  position: relative;
+}
+.layout-card__preview__grid {
+  /* Absolute-positioned so top/bottom % use height, left/right % use width.
+     This gives correct 1.33-aspect cells inside the 1.5-aspect postcard. */
+  position: absolute;
+  top: 9.15%; bottom: 9.15%;
+  left: 14.1%; right: 14.1%;
   display: grid;
-  gap: 4px;
-  padding: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows:    repeat(4, minmax(0, 1fr));
+  column-gap: 0.656%;
+  row-gap: 0.984%;
+}
+/* "Big" mode: single 4×6 photo, no kiss-cut grid. The cell fills the
+   entire postcard so the landscape illustration goes edge-to-edge. */
+.layout-card__preview--big .layout-card__preview__grid {
+  top: 0; bottom: 0; left: 0; right: 0;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  column-gap: 0;
+  row-gap: 0;
 }
 .layout-card__cell {
-  border-radius: 6px;
+  border-radius: 10.3%;                 /* 2.75 mm / 26.6 mm = real die-cut radius */
   background: linear-gradient(135deg, #c7d8ff, #a3b8ff);
+  min-width: 0;
+  min-height: 0;
 }
-.layout-card__cell--a { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
-.layout-card__cell--b { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
-.layout-card__cell--c { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
-.layout-card__cell--d { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
-.layout-card__cell--e { background: linear-gradient(135deg, #f0ddff, #d4b3ff); }
-.layout-card__cell--f { background: linear-gradient(135deg, #fff4b3, #ffe066); }
+/* 16 distinct cell colors a-p for the "16 unique" preview (ABCDEFGHIJKLMNOP).
+   The first 6 (a-f) are also used by the AABBAABB quad pattern + payment thumb. */
+.layout-card__cell--a { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); } /* blue   */
+.layout-card__cell--b { background: linear-gradient(135deg, #c7f0d8, #92dcb1); } /* green  */
+.layout-card__cell--c { background: linear-gradient(135deg, #ffe0b2, #ffc480); } /* orange */
+.layout-card__cell--d { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); } /* pink   */
+.layout-card__cell--e { background: linear-gradient(135deg, #f0ddff, #d4b3ff); } /* purple */
+.layout-card__cell--f { background: linear-gradient(135deg, #fff4b3, #ffe066); } /* yellow */
+.layout-card__cell--g { background: linear-gradient(135deg, #b3e9ff, #7fd4f2); } /* sky    */
+.layout-card__cell--h { background: linear-gradient(135deg, #ffd8a8, #ffb774); } /* peach  */
+.layout-card__cell--i { background: linear-gradient(135deg, #d8ffce, #a4ec85); } /* lime   */
+.layout-card__cell--j { background: linear-gradient(135deg, #ffc7ec, #f094cf); } /* magenta*/
+.layout-card__cell--k { background: linear-gradient(135deg, #c8e3ff, #8bb8ff); } /* steel  */
+.layout-card__cell--l { background: linear-gradient(135deg, #ffe5b4, #ffcc66); } /* amber  */
+.layout-card__cell--m { background: linear-gradient(135deg, #e0c7ff, #b894e8); } /* lavender*/
+.layout-card__cell--n { background: linear-gradient(135deg, #c2f2e2, #88d8b8); } /* mint   */
+.layout-card__cell--o { background: linear-gradient(135deg, #ffd6c0, #ff9f7a); } /* coral  */
+.layout-card__cell--p { background: linear-gradient(135deg, #cfd9ff, #9aa9d8); } /* indigo */
+/* "Same" cell, used for the 16-of-same-photo card; matches the
+   payment-flow .sheet-thumb top-left quadrant color so the cards
+   look continuous with the rest of the prototype. */
+.layout-card__cell--same { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
 /* big single photo preview gets a faux mountain landscape */
 .layout-card__cell--big {
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
   padding: 12px;
+  border-radius: 0;                  /* parent postcard has 3px; let it clip */
   background:
     radial-gradient(circle at 78% 28%, #ffd96b 0 7%, transparent 8%),
     linear-gradient(180deg, #c4d4ff 0%, #c4d4ff 60%, #d8eef0 100%);
@@ -5097,57 +5431,139 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   backdrop-filter: blur(8px);
   box-shadow: var(--glass-inner), var(--glass-shadow);
 }
-.ap-slots {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  margin-bottom: 18px;
-}
-.ap-slot {
+/* Add Photos uses the same physical proportions as the final sheet so the
+   user understands WHICH stickers each photo will produce. For the default
+   "4 Photos" layout, the 4 upload slots are arranged in the same AABB
+   quadrant positions on the sheet, each slot showing its 4 kiss-cut
+   sticker cells as semi-transparent sub-divisions. */
+.ap-sheet {
   position: relative;
-  aspect-ratio: 3/2;
-  border: 2px dashed #d3ccb8;
-  border-radius: 18px;
+  width: 100%;
+  max-width: 12in;                 /* 200% of real 6in, like dc-photo-grid */
+  margin: 0 auto 8px;
+  aspect-ratio: 152.4 / 101.6;
   background: #fff;
+  border: 1px solid #ece5cf;
+  border-radius: 0;                /* SQUARED postcard edges */
+  box-shadow: 0 8px 24px rgba(20,22,60,.08);
+}
+@media (max-width: 1200px) { .ap-sheet { max-width: 6in; } }
+@media (max-width:  720px) { .ap-sheet { max-width: 3in; } }
+
+.ap-sheet__inner {
+  position: absolute;
+  /* Match the paper margins on every other sheet representation. */
+  top: 9.15%; bottom: 9.15%; left: 14.1%; right: 14.1%;
+}
+/* Each slot is positioned absolutely to span its 2×2 quadrant of the inner
+   grid. Quadrant boundaries: width/height of the inner area is split into
+   halves with a 0.66% kiss-cut gap in the middle. */
+.ap-slots {
+  /* Switched from CSS grid to absolute positioning since each slot now
+     needs to span multiple sub-cells with kiss-cut visible inside. */
+  position: relative;
+  width: 100%; height: 100%;
+}
+
+.ap-slot {
+  position: absolute;
+  background: rgba(255,255,255,0.55);
+  border: 1.5px dashed rgba(122, 92, 255, 0.45);
+  border-radius: 0;                /* SQUARED corners matching sticker thumbs */
   cursor: pointer;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 10px;
-  transition: border-color .18s, transform .15s, box-shadow .18s;
+  align-items: center; justify-content: center;
+  gap: 6px;
+  transition: border-color .18s, background .15s, box-shadow .18s;
 }
 .ap-slot:hover {
   border-color: var(--paldea);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(122,92,255,.18);
+  background: rgba(122,92,255,0.06);
+  box-shadow: 0 8px 22px rgba(122,92,255,.15);
 }
 .ap-slot.is-pulsed { animation: ap-pulse .2s ease; }
 @keyframes ap-pulse {
-  0%,100% { background: #fff; }
-  50% { background: rgba(122,92,255,.08); }
+  0%,100% { background: rgba(255,255,255,0.55); }
+  50% { background: rgba(122,92,255,.18); }
 }
 .ap-slot__badge {
-  position: absolute; top: 12px; left: 12px;
-  width: 30px; height: 30px;
+  position: absolute; top: 8px; left: 8px;
+  width: 26px; height: 26px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--paldea) 18%, white);
-  color: var(--paldea);
+  background: var(--paldea);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 14px;
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 13px;
+  box-shadow: 0 2px 6px rgba(122,92,255,.35);
 }
 .ap-slot__circle {
-  width: 96px; height: 96px;
+  width: 64px; height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(122,92,255,.14), rgba(122,92,255,.06));
+  background: linear-gradient(135deg, rgba(122,92,255,.18), rgba(122,92,255,.08));
   display: flex; align-items: center; justify-content: center;
 }
-.ap-slot__circle svg { width: 40px; height: 40px; color: var(--paldea); }
+.ap-slot__circle svg { width: 30px; height: 30px; color: var(--paldea); }
 .ap-slot__label {
   font-family: 'Mulish', sans-serif; font-weight: 900;
-  font-size: 14px; color: #1a1a1a;
+  font-size: 13px; color: #1a1a1a;
+  text-align: center;
+  padding: 0 8px;
 }
 .ap-slot__hint {
   font-family: 'Barlow', sans-serif; font-weight: 600;
-  font-size: 11.5px; color: #8a8064;
+  font-size: 11px; color: #8a8064;
+  text-align: center;
 }
+/* Each slot's interior shows the kiss-cut sub-cells it will produce, drawn
+   as faint inner lines. The cross-shaped pattern matches the AABB quadrant's
+   2×2 grouping of stickers. */
+.ap-slot__cells {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
+  grid-template-rows: repeat(var(--rows, 2), 1fr);
+  column-gap: 0.94%;               /* kiss-cut equivalent for this quadrant */
+  row-gap: 1.41%;
+}
+.ap-slot__sub {
+  background: rgba(122, 92, 255, 0.04);
+  border: 1px dashed rgba(122, 92, 255, 0.28);
+  min-width: 0; min-height: 0;
+}
+
+/* === Per-layout slot positioning ===
+   For the recommended 4-Photos AABB layout, slots take up the 4 quadrants.
+   The split position is at (50%-gap/2 / 50%+gap/2) to leave the 1mm kiss-cut
+   gap visible in the middle of the sheet. */
+.ap-sheet[data-layout="2x2"] .ap-slot--1 { top: 0; left: 0; right: 50.328%; bottom: 50.492%; }
+.ap-sheet[data-layout="2x2"] .ap-slot--2 { top: 0; left: 50.328%; right: 0; bottom: 50.492%; }
+.ap-sheet[data-layout="2x2"] .ap-slot--3 { top: 50.492%; left: 0; right: 50.328%; bottom: 0; }
+.ap-sheet[data-layout="2x2"] .ap-slot--4 { top: 50.492%; left: 50.328%; right: 0; bottom: 0; }
+/* 1×1 "Big photo": single slot fills the whole inner area, no kiss-cut grid */
+.ap-sheet[data-layout="1x1"] .ap-slot--1 { inset: 0; }
+.ap-sheet[data-layout="1x1"] .ap-slot__cells { display: none; }
+/* 1×16 "16 of Same": single slot fills the whole inner area, kiss-cut visible inside */
+.ap-sheet[data-layout="1x16"] .ap-slot--1 { inset: 0; }
+/* 4×4 "16 Mini": 16 individual slots in a tight grid */
+.ap-sheet[data-layout="4x4"] .ap-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  column-gap: 0.656%;
+  row-gap: 0.984%;
+}
+.ap-sheet[data-layout="4x4"] .ap-slot {
+  position: relative;
+  inset: auto !important;
+}
+.ap-sheet[data-layout="4x4"] .ap-slot__circle { width: 32px; height: 32px; }
+.ap-sheet[data-layout="4x4"] .ap-slot__circle svg { width: 16px; height: 16px; }
+.ap-sheet[data-layout="4x4"] .ap-slot__label { font-size: 10px; }
+.ap-sheet[data-layout="4x4"] .ap-slot__hint { display: none; }
+.ap-sheet[data-layout="4x4"] .ap-slot__badge { width: 18px; height: 18px; font-size: 10px; top: 4px; left: 4px; }
+.ap-sheet[data-layout="4x4"] .ap-slot__cells { display: none; }
 .ap-action {
   display: flex; align-items: center; justify-content: center;
   gap: 12px;
@@ -5223,26 +5639,80 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   0%,100% { transform: scale(1); }
   50% { transform: scale(1.08); background: rgba(238,21,21,.1); }
 }
+/* Decorate workspace, the "sheet" the user is decorating. Honors the
+   real product proportions exactly, just rendered larger for usability:
+     - aspect 152.4/101.6 (paper, 1.5)
+     - padding 9.15% / 14.1%  (paper margins)
+     - 2×2 photo grid (the AABB layout's 4 unique photos)
+     - gap 0.66%  (kiss-cut equivalent between quadrants)
+     - SQUARE outer corners (real photo paper isn't rounded)
+   Each photo cell auto-derives the correct 1.33 (26.6/20) aspect from
+   the parent geometry, no need for an explicit aspect-ratio on the cell.
+   Size pinned at 200% of real for decoration usability:
+     - ≥1200px viewport : 12in × 8in (200% real)
+     - ≥ 720px           :  6in × 4in (100% real)
+     - smaller          :  3in × 2in ( 50% real) */
 .dc-photo-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  position: relative;
+  width: 100%;
+  max-width: 12in;                       /* 200% of real 6in */
+  margin: 0 auto;
+  aspect-ratio: 152.4 / 101.6;
   background: #fff;
-  padding: 14px;
-  border-radius: 16px;
   border: 1px solid var(--glass-border);
+  border-radius: 0;                      /* SQUARE photo paper */
   box-shadow: var(--glass-inner), 0 8px 24px rgba(20,22,60,.08);
 }
+@media (max-width: 1200px) { .dc-photo-grid { max-width: 6in; } }
+@media (max-width:  720px) { .dc-photo-grid { max-width: 3in; } }
+
+.dc-photo-grid__inner {
+  /* 4×4 sticker grid matching the final printed sheet's AABBAABB/CCDDCCDD
+     layout. Each of the 4 unique photos is replicated into a 2×2 quadrant
+     of stickers, top-left = A (orange), top-right = B (blue),
+     bottom-left = C (green), bottom-right = D (pink).
+     Absolute-positioned so top/bottom % use HEIGHT (paper margins of 9.3mm)
+     and left/right % use WIDTH (paper margins of 21.5mm), this is the only
+     way to get cells at the correct 26.6/20 = 1.33 aspect inside a 1.5 paper. */
+  position: absolute;
+  top: 9.15%; bottom: 9.15%;
+  left: 14.1%; right: 14.1%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows:    repeat(4, minmax(0, 1fr));
+  column-gap: 0.656%;                    /* 1mm / 152.4mm */
+  row-gap: 0.984%;                       /* 1mm / 101.6mm */
+}
+
 .dc-photo-cell {
-  aspect-ratio: 3/2;
-  border-radius: 12px;
+  /* aspect = 1.33 (26.6/20), auto-derived from parent geometry */
+  border-radius: 0;                      /* match the squared sheet */
   position: relative;
   overflow: hidden;
+  min-width: 0; min-height: 0;
 }
-.dc-photo-cell-1 { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
-.dc-photo-cell-2 { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
-.dc-photo-cell-3 { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
-.dc-photo-cell-4 { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
+/* AABBAABB/CCDDCCDD coloring, same quadrant mapping used in payment
+   thumbnail, layout-card AABB card, and preview step. Each photo
+   "A/B/C/D" gets printed into its 2×2 sticker quadrant. */
+.dc-photo-cell:nth-child(1),
+.dc-photo-cell:nth-child(2),
+.dc-photo-cell:nth-child(5),
+.dc-photo-cell:nth-child(6)   { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
+.dc-photo-cell:nth-child(3),
+.dc-photo-cell:nth-child(4),
+.dc-photo-cell:nth-child(7),
+.dc-photo-cell:nth-child(8)   { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
+.dc-photo-cell:nth-child(9),
+.dc-photo-cell:nth-child(10),
+.dc-photo-cell:nth-child(13),
+.dc-photo-cell:nth-child(14)  { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
+.dc-photo-cell:nth-child(11),
+.dc-photo-cell:nth-child(12),
+.dc-photo-cell:nth-child(15),
+.dc-photo-cell:nth-child(16)  { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
+/* The legacy positional classes are kept as no-ops in case any code paths
+   still target them, color is now driven by nth-child position. */
+.dc-photo-cell-1, .dc-photo-cell-2, .dc-photo-cell-3, .dc-photo-cell-4 {}
 .dc-sticker-overlay {
   position: absolute;
   font-size: 58px;
@@ -5255,6 +5725,267 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .dc-sticker-overlay-2 { top: 8%; right: 8%; transform: rotate(10deg); }
 .dc-sticker-overlay-3 { bottom: 6%; left: 12%; transform: rotate(-6deg); }
 .dc-sticker-overlay-4 { bottom: 8%; right: 8%; transform: rotate(8deg); }
+
+/* ---------- Interactive sticker placement (drag / rotate / scale) ----------
+   The dc-stamp-layer sits on top of the entire photo grid. Stamps inside it
+   can be dragged, rotated (top-right handle), resized (bottom-right handle),
+   or deleted (top-left handle). Supports mouse, touch, and stylus. */
+.dc-stamp-layer {
+  position: absolute;
+  /* Aligned with the printable area (matching dc-photo-grid__inner). */
+  top: 9.15%; bottom: 9.15%; left: 14.1%; right: 14.1%;
+  z-index: 20;
+  pointer-events: none;
+  touch-action: none;
+  overflow: visible;                /* stamps can be dragged off the layer */
+}
+/* dc-photo-grid must also allow overflow so stamps stay visible beyond the
+   paper edge. Each individual photo cell still clips its own contents. */
+.dc-photo-grid { overflow: visible; }
+
+/* ============== Kiss-cut die-line overlay ==============
+   Reproduces the reference's "Show Kiss Cut" toggle EXACTLY:
+     - cell viewBox: 26.6 × 20 mm
+     - cut path inset at (1.25, 0.833) mm
+     - cut path size:  24.1 × 17.5 mm
+     - corner radius:  2.75 mm (circular)
+     - asymmetric vertical insets (0.833mm top vs 1.667mm bottom), this
+       is intentional in the reference, representing real print-bleed
+       differences between paper feed-in and feed-out edges.
+   Toggle via body.is-cuts-visible (driven by the Decorate rail and the
+   Preview zoom-bar buttons). */
+.dc-photo-cell::after,
+.pv-cell::after,
+.sheet-thumb__cell::after,
+.layout-card__cell:not(.layout-card__cell--big)::after,
+.sticker-grid .cell::after {
+  content: '';
+  position: absolute;
+  /* Inset percentages from the cell edges, matching the reference path
+     exactly. Absolute %s here: top/bottom use HEIGHT, left/right use WIDTH. */
+  top: 4.17%;          /* 0.833 / 20  */
+  bottom: 8.33%;       /* 1.667 / 20  */
+  left: 4.7%;          /* 1.25 / 26.6 */
+  right: 4.7%;         /* 1.25 / 26.6 */
+  /* Elliptical syntax gives circular 2.75mm corners on the 24.1×17.5 inner
+     box (because horiz % of width and vert % of height differ by the
+     inverse of that box's aspect ratio). */
+  border-radius: 11.41% / 15.71%;
+  border: 1px solid rgba(255,255,255,0.95);
+  filter: drop-shadow(0 0 0.7px rgba(0,0,0,0.55));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s ease;
+  z-index: 5;
+}
+body.is-cuts-visible .dc-photo-cell::after,
+body.is-cuts-visible .pv-cell::after,
+body.is-cuts-visible .sheet-thumb__cell::after,
+body.is-cuts-visible .layout-card__cell:not(.layout-card__cell--big)::after,
+body.is-cuts-visible .sticker-grid .cell::after {
+  opacity: 1;
+}
+/* The "Big" mode (single 4×6 photo, no kiss-cut) gets its own outer cut path
+   when the toggle is on, traces the inside of the whole postcard. */
+body.is-cuts-visible .layout-card__preview--big::after,
+body.is-cuts-visible .pv-preview-box[data-pattern="big"]::after {
+  content: '';
+  position: absolute;
+  top: 2%; bottom: 2%; left: 1.5%; right: 1.5%;
+  border: 1px solid rgba(255,255,255,0.95);
+  border-radius: 4px;
+  filter: drop-shadow(0 0 0.7px rgba(0,0,0,0.55));
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Pressed/active state for any rail button or pill that toggles cut lines.
+   The Decorate rail button shares dc-rail-btn styling; this just adds the
+   "currently on" coloring. */
+.dc-rail-btn[aria-pressed="true"] {
+  background: var(--snap-red);
+  color: #fff;
+  border-color: var(--snap-red);
+  box-shadow: var(--glass-inner), 0 6px 14px rgba(238,21,21,.28);
+}
+.dc-rail-btn[aria-pressed="true"] svg {
+  color: #fff;
+  stroke: #fff;
+}
+
+/* Preview-step "Show Cuts" pill, sits next to the zoom controls and
+   matches their pill styling for visual coherence. */
+.pv-cuts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  box-shadow: var(--glass-inner);
+  margin-left: 12px;
+}
+.pv-cuts-toggle svg { width: 16px; height: 16px; }
+.pv-cuts-toggle:hover { border-color: var(--snap-red); }
+.pv-cuts-toggle[aria-pressed="true"] {
+  background: var(--snap-red);
+  color: #fff;
+  border-color: var(--snap-red);
+}
+.pv-cuts-toggle[aria-pressed="true"] svg { color: #fff; }
+.dc-stamp {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: center center;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.28));
+}
+.dc-stamp.is-dragging { cursor: grabbing; }
+.dc-stamp__content {
+  display: inline-block;
+  font-size: 56px;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 4px 6px;
+  border-radius: 6px;
+  outline: 2px dashed transparent;
+  transition: outline-color .1s;
+}
+.dc-stamp.is-text .dc-stamp__content {
+  font-weight: 900;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.35);
+}
+.dc-stamp.is-selected { z-index: 100; }
+.dc-stamp.is-selected .dc-stamp__content {
+  outline-color: var(--snap-red);
+  background: rgba(255,255,255,.18);
+}
+/* Three handles around a selected stamp.
+   Sized large enough for a child's fingertip on a touchscreen (24px target,
+   visually 22px with 1px border). */
+.dc-handle {
+  position: absolute;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #333;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  display: none;
+  align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: #333;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 101;
+  user-select: none;
+}
+.dc-stamp.is-selected .dc-handle { display: flex; }
+.dc-handle--del { top: -12px; left: -12px;    color: var(--snap-red); border-color: var(--snap-red); }
+.dc-handle--rot { top: -12px; right: -12px;   cursor: grab; }
+.dc-handle--sz  { bottom: -12px; right: -12px; cursor: nwse-resize; font-size: 14px; }
+.dc-handle--rot.is-dragging,
+.dc-handle--sz.is-dragging  { cursor: grabbing; }
+
+/* --- Text tab content (replaces the "Coming soon" placeholder) --- */
+.dc-text-builder {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px;
+  grid-column: 1 / -1;
+}
+.dc-text-builder__row {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.dc-text-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #dcd6c4;
+  background: rgba(255,255,255,0.7);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  outline: none;
+}
+.dc-text-input:focus { border-color: var(--snap-red); }
+.dc-font-select {
+  flex: 0 0 auto;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #dcd6c4;
+  background: rgba(255,255,255,0.7);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+  cursor: pointer;
+  outline: none;
+}
+.dc-color-swatch {
+  flex: 0 0 36px;
+  width: 36px; height: 36px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1.5px solid #dcd6c4;
+  background: #1a1a1a;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.dc-color-swatch input[type=color] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  border: 0; padding: 0; background: none; cursor: pointer;
+  opacity: 0;
+}
+.dc-text-add {
+  flex: 0 0 auto;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--snap-red);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+.dc-text-add:hover { filter: brightness(1.05); }
+.dc-text-preview {
+  margin-top: 4px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.7);
+  border: 1px dashed #dcd6c4;
+  text-align: center;
+  min-height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  color: #1a1a1a;
+  overflow: hidden;
+  word-break: break-word;
+}
+.dc-text-preview.is-empty { color: #aaa; font-style: italic; font-weight: 600; text-shadow: none; font-size: 14px; }
 
 .dc-control-panel {
   display: grid;
@@ -5298,6 +6029,179 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   gap: 12px;
   min-height: 220px;
 }
+
+/* ============== Doodle panel & canvas ==============
+   When the Doodle tab is active, the dc-sticker-grid is replaced with the
+   doodle controls (brush size, color swatches, line style, ink meter).
+   The canvas overlays the printable area of dc-photo-grid and only accepts
+   pointer events while body.is-doodle-mode is set. */
+.dc-doodle-panel {
+  grid-column: 1 / -1;             /* span both columns (no sidebar in doodle mode) */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+}
+.doodle-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.doodle-label {
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #5a503a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.doodle-sizes,
+.doodle-colors,
+.doodle-styles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.doodle-size {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid #ece5cf;
+  background: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .15s, transform .12s;
+}
+.doodle-size:hover { border-color: var(--snap-red); transform: translateY(-1px); }
+.doodle-size.is-active {
+  border-color: var(--snap-red);
+  background: color-mix(in srgb, var(--snap-red) 8%, white);
+}
+.doodle-size__dot {
+  background: #1a1a1a;
+  border-radius: 50%;
+  display: block;
+}
+.doodle-color {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px #ece5cf;
+  cursor: pointer;
+  padding: 0;
+  transition: transform .12s, box-shadow .15s;
+}
+.doodle-color:hover { transform: scale(1.1); }
+.doodle-color.is-active {
+  box-shadow: 0 0 0 2.5px var(--snap-red);
+  transform: scale(1.08);
+}
+.doodle-style {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid #ece5cf;
+  border-radius: 10px;
+  background: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #5a503a;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  /* Visual line preview inside the button */
+  display: flex; align-items: center; gap: 8px;
+}
+.doodle-style:hover { border-color: var(--snap-red); }
+.doodle-style.is-active {
+  border-color: var(--snap-red);
+  background: var(--snap-red);
+  color: #fff;
+}
+.doodle-style__line {
+  flex: 1;
+  height: 0;
+  border-top: 2.5px solid currentColor;
+}
+.doodle-style[data-style="dashed"] .doodle-style__line { border-top-style: dashed; }
+.doodle-style[data-style="dotted"] .doodle-style__line { border-top-style: dotted; }
+
+/* Inkwell meter */
+.doodle-inkwell {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(238,21,21,.06), rgba(238,21,21,.02));
+  border: 1px solid color-mix(in srgb, var(--snap-red) 18%, white);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.doodle-inkwell__head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'Barlow', sans-serif;
+}
+.doodle-inkwell__label { font-weight: 800; font-size: 12px; color: #1a1a1a; }
+.doodle-inkwell__pct   { font-weight: 700; font-size: 11px; color: #5a503a; font-variant-numeric: tabular-nums; }
+.doodle-inkwell__bar {
+  width: 100%; height: 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+.doodle-inkwell__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2e7d32 0%, #ffa726 70%, var(--snap-red) 100%);
+  width: 0%;
+  transition: width .25s ease;
+  border-radius: 999px;
+}
+.doodle-inkwell.is-empty .doodle-inkwell__fill { background: var(--snap-red); }
+.doodle-inkwell__hint {
+  margin: 0;
+  font-family: 'Barlow', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8a8064;
+}
+.doodle-inkwell.is-empty .doodle-inkwell__hint {
+  color: var(--snap-red);
+  font-weight: 800;
+}
+.doodle-clear {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #ece5cf;
+  background: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 800; font-size: 12px;
+  color: #5a503a;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  align-self: flex-start;
+}
+.doodle-clear:hover { border-color: var(--snap-red); color: var(--snap-red); }
+
+/* In Doodle mode the category sidebar disappears and the doodle panel spans
+   the full tab-content width. */
+body.is-doodle-mode .dc-category-sidebar { display: none; }
+body.is-doodle-mode .dc-tab-content { grid-template-columns: 1fr; }
+body.is-doodle-mode .dc-pagination,
+body.is-doodle-mode .dc-hint-card { display: none; }
+
+/* The doodle canvas sits over the printable area and only receives pointer
+   events while in doodle mode. Otherwise events pass through to stamps. */
+.dc-doodle-canvas {
+  position: absolute;
+  top: 9.15%; bottom: 9.15%; left: 14.1%; right: 14.1%;
+  z-index: 18;                          /* below stamp layer (20) */
+  pointer-events: none;
+  touch-action: none;
+  display: block;
+}
+body.is-doodle-mode .dc-doodle-canvas {
+  pointer-events: auto;
+  cursor: crosshair;
+  z-index: 22;                          /* above stamps while drawing */
+}
+/* Subtle "you're drawing" affordance: when in doodle mode, dim stamps slightly */
+body.is-doodle-mode .dc-stamp { opacity: 0.55; pointer-events: none; }
 .dc-category-sidebar {
   display: flex; flex-direction: column; gap: 4px;
   border-right: 1px solid #ece5cf;
@@ -5394,38 +6298,134 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   gap: 22px;
   margin-top: 4px;
 }
+/* Preview reproduces the physical 4×6 sticker sheet at scale.
+   Dimensions match the .sheet-thumb in the payment flow:
+     - aspect-ratio 152.4 / 101.6 (paper)
+     - 9.15% / 14.1% paper margins
+     - 4×4 cell grid (16 stickers)
+     - 0.66% kiss-cut gap
+     - 10.3% cell corner radius (2.75mm / 26.6mm)
+   The preview is pinned to PHYSICAL print dimensions so the customer
+   sees the sticker sheet at (approximately) life-size:
+     - Desktop ≥1200px : width 6in = real 4×6" landscape (576×384 CSS px)
+     - Below 1200px    : width 3in = real 2×3" landscape (288×192 CSS px),
+                         which is "less than 200% of real 4×6"
+   CSS `in` is defined as 96px regardless of physical DPI, but on most
+   modern displays it renders close to a real inch at arm's length. */
 .pv-preview-box {
-  width: 100%;
-  aspect-ratio: 3/2;
+  width: 6in;
+  aspect-ratio: 152.4 / 101.6;
+  max-width: 100%;
+  margin: 0 auto;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 0;                       /* SQUARE postcard edges */
   border: 1.5px solid #ece5cf;
   box-shadow: 0 16px 32px rgba(20,22,70,.12), 0 2px 6px rgba(20,22,70,.05);
-  padding: 14px;
-  display: grid;
-  grid-template-columns: repeat(2,1fr);
-  grid-template-rows: repeat(2,1fr);
-  gap: 8px;
+  padding: 0;                             /* inner grid uses absolute positioning */
   position: relative;
+}
+@media (max-width: 1200px) {
+  /* "Anything less than 200% of real 4×6", 200% of 4×6 in width = 12in =
+     1152px viewport. Below this threshold, drop the preview to real 2×3"
+     so it stays physically accurate on tablets and small laptops. */
+  .pv-preview-box { width: 3in; }
+}
+.pv-sheet-grid {
+  /* Absolute positioning so top/bottom % use HEIGHT and left/right % use
+     WIDTH, the only way to get per-axis correct paper margins. Pure CSS
+     padding %s use width for ALL four sides, which makes cells render at
+     1.5 aspect instead of the correct 1.33. */
+  position: absolute;
+  top: 9.15%; bottom: 9.15%;              /* 9.3 / 101.6 = 9.15% of height */
+  left: 14.1%; right: 14.1%;              /* 21.5 / 152.4 = 14.1% of width */
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows:    repeat(4, minmax(0, 1fr));
+  column-gap: 0.656%;                     /* 1mm / 152.4mm */
+  row-gap: 0.984%;                        /* 1mm / 101.6mm */
 }
 .pv-cell {
-  border-radius: 10px;
+  border-radius: 10.3%;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, #c7d8ff, #a3b8ff);
+  min-width: 0; min-height: 0;
 }
-.pv-cell--1 { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
-.pv-cell--2 { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
-.pv-cell--3 { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
-.pv-cell--4 { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
+/* "Big" mode: instead of 16 cells, show one large cell filling the inner
+   area. Achieved by hiding the grid and using a single absolute child. */
+.pv-preview-box[data-pattern="big"] .pv-sheet-grid { display: none; }
+.pv-preview-box[data-pattern="big"]::before {
+  content: '';
+  position: absolute;
+  inset: 9.15% 14.1%;
+  border-radius: 4%;
+  background:
+    radial-gradient(circle at 78% 28%, #ffd96b 0 4%, transparent 5%),
+    linear-gradient(180deg, #c4d4ff 0%, #c4d4ff 60%, #d8eef0 100%);
+  z-index: 0;
+}
+.pv-preview-box[data-pattern="big"]::after {
+  content: '';
+  position: absolute;
+  left: 14.1%; right: 14.1%; bottom: 9.15%;
+  height: 55%;
+  background: #6b85d6;
+  clip-path: polygon(0 100%, 22% 38%, 42% 60%, 60% 30%, 80% 56%, 100% 30%, 100% 100%);
+  z-index: 0;
+}
+/* "Same" mode: 16 cells, all the same color. */
+.pv-preview-box[data-pattern="same"] .pv-cell {
+  background: linear-gradient(135deg, #ffe0b2, #ffc480);
+}
+/* "Quad" mode: AABBAABB/CCDDCCDD pattern, four 2×2 photo groups. */
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(1),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(2),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(5),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(6)   { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(3),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(4),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(7),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(8)   { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(9),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(10),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(13),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(14)  { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(11),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(12),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(15),
+.pv-preview-box[data-pattern="quad"] .pv-cell:nth-child(16)  { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
+/* "Unique" mode: 16 distinct colors. */
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(1)  { background: linear-gradient(135deg, #c7d8ff, #a3b8ff); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(2)  { background: linear-gradient(135deg, #c7f0d8, #92dcb1); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(3)  { background: linear-gradient(135deg, #ffe0b2, #ffc480); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(4)  { background: linear-gradient(135deg, #ffd1d6, #ffaeb8); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(5)  { background: linear-gradient(135deg, #f0ddff, #d4b3ff); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(6)  { background: linear-gradient(135deg, #fff4b3, #ffe066); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(7)  { background: linear-gradient(135deg, #b3e9ff, #7fd4f2); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(8)  { background: linear-gradient(135deg, #ffd8a8, #ffb774); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(9)  { background: linear-gradient(135deg, #d8ffce, #a4ec85); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(10) { background: linear-gradient(135deg, #ffc7ec, #f094cf); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(11) { background: linear-gradient(135deg, #c8e3ff, #8bb8ff); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(12) { background: linear-gradient(135deg, #ffe5b4, #ffcc66); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(13) { background: linear-gradient(135deg, #e0c7ff, #b894e8); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(14) { background: linear-gradient(135deg, #c2f2e2, #88d8b8); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(15) { background: linear-gradient(135deg, #ffd6c0, #ff9f7a); }
+.pv-preview-box[data-pattern="unique"] .pv-cell:nth-child(16) { background: linear-gradient(135deg, #cfd9ff, #9aa9d8); }
+
 .pv-sticker {
   position: absolute;
-  font-size: 22px;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,.18));
+  font-size: 28px;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.25));
+  z-index: 10;
+  pointer-events: none;
 }
-.pv-sticker--a { top: 12%; left: 12%; }
-.pv-sticker--b { top: 14%; right: 12%; }
-.pv-sticker--c { bottom: 12%; left: 16%; }
-.pv-sticker--d { bottom: 10%; right: 12%; }
+/* Decoration overlays sit at the four corners of the printable grid area.
+   Positions are tuned so each sticker overlaps a corner cell of the 4×4
+   grid (grid lives at 9.15% top/bottom, 14.1% left/right). */
+.pv-sticker--a { top: 11%; left: 14%; transform: rotate(-12deg); }
+.pv-sticker--b { top: 11%; right: 14%; transform: rotate(10deg); }
+.pv-sticker--c { bottom: 11%; left: 14%; transform: rotate(-6deg); }
+.pv-sticker--d { bottom: 11%; right: 14%; transform: rotate(8deg); }
 .pv-rail { display: flex; flex-direction: column; gap: 14px; }
 .pv-card {
   background: var(--glass-bg);
@@ -5710,7 +6710,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .print-summary__row:last-child { border-bottom: 0; }
 .print-summary__row strong { color: #1a1a1a; font-weight: 900; }
 
-/* Hero pictograms — bigger illustrations + scribble decorations */
+/* Hero pictograms, bigger illustrations + scribble decorations */
 .wiz-hero__icon { width: 124px; height: 96px; overflow: visible; }
 .wiz-hero__icon svg.wiz-hero__art { width: 100%; height: 100%; overflow: visible; }
 .wiz-hero__title {
@@ -5743,7 +6743,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 }
 
 /* ================================================================
-   Assets — raster image library + slot assignment (al-)
+   Assets, raster image library + slot assignment (al-)
    ================================================================ */
 #page-assets {
   padding: 24px 28px 28px;
@@ -6009,7 +7009,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 }
 
 /* ================================================================
-   Post-Print — 2-column glassmorphic layout (pp-)
+   Post-Print, 2-column glassmorphic layout (pp-)
    ================================================================ */
 #page-post-print {
   padding: 24px 28px 28px;
@@ -6225,7 +7225,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 }
 
 /* ================================================================
-   Error States — inline / banner / full-screen hierarchy
+   Error States, inline / banner / full-screen hierarchy
    ================================================================ */
 #page-errors {
   padding: 28px 30px;
@@ -6348,7 +7348,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .err-fullscreen-demo__actions { display: flex; gap: 12px; margin-top: 10px; }
 
 /* ================================================================
-   Sound UI — audio placeholders + waveforms
+   Sound UI, audio placeholders + waveforms
    ================================================================ */
 #page-sound {
   padding: 28px 30px;
@@ -6489,7 +7489,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
 .sound-card--poke     .sound-wave span { background: #C9A200; }
 
 /* ================================================================
-   Microcopy — voice + patterns library
+   Microcopy, voice + patterns library
    ================================================================ */
 #page-microcopy {
   padding: 28px 30px;
@@ -7632,7 +8632,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   .al-slot { grid-template-columns: 48px 1fr auto; gap: 10px; padding: 8px; }
   .al-slot__thumb { width: 48px; height: 36px; }
 
-  /* Tray icon/text in asset library — allow wrap */
+  /* Tray icon/text in asset library, allow wrap */
   .al-tray { flex-wrap: wrap; }
 
   /* Admin header buttons wrap below greeting at very narrow widths */
@@ -7643,7 +8643,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   .admin-panel { overflow-x: auto; }
   .sessions-table { min-width: 340px; }
 
-  /* Shutter row gap is 36px by default — too wide for narrow screens */
+  /* Shutter row gap is 36px by default, too wide for narrow screens */
   .shutter-row { gap: 16px; justify-content: space-around; flex-wrap: wrap; }
 
   /* Primary buttons have min-width: 220px which forces overflow on phones */
@@ -7657,7 +8657,7 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
   .admin-footer { padding: 14px; margin: 10px -14px 0; }
   .admin-footer__actions { flex-wrap: wrap; }
 
-  /* Pages with their own padding override the canvas — bring them
+  /* Pages with their own padding override the canvas, bring them
      in line with the smaller canvas at this size. */
   #page-errors, #page-sound, #page-microcopy, #page-capture,
   #page-sticker-ux, #page-assets, #page-post-print {
@@ -7738,3 +8738,394 @@ body.a11y :focus-visible { box-shadow: var(--focus-ring); }
     transition-duration: 0.001s !important;
   }
 }
+
+/* Flow integration: captured photos inside AABB Add-Photos slots + preview */
+.ap-slot__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; z-index: 1; }
+.ap-slot__cells { z-index: 1; }
+/* When a quadrant is filled, keep the kiss-cut grid visible so the preview
+   shows the true sticker count (4 per quadrant for AABB, 16 for "Same"). The
+   photo is repeated into each sub-sticker; the gaps read as white kiss-cut. */
+.ap-slot.is-filled .ap-slot__cells { background: #fff; border-radius: inherit; }
+.ap-slot__sub.is-filled {
+  background-color: #0b1020;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px dashed rgba(255,255,255,.85);
+}
+.ap-slot.is-filled .ap-slot__circle,
+.ap-slot.is-filled .ap-slot__label,
+.ap-slot.is-filled .ap-slot__hint { display: none; }
+.ap-slot.is-filled .ap-slot__badge { z-index: 2; background: var(--success); color: #fff; }
+.ap-slot.is-filled { border-color: var(--success); }
+.pv-cell.has-photo { background-color: #0b1020; }
+
+}
+/* ================================================================
+   Dev Tools page (#page-devtools)
+   ================================================================ */
+#page-devtools {
+  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.dev-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.dev-head h2 { font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 26px; margin: 0; color: #111; }
+.dev-head p { margin: 4px 0 0; font-size: 13px; color: #666; font-weight: 500; max-width: 720px; }
+.dev-badge {
+  background: #0C1446; color: #fff; font-family: 'Barlow', sans-serif; font-weight: 800;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; flex-shrink: 0;
+}
+.dev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dev-card {
+  background: rgba(255,255,255,.7);
+  border: 1px solid #ece5cf;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 26px rgba(20,22,70,.06);
+}
+.dev-card--wide { grid-column: 1 / -1; }
+.dev-card__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.dev-card__head h3 { font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 16px; margin: 0; color: #1a1a1a; }
+.dev-card__hint { font-size: 11px; font-weight: 700; color: #8a836f; }
+.dev-card__desc { font-size: 12.5px; color: #6b6452; font-weight: 500; margin: 0 0 14px; line-height: 1.5; }
+
+.ram-drop {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 2.5px dashed #c9c1aa; border-radius: 16px; padding: 26px 20px;
+  background: #FAF7EC; cursor: pointer; text-align: center; transition: border-color .15s, background .15s;
+}
+.ram-drop:hover, .ram-drop.is-dragover { border-color: var(--paldea); background: rgba(122,92,255,.06); }
+.ram-drop__icon { width: 46px; height: 46px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; }
+.ram-drop__icon svg { width: 24px; height: 24px; color: var(--paldea); }
+.ram-drop__title { font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 14px; color: #1a1a1a; }
+.ram-drop__sub { font-size: 11px; color: #8a836f; font-weight: 600; }
+
+.ram-pool {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; min-height: 76px;
+  padding: 10px; background: #F4EFE0; border-radius: 12px; align-items: center;
+}
+.ram-pool__empty { font-size: 12px; color: #9a937f; font-weight: 600; padding: 0 6px; }
+.ram-thumb {
+  position: relative; width: 76px; height: 57px; border-radius: 8px; overflow: hidden;
+  border: 2px solid #fff; box-shadow: 0 3px 8px rgba(12,20,70,.16); background: #0b1020;
+  animation: snapPop .25s cubic-bezier(.22,1.2,.4,1) both;
+}
+.ram-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ram-thumb__del {
+  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(12,20,70,.78); color: #fff; border: 0; cursor: pointer; font-size: 13px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.ram-apply { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ram-apply__label { font-size: 12px; font-weight: 800; color: #555; margin-right: 4px; }
+
+.dev-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.dev-row:last-child { margin-bottom: 0; }
+.dev-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 15px; border-radius: 11px; border: 1px solid #e0dac7; background: #fff;
+  font-family: 'Mulish', sans-serif; font-weight: 700; font-size: 12.5px; color: #333; cursor: pointer;
+  transition: transform .12s, background .12s, border-color .12s;
+}
+.dev-btn:hover { transform: translateY(-1px); background: #fafaf4; }
+.dev-btn svg { width: 16px; height: 16px; }
+.dev-btn.is-active { background: var(--snap-red); border-color: var(--snap-red); color: #fff; }
+.dev-btn--primary { background: var(--nintendo); border-color: var(--nintendo); color: #fff; }
+.dev-btn--primary:hover { background: #16307A; }
+.dev-btn--ghost { background: transparent; color: #888; }
+.dev-btn--ghost:hover { background: #f1ece0; color: #555; }
+
+.dev-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dev-stat {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px;
+  background: #FAF7EC; border-radius: 10px;
+}
+.dev-stat__k { font-size: 10px; color: #8a836f; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.dev-stat__v { font-size: 18px; font-weight: 900; color: #111; font-variant-numeric: tabular-nums; }
+
+/* Kiosk mode: hide ALL dev chrome so a guest (down to 5 years old) sees only
+   the friendly attract screen, full-bleed, with nothing technical on top. */
+body.kiosk-mode .nav-bar { display: none !important; }
+
+/* HARD GUARANTEE: in the child-facing kiosk, only the five guest pages may
+   ever render. Even if some non-guest page (admin, pitch, dev tools, etc.)
+   were somehow left active by stale state, it is forced display:none here, so
+   admin chrome can never appear in the default presentation. The guest guard
+   then returns focus to the attract screen. */
+body.kiosk-mode #page-pitch,
+body.kiosk-mode #page-design,
+body.kiosk-mode #page-admin,
+body.kiosk-mode #page-assets,
+body.kiosk-mode #page-errors,
+body.kiosk-mode #page-sound,
+body.kiosk-mode #page-microcopy,
+body.kiosk-mode #page-devtools { display: none !important; }
+
+/* ===== Firm division: User (kiosk) vs Operator (attendant/owner) ===== */
+/* Operator mode hides both the guest chrome and the team/dev nav bar, and
+   shows a distinct dark operator console bar so the back office can never be
+   mistaken for the guest experience. */
+body.operator-mode .nav-bar { display: none !important; }
+/* The team/dev tab bar is visible ONLY in build mode — never for a guest. */
+body:not(.build-mode) .nav-bar { display: none !important; }
+body.operator-mode .credit-pill { display: none !important; }
+body.operator-mode .demo-hotspot { display: none; }     /* exit via the bar */
+body.operator-mode #led-halo { display: none; }
+.op-bar { display: none; }
+body.operator-mode .op-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 9998;
+  padding: 0 16px; background: #0C1446; color: #fff;
+  box-shadow: 0 2px 14px rgba(12,20,70,.35);
+  font-family: 'Mulish', sans-serif;
+}
+body.operator-mode .canvas, body.operator-mode #page-admin { padding-top: 64px; }
+.op-bar__left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.op-bar__badge { display: inline-flex; align-items: center; gap: 7px; font-weight: 900; font-size: 13px; letter-spacing: .02em; background: rgba(255,255,255,.12); padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+.op-bar__badge svg { width: 15px; height: 15px; fill: none; stroke: #FFCB05; stroke-width: 2; }
+.op-bar__venue { font-weight: 700; font-size: 13px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op-bar__right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.op-bar__clock { font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; opacity: .9; }
+.op-bar__exit { display: inline-flex; align-items: center; gap: 7px; padding: 8px 15px; border: 0; border-radius: 999px; background: var(--snap-red); color: #fff; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.op-bar__exit svg { width: 16px; height: 16px; }
+.op-bar__exit:hover { filter: brightness(1.08); }
+
+/* Attendant PIN modal */
+.op-pin { position: fixed; inset: 0; z-index: 10002; display: none; align-items: center; justify-content: center; }
+.op-pin.is-open { display: flex; }
+.op-pin__scrim { position: absolute; inset: 0; background: rgba(8,6,24,.6); backdrop-filter: blur(4px); }
+.op-pin__card { position: relative; width: min(340px, 92vw); background: #fff; border-radius: 24px; padding: 26px 24px 20px; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.op-pin__icon { width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%; background: #0C1446; display: flex; align-items: center; justify-content: center; }
+.op-pin__icon svg { width: 26px; height: 26px; fill: none; stroke: #FFCB05; stroke-width: 2; }
+.op-pin__title { font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 21px; margin: 0 0 4px; color: #1a1a1a; }
+.op-pin__sub { font-size: 12.5px; color: #6b6452; margin: 0 0 16px; font-weight: 600; }
+.op-pin__dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; }
+.op-pin__dots span { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cfc8b6; transition: background .12s, border-color .12s; }
+.op-pin__dots span.is-on { background: #0C1446; border-color: #0C1446; }
+.op-pin__dots.is-error span { border-color: var(--snap-red); animation: op-shake .3s; }
+@keyframes op-shake { 0%,100%{ transform: translateX(0); } 25%{ transform: translateX(-6px); } 75%{ transform: translateX(6px); } }
+.op-pin__pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.op-pin__key { padding: 16px 0; border: 1.5px solid #ECE4CF; border-radius: 14px; background: #FBF8EF; font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 20px; color: #2a2a2a; cursor: pointer; }
+.op-pin__key:hover { background: #fff; border-color: var(--snap-red); }
+.op-pin__key:active { transform: scale(.96); }
+.op-pin__key--util { font-size: 14px; color: #8a836f; }
+.op-pin__hint { font-size: 11px; color: #b3aa92; margin: 14px 0 8px; font-weight: 700; }
+.op-pin__cancel { width: 100%; padding: 12px; border: 0; border-radius: 12px; background: transparent; color: #8a836f; font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 14px; cursor: pointer; }
+.op-pin__cancel:hover { background: #F4EFE0; }
+
+/* Hidden reviewer hotspot + retired legacy trigger */
+.dev-kiosk-exit { display: none !important; }
+.demo-hotspot { position: fixed; top: 0; left: 0; width: 50px; height: 50px; z-index: 10001; background: transparent; }
+body:not(.kiosk-mode) .demo-hotspot { display: none; }
+
+/* Demo navigation drawer (reviewer access without leaving kiosk visuals) */
+.demo-drawer { position: fixed; inset: 0; z-index: 10000; display: none; }
+.demo-drawer.is-open { display: block; }
+.demo-drawer__scrim { position: absolute; inset: 0; background: rgba(8,6,24,.45); backdrop-filter: blur(3px); }
+.demo-drawer__panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: min(320px, 86vw);
+  background: #fff; box-shadow: -16px 0 50px rgba(0,0,0,.25); padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 4px; overflow-y: auto; transform: translateX(100%);
+  transition: transform .26s cubic-bezier(.2,.8,.2,1);
+}
+.demo-drawer.is-open .demo-drawer__panel { transform: translateX(0); }
+.demo-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.demo-drawer__title { font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 16px; color: #1a1a1a; }
+.demo-drawer__close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #F4EFE0; font-size: 20px; cursor: pointer; }
+.demo-drawer__group { font-size: 11px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: #b3aa92; margin: 14px 0 4px; }
+.demo-drawer__link {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 11px 12px; border: 0; border-radius: 12px; background: transparent; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 14px; color: #2a2a2a;
+}
+.demo-drawer__link:hover { background: #FBF6E9; }
+.demo-drawer__link.is-active { background: #FFF1F1; color: var(--snap-red); }
+.demo-drawer__note { font-size: 11px; color: #8a836f; margin-top: 14px; line-height: 1.5; }
+.demo-drawer__link--op { background: #0C1446; color: #fff; margin-top: 2px; }
+.demo-drawer__link--op:hover { background: #16205e; }
+.demo-drawer__link--op svg { stroke: #FFCB05; }
+.demo-drawer__link--op.is-active { background: #16205e; color: #fff; }
+
+/* ============================================================
+   Print credits: persistent balance pill (shown during the
+   customer journey) + in-flow Add Credits overlay.
+   ============================================================ */
+.credit-pill {
+  position: fixed; top: 14px; right: 16px; z-index: 4000;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 15px; border-radius: 999px;
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 14px;
+  color: #0C1446; background: var(--pika);
+  box-shadow: 0 8px 20px rgba(20,22,70,.22);
+  border: 2px solid #fff;
+}
+.credit-pill svg { width: 17px; height: 17px; }
+.credit-pill__n { font-variant-numeric: tabular-nums; }
+.credit-pill.is-low { background: #FF9E2C; }
+.credit-pill.is-empty { background: var(--snap-red); color: #fff; }
+.credit-pill.bump { animation: credit-bump .42s cubic-bezier(.3,1.5,.5,1); }
+@keyframes credit-bump { 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
+/* During kiosk mode the pill anchors below the (hidden) chrome cleanly */
+body:not(.kiosk-mode) .credit-pill { top: 70px; }
+
+/* Add Credits overlay */
+.addcredits {
+  position: fixed; inset: 0; z-index: 5000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(8,10,30,.55); backdrop-filter: blur(6px);
+  padding: 20px;
+}
+.addcredits.is-open { display: flex; }
+.addcredits__panel {
+  width: min(520px, 96vw); max-height: 92vh; overflow: auto;
+  background: var(--cream); border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(8,10,30,.5);
+  border: 3px solid #fff; padding: 24px;
+}
+.addcredits__head { text-align: center; margin-bottom: 14px; }
+.addcredits__title { font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 24px; color: var(--night); }
+.addcredits__sub { font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 14px; color: #6b6452; margin-top: 4px; }
+.addcredits__balance {
+  display: inline-flex; gap: 7px; align-items: center; margin: 8px auto 0;
+  padding: 6px 14px; border-radius: 999px; background: #fff;
+  font-weight: 800; font-size: 13px; color: var(--night);
+  box-shadow: inset 0 0 0 1px rgba(20,22,70,.1);
+}
+.addcredits__tabs { display: flex; gap: 8px; margin: 16px 0 14px; }
+.addcredits__tab {
+  flex: 1; padding: 12px; border-radius: 14px; border: 2px solid transparent;
+  background: #fff; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 14px; color: #6b6452;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 12px rgba(20,22,70,.06);
+}
+.addcredits__tab svg { width: 18px; height: 18px; }
+.addcredits__tab.is-active { border-color: var(--info-blue); color: var(--night); background: #fff; }
+.addcredits__view { display: none; }
+.addcredits__view.is-active { display: block; }
+
+.ac-packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.ac-pack {
+  position: relative; padding: 14px; border-radius: 16px; border: 2px solid transparent;
+  background: #fff; cursor: pointer; text-align: center;
+  box-shadow: 0 4px 12px rgba(20,22,70,.07); transition: transform .12s, border-color .12s;
+}
+.ac-pack:hover { transform: translateY(-2px); }
+.ac-pack.is-active { border-color: var(--info-blue); box-shadow: 0 10px 24px rgba(37,99,235,.22); }
+.ac-pack__credits { font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 22px; color: var(--night); }
+.ac-pack__price { font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 14px; color: #6b6452; }
+.ac-pack__deal { display: inline-block; margin-top: 5px; padding: 2px 8px; border-radius: 999px; background: #E7F6EA; color: var(--success); font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+.ac-card-fields { display: grid; gap: 10px; margin-bottom: 14px; }
+.ac-input {
+  width: 100%; padding: 13px 14px; border-radius: 12px; border: 2px solid #E3DECF;
+  background: #fff; font-family: 'Mulish', sans-serif; font-weight: 700; font-size: 16px; color: var(--night);
+  font-variant-numeric: tabular-nums;
+}
+.ac-input:focus { border-color: var(--info-blue); outline: none; }
+.ac-input--code { text-align: center; letter-spacing: .28em; text-transform: uppercase; font-size: 22px; font-weight: 900; }
+.ac-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ac-help { font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 12px; color: #8a836f; text-align: center; margin-top: 4px; }
+.ac-feedback { min-height: 20px; text-align: center; font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 13px; margin: 6px 0; }
+.ac-feedback.is-success { color: var(--success); }
+.ac-feedback.is-error { color: var(--snap-red); }
+.ac-cta {
+  width: 100%; padding: 15px; border-radius: 16px; border: 0; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-weight: 900; font-size: 17px; color: #fff;
+  background: var(--success); box-shadow: 0 10px 24px rgba(46,125,50,.32);
+}
+.ac-cta:disabled { background: #B7B1A6; box-shadow: none; cursor: default; }
+.ac-cta.is-processing { opacity: .75; cursor: default; }
+.ac-close {
+  display: block; width: 100%; margin-top: 10px; padding: 11px; border: 0; background: none; cursor: pointer;
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 13px; color: #6b6452;
+}
+.ac-attendant-note {
+  margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: #FFF6DC;
+  font-family: 'Barlow', sans-serif; font-weight: 600; font-size: 12px; color: #7a5a12; text-align: center;
+}
+
+/* Photo-count nudge on the Add Photos step */
+.ap-nudge {
+  display: none; align-items: center; gap: 10px; justify-content: center;
+  margin: 0 auto 12px; max-width: 560px; padding: 11px 16px; border-radius: 14px;
+  background: #FFF6DC; color: #7a5a12;
+  font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 13px;
+}
+.ap-nudge.is-shown { display: flex; }
+.ap-nudge svg { width: 18px; height: 18px; flex: none; }
+
+/* Attendant access button on the attract footer */
+.attract-attendant {
+  background: none; border: 0; cursor: pointer;
+  color: inherit; font: inherit; opacity: .8;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.attract-attendant svg { width: 13px; height: 13px; }
+
+/* Capture tools: upload + record GIF */
+.snapcap__tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.snapcap__tool {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 14px; cursor: pointer;
+  border: 2px solid rgba(31,62,175,.2); background: #fff; color: var(--night);
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(20,22,70,.08);
+  transition: transform .12s, border-color .12s;
+}
+.snapcap__tool:hover { transform: translateY(-1px); border-color: var(--info-blue); }
+.snapcap__tool:disabled { opacity: .6; cursor: default; }
+.snapcap__tool svg { width: 18px; height: 18px; }
+
+/* Post-print export bar */
+.pp-export {
+  display: flex; gap: 10px; align-items: center; justify-content: center;
+  flex-wrap: wrap; margin: 14px auto 4px; max-width: 760px;
+}
+.pp-export__label { font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 13px; color: #6b6452; }
+.pp-export__btn {
+  padding: 9px 16px; border-radius: 12px; cursor: pointer;
+  border: 2px solid var(--info-blue); background: var(--info-blue); color: #fff;
+  font-family: 'Mulish', sans-serif; font-weight: 800; font-size: 13px;
+  box-shadow: 0 4px 12px rgba(37,99,235,.2);
+  transition: transform .12s, filter .12s;
+}
+.pp-export__btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.pp-export__btn--ghost { background: #fff; color: var(--info-blue); }
+
+/* User-mode theme selector on the attract footer */
+.attract-themes { display: inline-flex; align-items: center; gap: 8px; }
+.attract-themes__label { font-size: 12px; font-weight: 800; letter-spacing: .04em; opacity: .85; }
+.attract-theme-dot {
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+  background: var(--d); border: 2px solid rgba(255,255,255,.85);
+  box-shadow: 0 2px 6px rgba(0,0,0,.2); padding: 0;
+  transition: transform .12s, outline-color .12s;
+  outline: 2px solid transparent; outline-offset: 2px;
+}
+.attract-theme-dot:hover { transform: scale(1.12); }
+.attract-theme-dot.is-active { outline-color: var(--d); transform: scale(1.12); }
+
+/* Print: only the composed sheet prints, at exact 4x6in. */
+#print-root { display: none; }
+#print-root img { width: 100%; height: 100%; object-fit: contain; display: block; }
+@media print {
+  body * { visibility: hidden !important; }
+  #print-root, #print-root * { visibility: visible !important; }
+  #print-root {
+    display: block !important; position: fixed; inset: 0;
+    width: 100%; height: 100%; margin: 0; background: #fff; z-index: 99999;
+  }
+  @page { size: 6in 4in; margin: 0; }
+}
+
+@media (max-width: 860px) {
+  .dev-grid { grid-template-columns: 1fr; }
+  .dev-stat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.photo-tile__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-tile.has-img { background: #0C1446; }
+.photo-tile__label { position: relative; z-index: 1; }
+
