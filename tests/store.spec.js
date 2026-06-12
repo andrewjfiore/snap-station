@@ -13,15 +13,15 @@ function freshStore() {
 }
 
 test.describe('SnapStore', () => {
-  test('defaults: CRT off, videoRental theme, $3 / 5 credits per card, no free play', () => {
+  test('defaults: CRT off, snap theme, $4 / 5 credits per card, no free play', () => {
     const { store } = freshStore();
     const s = store.getSettings();
     expect(s.crtIntensity).toBe(0);
     expect(s.scanlines).toBe(false);
-    expect(s.theme).toBe('videoRental');
+    expect(s.theme).toBe('snap');
     expect(s.rentalShelves).toBe(true);
     const a = store.getAttendant();
-    expect(a.pricePerSheetCents).toBe(300);
+    expect(a.pricePerSheetCents).toBe(400); // design system v4: $4/credit
     expect(a.creditsPerCard).toBe(5);
     expect(a.freePlay).toBe(false);
     expect(store.getCredits()).toBe(0);
@@ -29,9 +29,9 @@ test.describe('SnapStore', () => {
 
   test('settings patch round-trips and merges with defaults', () => {
     const { store } = freshStore();
-    store.setSettings({ theme: 'marioLevel', crtIntensity: 0.5 });
+    store.setSettings({ theme: 'ocean', crtIntensity: 0.5 });
     const s = store.getSettings();
-    expect(s.theme).toBe('marioLevel');
+    expect(s.theme).toBe('ocean');
     expect(s.crtIntensity).toBe(0.5);
     expect(s.soundOn).toBe(true); // untouched default
   });
@@ -49,7 +49,7 @@ test.describe('SnapStore', () => {
     data['ss.v1.settings'] = '{not json';
     data['ss.v1.gallery'] = '"not an array"';
     data['ss.v1.credits'] = '"NaN"';
-    expect(store.getSettings().theme).toBe('videoRental');
+    expect(store.getSettings().theme).toBe('snap');
     expect(store.getGallery()).toEqual([]);
     expect(store.getCredits()).toBe(0);
   });
@@ -101,7 +101,7 @@ test.describe('SnapStore', () => {
     data['sk_screen'] = '"editor"';
 
     expect(store.migrate()).toBe(true);
-    expect(store.getSettings().theme).toBe('cinnabar');
+    expect(store.getSettings().theme).toBe('snap'); // v4: legacy names normalize
     expect(store.getSettings().crtIntensity).toBe(0.3);
     expect(store.getSettings().rentalShelves).toBe(false);
     expect(store.getCredits()).toBe(7);

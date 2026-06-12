@@ -107,10 +107,48 @@ function PinPadModal({ open, title, hint, onClose, onSubmit }) {
 }
 
 // The attendant panel — one well-organized panel with the existing controls.
+// Supply meter row: level band coloring + restock.
+function SupplyRow({ label, value, max, level, onRestock }) {
+  return (
+    <div className="att-supply">
+      <div className="att-supply__head">
+        <span className="field-label">{label}</span>
+        <span className={cx('att-supply__count', `is-${level}`)}>{value} / {max}</span>
+      </div>
+      <div className="att-supply__bar">
+        <div className={cx('att-supply__fill', `is-${level}`)} style={{ width: `${Math.round(value / max * 100)}%` }}/>
+      </div>
+      <button className="btn btn-secondary att-supply__btn" onClick={onRestock}>Reload {label.toLowerCase()}</button>
+    </div>
+  );
+}
+
 function AttendantPanel({ attendant, patchAttendant, settings, setSettings,
                           credits, refreshCredits, onClearGallery, onExit, onClose }) {
   const [changePinOpen, setChangePinOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [supplies, setSupplies] = useState(() => SnapStore.suppliesSnapshot());
+  const [tokens, setTokens] = useState(() => SnapStore.getTokens());
+  const [newCode, setNewCode] = useState('');
+  const [newCodeCredits, setNewCodeCredits] = useState(3);
+
+  const restock = (which) => {
+    SoundFX.confirm();
+    SnapStore.restockSupplies(which);
+    setSupplies(SnapStore.suppliesSnapshot());
+    snapToast('success', `All set! ${which === 'paper' ? 'Paper' : 'Ribbon'} reloaded.`);
+  };
+
+  const addCode = () => {
+    const code = newCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length < 6 || code.length > 8) { SoundFX.error(); snapToast('error', 'Codes are 6 to 8 letters/numbers.'); return; }
+    const t = SnapStore.getTokens();
+    SnapStore.setTokens({ codes: { ...t.codes, [code]: Math.max(1, newCodeCredits) } });
+    setTokens(SnapStore.getTokens());
+    setNewCode('');
+    SoundFX.confirm();
+    snapToast('success', `Code ${code} is live — worth ${Math.max(1, newCodeCredits)} credit${newCodeCredits === 1 ? '' : 's'}.`);
+  };
 
   const grant = (n) => {
     SoundFX.coin();
@@ -216,6 +254,12 @@ function AttendantPanel({ attendant, patchAttendant, settings, setSettings,
                      value={settings.printServerUrl || ''}
                      onChange={(e) => setSettings({ printServerUrl: e.target.value })}/>
             </div>
+            <div className="att-row">
+              <label className="field-label" htmlFor="att-shareurl">QR share URL</label>
+              <input id="att-shareurl" className="text-field" type="url" placeholder="(station site)"
+                     value={settings.shareUrl || ''}
+                     onChange={(e) => setSettings({ shareUrl: e.target.value })}/>
+            </div>
             <label className="att-row" htmlFor="att-sound">
               <span className="field-label">Sound</span>
               <input id="att-sound" type="checkbox" className="att-toggle" checked={!!settings.soundOn}
@@ -228,8 +272,64 @@ function AttendantPanel({ attendant, patchAttendant, settings, setSettings,
             </label>
           </section>
 
+          <section className="att-section" data-testid="att-supplies">
+            <h3 className="label">Supplies</h3>
+            <SupplyRow label="Paper" value={supplies.paper} max={supplies.paperMax}
+                       level={supplies.paperLevel} onRestock={() => restock('paper')}/>
+            <SupplyRow label="Ribbon" value={supplies.ribbon} max={supplies.ribbonMax}
+                       level={supplies.ribbonLevel} onRestock={() => restock('ribbon')}/>
+            <div className="att-row">
+              <span className="field-label">Sheets printable</span>
+              <strong>{supplies.remaining}</strong>
+            </div>
+            <div className="att-row">
+              <span className="field-label">Sold this session</span>
+              <strong>{supplies.soldToday}</strong>
+            </div>
+            <div className="att-row">
+              <span className="field-label">Margin / sheet</span>
+              <strong>{centsToUsd(Math.max(0, attendant.pricePerSheetCents - supplies.unitCostCents))}</strong>
+            </div>
+          </section>
+
+          <section className="att-section" data-testid="att-tokens">
+            <h3 className="label">Snap Pass codes</h3>
+            <p className="att-note">Sell codes for cash — one-time use, each worth its credit value.</p>
+            <div className="att-token-list">
+              {Object.entries(tokens.codes).map(([code, n]) => (
+                <span key={code} className={cx('att-token', tokens.used.includes(code) && 'is-used')}
+                      title={tokens.used.includes(code) ? 'Already redeemed' : `Worth ${n} credit${n === 1 ? '' : 's'}`}>
+                  {code} · {n}{tokens.used.includes(code) ? ' ✓' : ''}
+                </span>
+              ))}
+            </div>
+            <div className="att-row">
+              <input className="text-field" type="text" maxLength={8} placeholder="NEWCODE1"
+                     value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())}/>
+              <input className="text-field att-token-credits" type="number" min="1" max="20"
+                     value={newCodeCredits}
+                     onChange={(e) => setNewCodeCredits(Math.max(1, parseInt(e.target.value, 10) || 1))}/>
+              <button className="btn btn-secondary" onClick={addCode}>Add code</button>
+            </div>
+          </section>
+
           <section className="att-section">
             <h3 className="label">Maintenance</h3>
+            <label className="att-row" htmlFor="att-lock">
+              <span className="field-label">Production lock</span>
+              <input id="att-lock" type="checkbox" className="att-toggle" checked={!!attendant.productionLock}
+                     onChange={(e) => {
+                       patchAttendant({ productionLock: e.target.checked });
+                       snapToast('info', e.target.checked
+                         ? 'Locked: demo hints (PIN, sample codes, demo card) are hidden.'
+                         : 'Unlocked: demo hints visible again.');
+                     }}/>
+              <span className={cx('toggle-dot', attendant.productionLock && 'on')} aria-hidden="true">
+                {attendant.productionLock && (
+                  <svg style={{ width: 16, height: 16 }} viewBox="0 0 24 24"><path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="M5 12l5 5 9-11"/></svg>
+                )}
+              </span>
+            </label>
             <div className="att-actions">
               <button className="btn btn-danger-ghost" onClick={() => setConfirmClear(true)}>Clear Gallery</button>
               <button className="btn btn-secondary" onClick={() => { SoundFX.click(); setChangePinOpen(true); }}>Change PIN</button>
@@ -238,35 +338,15 @@ function AttendantPanel({ attendant, patchAttendant, settings, setSettings,
           </section>
         </div>
 
-        <section className="theme-selector att-themes" aria-label="Theme selector">
-          <div className="theme-selector__head">
-            <h2 className="theme-selector__title">Choose Your Theme</h2>
-            <p className="theme-selector__sub">Tap to apply</p>
-          </div>
-          <div className="theme-strip" role="radiogroup" aria-label="Theme options">
-            {DS_THEMES.map((t) => (
-              <button key={t.id}
-                      className={cx('theme-panel', (settings.theme === t.id || (t.id === 'pokemon-center' && !DS_THEMES.some(x => x.id === settings.theme))) && 'is-active')}
-                      data-theme={t.id} style={{ '--tp-ink': t.ink }}
-                      role="radio" aria-checked={settings.theme === t.id}
-                      onClick={() => { SoundFX.select(); setSettings({ theme: t.id }); }}>
-                <svg className="theme-panel__art" viewBox="0 0 200 100" preserveAspectRatio="none">
-                  {t.polys.map(([pts, fill], i) => <polygon key={i} points={pts} fill={fill}/>)}
-                </svg>
-                <svg className="theme-panel__check" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" fill="#fff"/>
-                  <path fill="none" stroke="#1a1a1a" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" d="M7 12l3.5 3.5L17 9"/>
-                </svg>
-                <div className="theme-panel__body">
-                  <div className="theme-panel__chips">
-                    {t.polys.map(([, fill], i) => <span key={i} style={{ background: fill }}/>)}
-                  </div>
-                  <div>
-                    <div className="theme-panel__name">{t.name}</div>
-                    <div className="theme-panel__tag">{t.tag}</div>
-                  </div>
-                </div>
-              </button>
+        <section className="att-section att-themes-dots" aria-label="Theme selector">
+          <h3 className="label">Station theme</h3>
+          <div className="attract-themes att-theme-row">
+            {[['snap','#EE1515','Classic red'],['ocean','#1F6FEB','Ocean blue'],['grape','#7A5CFF','Grape'],
+              ['mint','#13A36B','Mint'],['sunset','#FF7043','Sunset'],['berry','#C0272D','Berry']].map(([id, d, label]) => (
+              <button key={id}
+                      className={cx('attract-theme-dot', settings.theme === id && 'is-active')}
+                      style={{ '--d': d }} aria-label={label} title={label}
+                      onClick={() => { SoundFX.select(); setSettings({ theme: id }); }}/>
             ))}
           </div>
         </section>

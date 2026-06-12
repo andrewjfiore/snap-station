@@ -850,3 +850,25 @@ body.a11y .capture-overlay__sub { color: #333; }
    it conditionally, so is-open shows it. */
 .dyesub.is-open { display: flex; }
 .dyesub__fault.is-open { display: block; }
+
+/* === v4 attendant additions === */
+.att-supply { display: flex; flex-direction: column; gap: 6px; }
+.att-supply__head { display: flex; justify-content: space-between; align-items: baseline; }
+.att-supply__count { font: 800 13px/1 Barlow, sans-serif; }
+.att-supply__count.is-low { color: #B7791F; }
+.att-supply__count.is-critical, .att-supply__count.is-empty { color: var(--snap-red); }
+.att-supply__bar { height: 10px; border-radius: 999px; background: #eee7d4; overflow: hidden; }
+.att-supply__fill { height: 100%; border-radius: 999px; background: var(--success); transition: width .25s ease; }
+.att-supply__fill.is-low { background: #F6AD55; }
+.att-supply__fill.is-critical, .att-supply__fill.is-empty { background: var(--snap-red); }
+.att-supply__btn { align-self: flex-start; padding: 8px 12px; font-size: 12px; }
+.att-note { font: 600 12px/1.45 Mulish, sans-serif; color: #6d675a; margin: 0; }
+.att-token-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.att-token {
+  font: 800 11px/1 'JetBrains Mono', monospace;
+  background: rgba(255,255,255,.85); border: 1px solid #e0dac7;
+  border-radius: 8px; padding: 6px 8px;
+}
+.att-token.is-used { opacity: .45; text-decoration: line-through; }
+.att-token-credits { max-width: 70px; }
+.att-theme-row { display: flex; gap: 10px; }

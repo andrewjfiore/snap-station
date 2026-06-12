@@ -89,7 +89,7 @@ function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid, onTopUp
     setFailed(null);
     // Consumables gate (v4): an empty paper tray or ribbon blocks printing
     // BEFORE any money or credits move.
-    if (!freePlay && !SnapStore.canPrint(copies)) {
+    if (!SnapStore.canPrint(copies)) {
       const out = SnapStore.suppliesSnapshot();
       setFailed(out.remaining === 0
         ? 'This station is out of supplies. An attendant has been notified — please check back soon!'

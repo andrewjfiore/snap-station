@@ -24,15 +24,40 @@ test.describe('Sticker geometry constants', () => {
     for (const p of C.PAPER_SIZES) expect(p.w).toBeGreaterThan(p.h);
   });
 
-  test('every layout maps exactly 16 cells with valid group indices', () => {
+  test('every layout maps its cells with valid group indices', () => {
     for (const layout of C.SHEET_LAYOUTS) {
-      expect(layout.mapping).toHaveLength(16);
+      // grid layouts have 16 cells; the v4 'big' layout is one full-envelope sticker
+      expect(layout.mapping).toHaveLength(layout.id === 'big' ? 1 : 16);
       for (const g of layout.mapping) {
         expect(g).toBeGreaterThanOrEqual(0);
         expect(g).toBeLessThan(layout.groups);
       }
       // every group is used at least once
       expect(new Set(layout.mapping).size).toBe(layout.groups);
+    }
+  });
+
+  test("v4 'big': one cell spanning the grid envelope, kiss-cut from the shared insets", () => {
+    for (const paper of ['4x6', 'hagaki', 'letter']) {
+      const g = C.getSheetGeometry(paper, 'big');
+      const grid = C.getSheetGeometry(paper, 'quad');
+      expect(g.cells).toHaveLength(1);
+      const cell = g.cells[0];
+      // same outer envelope as every grid layout (dimensional consistency)
+      expect(cell.x).toBeCloseTo(grid.grid.marginL, 9);
+      expect(cell.y).toBeCloseTo(grid.grid.marginT, 9);
+      expect(cell.w).toBeCloseTo(grid.grid.w, 9);
+      expect(cell.h).toBeCloseTo(grid.grid.h, 9);
+      // kiss-cut inset by the per-cell offsets on each edge
+      const D = C.STICKER_DIMS, s = g.paper.scale;
+      expect(cell.kiss.x - cell.x).toBeCloseTo(D.KISS_OFF_X * s, 9);
+      expect(cell.kiss.y - cell.y).toBeCloseTo(D.KISS_OFF_Y * s, 9);
+      expect(cell.kiss.r).toBeCloseTo(D.KISS_R * s, 9);
+      // on 4x6 this lands within 2.6 mm of the original hardware's 109.4 x 83 mm image area
+      if (paper === '4x6') {
+        expect(Math.abs(cell.kiss.w - 109.4)).toBeLessThan(2.6);
+        expect(Math.abs(cell.kiss.h - 83)).toBeLessThan(2.6);
+      }
     }
   });
 

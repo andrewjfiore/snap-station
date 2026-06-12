@@ -10,7 +10,7 @@ and print it with real kiss-cut geometry measured from an original sticker sheet
 
 | Entry point | What it is |
 | --- | --- |
-| `index.html` | **The kiosk** — attract screen → 5-step wizard (Choose Layout → Add Photos → Decorate → Review & Pay → Print), live capture with on-screen guidance, simulated $3 payment (card/cash demo, credits, free play), attendant mode, 3-tier error handling, keyboard/touch |
+| `index.html` | **The kiosk** — attract screen (START + Game Pak insert) → 5-step wizard (Choose Layout → Add Photos → Decorate → Review & Pay → Print), live capture with on-screen guidance + GIF recording, fault-safe credits ($4/sheet, card/cash demo, Snap Pass codes, free play), dye-sub print ritual, supplies tracking, attendant mode, 3-tier errors, keyboard/touch |
 | `classic.html` | The classic two-page suite in a tab shell |
 | `snap-station.html` | Classic capture page — webcam or any window (emulator!) via screen share, zoom/pan/mirror, GIF recording, gallery, send-to-stickers |
 | `sticker-sheet.html` | Classic composer — per-cell cropping, emoji/text stamps, JPG/PNG/PDF/GIF/Print export, **one-file Cricut/Silhouette Print-Then-Cut SVG** |
@@ -27,6 +27,14 @@ warm cream retail look, glass panels, Barlow/Mulish type, pokéball controls.
 | Capture | Review & Pay |
 | --- | --- |
 | ![Capture](docs/screenshots/step2-capture.png) | ![Pay](docs/screenshots/step4-pay.png) |
+
+| Dye-sub print ritual | All set! |
+| --- | --- |
+| ![Printing](docs/screenshots/step5-dyesub.png) | ![Post-print](docs/screenshots/step5-postprint.png) |
+
+*A jam never charges you: credits are reserved at payment, committed only when the
+sheet finishes, and refunded on a printer fault — the original kiosk burned your
+card at the button press; this one keeps the spec's promise.*
 
 ## Run it
 
