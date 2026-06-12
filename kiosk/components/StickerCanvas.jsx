@@ -1,7 +1,54 @@
 // ======= Sticker Canvas =======
 // Renders the 4×6 landscape sheet with an auto-fit scale,
 // draws the sticker grid (exact mm dimensions), supports draggable/
-// resizable/rotatable stamps on top, and shows kiss-cut overlay + CRT + fade.
+// resizable/rotatable stamps on top, and shows kiss-cut overlay.
+// Restyled to the design-system look (light glass frame, white sheet).
+
+// Scattered emoji wallpaper behind the sheet (screen decoration only — it is
+// not printed). Deterministic seeded layout so it doesn't reshuffle on render.
+function sheetWpSeeded(n) {
+  let s = n;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function SheetWallpaper({ wallpaperId = 'none', customEmoji = '', count = 60, seed = 7 }) {
+  const wp = SHEET_WALLPAPERS.find((w) => w.id === wallpaperId);
+  let emoji = wp ? wp.emoji : [];
+  if (wallpaperId === 'custom' && customEmoji) {
+    emoji = Array.from(customEmoji).filter((c) => c.trim());
+    if (emoji.length === 0) emoji = [customEmoji];
+  }
+  const emojiKey = emoji.join('');
+  const rnd = useMemo(() => {
+    if (emoji.length === 0) return [];
+    const r = sheetWpSeeded(seed);
+    return Array.from({ length: count }, (_, i) => ({
+      key: i,
+      emoji: emoji[Math.floor(r() * emoji.length)],
+      left: r() * 100,
+      top: r() * 100,
+      size: 14 + r() * 18,
+      rot: (r() * 2 - 1) * 30,
+    }));
+  }, [wallpaperId, customEmoji, emojiKey, count, seed]);
+
+  if (!emoji || emoji.length === 0) return null;
+  return (
+    <div className="sk-wallpaper" aria-hidden="true">
+      {rnd.map((e) => (
+        <span key={e.key}
+              style={{ left: `${e.left}%`, top: `${e.top}%`, fontSize: `${e.size}px`,
+                       transform: `rotate(${e.rot}deg)` }}>
+          {e.emoji}
+        </span>
+      ))}
+    </div>
+  );
+}
+window.SheetWallpaper = SheetWallpaper;
 
 function StickerCanvas({
   sheet,
@@ -114,11 +161,11 @@ function StickerCanvas({
 
   return (
     <div className="sk-sheet-frame">
-      <EmojiWallpaper wallpaperId={sheet.wallpaper || 'none'} customEmoji={sheet.customEmoji || ''}/>
+      <SheetWallpaper wallpaperId={sheet.wallpaper || 'none'} customEmoji={sheet.customEmoji || ''}/>
 
       <div
         ref={stageRef}
-        className={cx('sk-sheet', sheet.crtFilter && 'crt-on', sheet.fade && 'fade-on')}
+        className="sk-sheet"
         style={{
           aspectRatio: `${paper.w} / ${paper.h}`,
           background: sheet.paperColor || '#ffffff',

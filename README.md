@@ -10,16 +10,23 @@ and print it with real kiss-cut geometry measured from an original sticker sheet
 
 | Entry point | What it is |
 | --- | --- |
-| `index.html` | **The kiosk** — full attract → capture → gallery → design → checkout → print flow, cabinet chrome with CRT bezel, Blockbuster rental-shelves backdrop, simulated $3 Snap Card payment, attendant mode, gamepad/keyboard/touch |
+| `index.html` | **The kiosk** — attract screen → 5-step wizard (Choose Layout → Add Photos → Decorate → Review & Pay → Print), live capture with on-screen guidance, simulated $3 payment (card/cash demo, credits, free play), attendant mode, 3-tier error handling, keyboard/touch |
 | `classic.html` | The classic two-page suite in a tab shell |
 | `snap-station.html` | Classic capture page — webcam or any window (emulator!) via screen share, zoom/pan/mirror, GIF recording, gallery, send-to-stickers |
 | `sticker-sheet.html` | Classic composer — per-cell cropping, emoji/text stamps, JPG/PNG/PDF/GIF/Print export, **one-file Cricut/Silhouette Print-Then-Cut SVG** |
 
-![Attract screen, Video Rental theme](docs/screenshots/kiosk-attract-videoRental.png)
+The kiosk UI follows the project's Pokémon Snap Station design system (`ui_designsystem`):
+warm cream retail look, glass panels, Barlow/Mulish type, pokéball controls.
 
-| Designer | Mario Level theme |
+![Attract screen](docs/screenshots/attract.png)
+
+| Choose your layout | Decorate |
 | --- | --- |
-| ![Editor](docs/screenshots/kiosk-editor-videoRental.png) | ![Mario theme](docs/screenshots/kiosk-attract-marioLevel.png) |
+| ![Layout](docs/screenshots/step1-layout.png) | ![Decorate](docs/screenshots/step3-decorate.png) |
+
+| Capture | Review & Pay |
+| --- | --- |
+| ![Capture](docs/screenshots/step2-capture.png) | ![Pay](docs/screenshots/step4-pay.png) |
 
 ## Run it
 

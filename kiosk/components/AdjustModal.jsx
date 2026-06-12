@@ -48,7 +48,8 @@ function AdjustModal({ src, pos, onChange, onClose }) {
     <div className="adjust-overlay" role="dialog" aria-modal="true" aria-label="Adjust photo framing"
          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="adjust-box">
-        <h3>Adjust Photo</h3>
+        <h3 className="adjust-title">Adjust your photo</h3>
+        <p className="adjust-sub">Drag to reframe · slide to zoom</p>
         <div className="adjust-frame" ref={frameRef}
              style={{ aspectRatio: `${KISS_INNER_W} / ${KISS_INNER_H}` }}
              onPointerDown={onPointerDown}
@@ -70,9 +71,9 @@ function AdjustModal({ src, pos, onChange, onClose }) {
                  onChange={(e) => setP(prev => ({ ...prev, zoom: parseFloat(e.target.value) }))}/>
         </div>
         <div className="adjust-actions">
-          <button className="btn sm" onClick={reset}>Reset</button>
-          <button className="btn sm" onClick={() => { SoundFX.back(); onClose(); }}>Cancel</button>
-          <button className="btn primary sm" onClick={commit}>Done</button>
+          <button className="btn btn-secondary" onClick={reset}>Reset</button>
+          <button className="btn btn-secondary" onClick={() => { SoundFX.back(); onClose(); }}>Cancel</button>
+          <button className="btn btn-primary" onClick={commit}>Done</button>
         </div>
       </div>
     </div>
