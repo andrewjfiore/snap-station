@@ -836,3 +836,17 @@ body.a11y .capture-overlay__sub { color: #333; }
 .rec-dot .d { width: 8px; height: 8px; border-radius: 50%; background: var(--snap-red); animation: rec-blink 1s infinite; }
 @keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .rec-dot .d { animation: none; } }
+
+/* === v4 print/post-print additions === */
+.bigscreen-overlay {
+  position: fixed; inset: 0; z-index: 6000;
+  background: #06080f;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.bigscreen-overlay img { max-width: 96vw; max-height: 96vh; box-shadow: 0 0 120px rgba(255,255,255,.18); border-radius: 8px; }
+.pp-share__actions { display: flex; justify-content: center; margin-top: 12px; }
+/* The dyesub dialog ships display:none in the spec showcase; the kiosk mounts
+   it conditionally, so is-open shows it. */
+.dyesub.is-open { display: flex; }
+.dyesub__fault.is-open { display: block; }

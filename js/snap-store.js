@@ -65,6 +65,7 @@
     cabinetVisible: 'auto',
     chromeStyle: 'brushed',
     printServerUrl: '',
+    shareUrl: '',                // post-print QR target; empty → the live station site
   };
 
   var DEFAULT_ATTENDANT = {

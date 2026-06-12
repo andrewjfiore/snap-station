@@ -249,7 +249,8 @@ function App() {
                     onCapture={handleCapture} onImportClassic={handleImportClassic}/>,
     3: <Step3Decorate sheet={sheet} setSheet={setSheet} updateSheet={updateSheet}/>,
     4: <Step4Pay sheet={sheet} updateSheet={updateSheet} credits={credits}
-                 refreshCredits={refreshCredits} onPaid={handlePaid}/>,
+                 refreshCredits={refreshCredits} onPaid={handlePaid}
+                 onTopUp={(need, onDone) => setAddCreditsOpen({ need, onDone })}/>,
     5: <Step5Print sheet={sheet} snaps={snaps} order={order}
                    onStartOver={startOver} onPrintAnother={() => { setOrder(null); setStep(4); }}/>,
   }[step];
