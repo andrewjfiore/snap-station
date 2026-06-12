@@ -18,7 +18,7 @@ working tree.
 | `kiosk/components/` | UI kit (toasts, score popup, error tiers, keypad), icons, attendant panel, adjust modal, sticker canvas | design system + earlier kiosk port |
 | `kiosk/lib/` | hooks (storage/keyboard/gamepad/idle), 300-DPI sheet renderer | earlier kiosk port (unchanged geometry) |
 | `js/` | Shared framework-agnostic UMD modules (single source of truth) | extracted from classic pages + restored from `99f7fe8` |
-| `lib/vendor/` | Self-hosted third-party libraries (exact pinned files) | npm registry (versions in `docs/DEPLOYMENT.md`) |
+| `lib/vendor/` | Self-hosted third-party libraries (exact pinned files, incl. qrcode-generator 1.5.0 for the post-print QR) | npm registry (versions in `docs/DEPLOYMENT.md`) |
 | `assets/fonts/` | Self-hosted woff2 fonts + `fonts.css` (all OFL-licensed) | Google Fonts (latin subsets) |
 | `manifest.json`, icons | PWA-lite install metadata | new |
 

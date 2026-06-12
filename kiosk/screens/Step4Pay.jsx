@@ -46,11 +46,11 @@ function OrderSummary({ layoutName, copies, totalCents, method, onChangeMethod }
   );
 }
 
-function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid }) {
+function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid, onTopUp }) {
   const attendant = SnapStore.getAttendant();
   const freePlay = !!attendant.freePlay;
   const price = attendant.pricePerSheetCents;
-  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
   const paper = PAPER_SIZES.find((p) => p.id === sheet.paperId) || PAPER_SIZES[0];
 
   const [stage, setStage] = useState('method'); // method | amount | confirm | processing | done
@@ -87,6 +87,16 @@ function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid }) {
 
   const pay = () => {
     setFailed(null);
+    // Consumables gate (v4): an empty paper tray or ribbon blocks printing
+    // BEFORE any money or credits move.
+    if (!SnapStore.canPrint(copies)) {
+      const out = SnapStore.suppliesSnapshot();
+      setFailed(out.remaining === 0
+        ? 'This station is out of supplies. An attendant has been notified — please check back soon!'
+        : `Only ${out.remaining} sheet${out.remaining === 1 ? '' : 's'} of supplies left — lower the quantity or ask the attendant for a refill.`);
+      SoundFX.error();
+      return;
+    }
     if (method === 'cash') {
       const entered = parseFloat(cashEntered || '0') * 100;
       if (!(entered >= totalCents)) {
@@ -100,22 +110,20 @@ function Step4Pay({ sheet, updateSheet, credits, refreshCredits, onPaid }) {
     setStage('processing');
     setTimeout(() => {
       if (method === 'credit') {
-        if (SnapStore.getCredits() < copies) {
+        // Fault-safe model: RESERVE now; the print step commits on a finished
+        // sheet and refunds on a jam. Short on credits → the Add Credits
+        // overlay opens (card pack or attendant code), then payment resumes.
+        const res = SnapPayment.reserve(copies);
+        if (!res.ok) {
           setStage('confirm');
-          setFailed("Not enough credits on your Snap Card. Ask a helper, or pick a different method.");
-          SoundFX.error();
           refreshCredits();
-          return;
-        }
-        for (let i = 0; i < copies; i++) {
-          const res = SnapPayment.spendCredit();
-          if (!res.ok) {
-            setStage('confirm');
-            setFailed("Not enough credits on your Snap Card. Ask a helper, or pick a different method.");
+          if (onTopUp) {
+            onTopUp(copies, () => { refreshCredits(); pay(); });
+          } else {
+            setFailed('Not enough credits on your Snap Card. Ask a helper, or pick a different method.');
             SoundFX.error();
-            refreshCredits();
-            return;
           }
+          return;
         }
         refreshCredits();
         finishPayment();

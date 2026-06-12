@@ -1,15 +1,19 @@
 // ======= Step 1 — Choose Layout =======
-// Transplanted from the design system's sticker-ux tab, step 1. The three cards
-// map onto SHEET_LAYOUTS: 1x1 → single, 2x2 → quad, 4x4 → unique.
+// Design system v4 sticker-ux step 1: four cards mapping onto SHEET_LAYOUTS.
+// 1x1 → big (one full-sheet sticker), 1x16 → single (same photo × 16),
+// 2x2 → quad, 4x4 → unique.
 
 const LAYOUT_CARDS = [
-  { ds: '1x1', layoutId: 'single', title: '1 Big Photo', sub: 'Single 4×6',
+  { ds: '1x1', layoutId: 'big', title: '1 Big Photo', sub: 'Single 4×6',
     previewStyle: { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' },
     cells: ['big'] },
-  { ds: '2x2', layoutId: 'quad', title: '4 Photos', sub: '2 × 2 grid', recommended: true,
+  { ds: '1x16', layoutId: 'single', title: '16 of the Same', sub: 'Same photo × 16',
+    previewStyle: { gridTemplateColumns: 'repeat(4,1fr)', gridTemplateRows: 'repeat(4,1fr)', gap: 3 },
+    cells: ['a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a'] },
+  { ds: '2x2', layoutId: 'quad', title: '4 Photos', sub: '4 of each photo', recommended: true,
     previewStyle: { gridTemplateColumns: 'repeat(2,1fr)', gridTemplateRows: 'repeat(2,1fr)' },
     cells: ['a', 'b', 'c', 'd'] },
-  { ds: '4x4', layoutId: 'unique', title: '16 Mini Photos', sub: '4 × 4 grid',
+  { ds: '4x4', layoutId: 'unique', title: '16 Mini Photos', sub: 'All unique · 4×4',
     previewStyle: { gridTemplateColumns: 'repeat(4,1fr)', gridTemplateRows: 'repeat(4,1fr)', gap: 3 },
     cells: ['d','c','f','b','a','e','a','c','b','f','e','d','c','a','b','e'] },
 ];

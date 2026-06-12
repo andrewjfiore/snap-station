@@ -5,15 +5,27 @@
 // only), too dark / too bright (mean luma of the captureFrame canvas ~1 Hz),
 // and camera-blocked. The viewfinder stays live — guidance is never a modal.
 
-// Compose mirror into the final JPEG so the saved photo matches the viewfinder.
-function composeCaptureCanvas(srcCanvas, mirror) {
+// Compose mirror + CRT effect into the final frame so the saved photo
+// matches the viewfinder (WYSIWYG).
+function composeCaptureFrame(srcCanvas, fx) {
   const out = document.createElement('canvas');
   out.width = srcCanvas.width;
   out.height = srcCanvas.height;
   const ctx = out.getContext('2d');
-  if (mirror) { ctx.translate(out.width, 0); ctx.scale(-1, 1); }
+  if (fx && fx.crt) ctx.filter = 'contrast(1.15) saturate(1.2)';
+  if (fx && fx.mirror) { ctx.translate(out.width, 0); ctx.scale(-1, 1); }
   ctx.drawImage(srcCanvas, 0, 0);
-  return out.toDataURL('image/jpeg', 0.8);
+  ctx.filter = 'none';
+  if (fx && fx.crt) {
+    // baked scanlines, 4px period (visible but print-safe)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    for (let y = 0; y < out.height; y += 4) ctx.fillRect(0, y, out.width, 1);
+  }
+  return out;
+}
+function composeCaptureCanvas(srcCanvas, fx) {
+  return composeCaptureFrame(srcCanvas, fx).toDataURL('image/jpeg', 0.8);
 }
 
 // Demo scene frame (no camera required) — real JPEG via canvas.
@@ -65,29 +77,36 @@ function CaptureOverlay({ state, countdown }) {
 
 // Live capture view — viewfinder + QC overlay + pokéball shutter.
 function CaptureView({ onPhoto, onBack, slotLabel }) {
-  const [source, setSource] = useState('camera'); // camera | demo
+  const [source, setSource] = useState('camera'); // camera | game | demo
   const [live, setLive] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [qc, setQc] = useState('ok'); // ok | face | dark | bright
   const [countdown, setCountdown] = useState(0);
   const [flash, setFlash] = useState(false);
   const [score, setScore] = useState(null); // {photo, score, message}
+  // Selfie mirror on for the camera, off for game capture (v4 spec).
+  const [fx, setFx] = useState({ mirror: true, crt: false });
+  const [recording, setRecording] = useState(false);
   const videoRef = useRef(null);
   const frameSourceRef = useRef(null);
   const faceDetectorRef = useRef(undefined);
+  const recordingRef = useRef(false);
   const [demoIdx, setDemoIdx] = useState(0);
 
-  // Source lifecycle
+  // Source lifecycle: webcam, or screen/window share for "Capture the game".
   useEffect(() => {
     setBlocked(false);
+    setFx((f) => ({ ...f, mirror: source === 'camera' }));
     if (source === 'demo') { setLive(false); return; }
     let cancelled = false;
     setLive(false);
-    const src = new SnapCapture.WebcamFrameSource();
+    const src = source === 'game'
+      ? new SnapCapture.DisplayFrameSource()
+      : new SnapCapture.WebcamFrameSource();
     frameSourceRef.current = src;
     src.start(videoRef.current)
       .then(() => { if (cancelled) { src.stop(); return; } setLive(true); })
-      .catch(() => { if (!cancelled) { SoundFX.error(); setBlocked(true); } }); // getUserMedia rejected
+      .catch(() => { if (!cancelled) { SoundFX.error(); setBlocked(true); } }); // permission rejected
     return () => {
       cancelled = true;
       src.stop();
@@ -159,17 +178,67 @@ function CaptureView({ onPhoto, onBack, slotLabel }) {
       onPhoto(dataUrl);
     };
     const fsrc = frameSourceRef.current;
-    if (source === 'camera' && fsrc && live) {
+    if (source !== 'demo' && fsrc && live) {
       const raw = document.createElement('canvas');
       fsrc.captureFrame(raw)
-        .then(() => finish(composeCaptureCanvas(raw, true)))
-        .catch(() => { SoundFX.error(); finish(composeCaptureCanvas(drawDemoFrame(DEMO_SNAPS[demoIdx]), false)); });
+        .then(() => finish(composeCaptureCanvas(raw, fx)))
+        .catch(() => { SoundFX.error(); finish(composeCaptureCanvas(drawDemoFrame(DEMO_SNAPS[demoIdx]), { mirror: false })); });
     } else {
-      finish(composeCaptureCanvas(drawDemoFrame(DEMO_SNAPS[demoIdx]), false));
+      finish(composeCaptureCanvas(drawDemoFrame(DEMO_SNAPS[demoIdx]), { mirror: false, crt: fx.crt }));
     }
-  }, [source, live, demoIdx, onPhoto]);
+  }, [source, live, demoIdx, onPhoto, fx]);
 
-  const shutterDisabled = source === 'camera' && !live;
+  // Record GIF — ~2 s at 7 fps through the same WYSIWYG frame pipeline,
+  // encoded with the vendored gif.js. Saved to the gallery as kind 'gif'
+  // (animated on screen and in downloads; print uses the first frame).
+  const recordGif = useCallback(() => {
+    if (recordingRef.current || countdown > 0) return;
+    const fsrc = frameSourceRef.current;
+    const liveSource = source !== 'demo' && fsrc && live;
+    recordingRef.current = true;
+    setRecording(true);
+    SoundFX.click();
+    const FRAMES = 14, DELAY = 150, W = 480;
+    const gif = new GIF({ workers: 2, quality: 12, workerScript: 'lib/vendor/gif.worker.js', width: null, height: null });
+    let n = 0;
+    const grab = () => {
+      const done = () => {
+        if (++n < FRAMES) { setTimeout(grab, DELAY); return; }
+        gif.on('finished', (blob) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            recordingRef.current = false;
+            setRecording(false);
+            SoundFX.confirm();
+            setScore({ photo: reader.result, score: 80, message: 'Animated!' });
+            onPhoto(reader.result, 'gif');
+          };
+          reader.readAsDataURL(blob);
+        });
+        gif.render();
+      };
+      const addFrame = (canvas) => {
+        // Downscale for a kiosk-friendly file size
+        const small = document.createElement('canvas');
+        const scale = W / canvas.width;
+        small.width = W; small.height = Math.round(canvas.height * scale);
+        small.getContext('2d').drawImage(canvas, 0, 0, small.width, small.height);
+        gif.addFrame(small, { delay: DELAY, copy: true });
+        done();
+      };
+      if (liveSource) {
+        const raw = document.createElement('canvas');
+        fsrc.captureFrame(raw)
+          .then(() => addFrame(composeCaptureFrame(raw, fx)))
+          .catch(() => addFrame(composeCaptureFrame(drawDemoFrame(DEMO_SNAPS[(demoIdx + n) % DEMO_SNAPS.length]), { mirror: false })));
+      } else {
+        addFrame(composeCaptureFrame(drawDemoFrame(DEMO_SNAPS[(demoIdx + n) % DEMO_SNAPS.length]), { mirror: false, crt: fx.crt }));
+      }
+    };
+    grab();
+  }, [source, live, demoIdx, fx, countdown, onPhoto]);
+
+  const shutterDisabled = (source !== 'demo' && !live) || recording;
 
   const snap = useCallback(() => {
     if (countdown > 0 || shutterDisabled) return;
@@ -209,15 +278,24 @@ function CaptureView({ onPhoto, onBack, slotLabel }) {
         )}
         <video ref={videoRef} autoPlay playsInline muted
                className="capture-video"
-               style={{ display: source === 'camera' && !blocked ? 'block' : 'none' }}/>
+               style={{
+                 display: source !== 'demo' && !blocked ? 'block' : 'none',
+                 transform: fx.mirror ? 'scaleX(-1)' : 'none',
+                 filter: fx.crt ? 'contrast(1.15) saturate(1.2)' : 'none',
+               }}/>
+        {fx.crt && source !== 'demo' && !blocked && <div className="capture-crt-lines" aria-hidden="true"/>}
         {blocked && (
           <div className="capture-cam-slash">
             <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
           </div>
         )}
-        {source === 'camera' && !live && !blocked && (
-          <div className="capture-waiting">Warming up the camera…</div>
+        {source !== 'demo' && !live && !blocked && (
+          <div className="capture-waiting">{source === 'game' ? 'Pick the game window to share…' : 'Warming up the camera…'}</div>
         )}
+        {source === 'camera' && live && overlayState === 'ok' && countdown === 0 && (
+          <div className="capture-smile">👀 Look here and smile!</div>
+        )}
+        {recording && <div className="rec-dot"><span className="d"/>REC</div>}
 
         {countdown > 0 && <div className="capture-countdown" key={countdown}>{countdown}</div>}
         {flash && <div className="capture-flash"/>}
@@ -230,9 +308,25 @@ function CaptureView({ onPhoto, onBack, slotLabel }) {
                   onClick={() => { SoundFX.click(); setSource('camera'); }}>
             <svg style={{ width: 18, height: 18 }}><use href="#i-camera"/></svg>Camera
           </button>
+          <button className={cx('seg-btn', source === 'game' && 'active')}
+                  title="Share the game window — emulator, console capture, anything on screen"
+                  onClick={() => { SoundFX.click(); setSource('game'); }}>
+            <svg style={{ width: 18, height: 18 }}><use href="#i-sheet"/></svg>Capture the game
+          </button>
           <button className={cx('seg-btn', source === 'demo' && 'active')}
                   onClick={() => { SoundFX.click(); setSource('demo'); }}>
             <svg style={{ width: 18, height: 18 }}><use href="#i-sparkle"/></svg>Demo
+          </button>
+        </div>
+
+        <div className="fx-chips">
+          <button className={cx('fx-chip', fx.mirror && 'on')} aria-pressed={fx.mirror}
+                  onClick={() => { SoundFX.click(); setFx({ ...fx, mirror: !fx.mirror }); }}>
+            Mirror · {fx.mirror ? 'ON' : 'OFF'}
+          </button>
+          <button className={cx('fx-chip', fx.crt && 'on')} aria-pressed={fx.crt}
+                  onClick={() => { SoundFX.click(); setFx({ ...fx, crt: !fx.crt }); }}>
+            CRT · {fx.crt ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -245,6 +339,12 @@ function CaptureView({ onPhoto, onBack, slotLabel }) {
           <span className="ray r1"/><span className="ray r2"/><span className="ray r3"/>
           <span className="ray r4"/><span className="ray r5"/>
         </div>
+
+        <button className={cx('btn btn-tertiary', recording && 'is-recording')}
+                disabled={recording || countdown > 0}
+                onClick={recordGif}>
+          {recording ? '● Recording…' : '🎞 Record GIF'}
+        </button>
 
         <button className="btn btn-tertiary ic-back" onClick={() => { SoundFX.back(); onBack(); }}>
           <svg style={{ width: 16, height: 16 }}><use href="#i-back"/></svg>
@@ -261,7 +361,7 @@ function CaptureView({ onPhoto, onBack, slotLabel }) {
 }
 
 function Step2Photos({ sheet, updateSheet, snaps, onCapture, onImportClassic }) {
-  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS[1];
+  const layout = SHEET_LAYOUTS.find((l) => l.id === sheet.layoutId) || SHEET_LAYOUTS.find((l) => l.id === 'quad');
   const groups = layout.groups;
   const sourceMap = sheet.sourceMap || {};
   const [captureFor, setCaptureFor] = useState(null);   // slot index or 'next'
@@ -290,13 +390,13 @@ function Step2Photos({ sheet, updateSheet, snaps, onCapture, onImportClassic }) 
   };
 
   // Capture → gallery + slot
-  const handlePhoto = (dataUrl) => {
-    onCapture(dataUrl);
+  const handlePhoto = (dataUrl, kind) => {
+    onCapture(dataUrl, kind);
     const target = nextEmpty(captureFor);
     if (target != null) {
       const nextMap = { ...sourceMap, [target]: dataUrl };
       updateSheet({ sourceMap: nextMap });
-      snapToast('success', 'Photo saved to your sheet!');
+      snapToast('success', kind === 'gif' ? 'GIF saved to your sheet!' : 'Photo saved to your sheet!');
       setCaptureFor('next');
       // leave the camera open while empty slots remain
       const stillEmpty = Array.from({ length: groups }, (_, g) => g).some((g) => !nextMap[g]);
@@ -312,7 +412,7 @@ function Step2Photos({ sheet, updateSheet, snaps, onCapture, onImportClassic }) 
     if (target == null) { SoundFX.error(); snapToast('info', 'All slots are full — remove one first.'); return; }
     SoundFX.confirm();
     assign(target, snapEntry.dataUrl);
-    snapToast('success', 'Photo saved to your sheet!');
+    snapToast('success', kind === 'gif' ? 'GIF saved to your sheet!' : 'Photo saved to your sheet!');
   };
 
   // Upload files → gallery + empty slots

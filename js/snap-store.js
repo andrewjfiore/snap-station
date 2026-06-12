@@ -55,7 +55,7 @@
   function remove(name) { rawRemove(PREFIX + name); }
 
   var DEFAULT_SETTINGS = {
-    theme: 'videoRental',
+    theme: 'snap',          // SnapTheme dot themes: snap/ocean/grape/mint/sunset/berry
     soundOn: true,
     crtIntensity: 0,        // CRT off by default — closeout requirement
     scanlines: false,
@@ -65,20 +65,46 @@
     cabinetVisible: 'auto',
     chromeStyle: 'brushed',
     printServerUrl: '',
+    shareUrl: '',                // post-print QR target; empty → the live station site
   };
 
   var DEFAULT_ATTENDANT = {
     pinHash: null,           // null → PIN "0000" accepted, attendant UI shows "change me"
     freePlay: false,
-    pricePerSheetCents: 300, // a measly three bucks for 16 stickers
+    pricePerSheetCents: 400, // design system v4: 1 credit = 1 sheet = $4
     creditsPerCard: 5,
+    productionLock: false,   // suppresses demo hints (PIN hint, token code hints)
     stats: { prints: 0, sessions: 0 },
   };
+
+  // Consumables model from the design system: a real unit runs out of sticker
+  // paper and dye-sub ribbon; printing is blocked when either is empty.
+  // Costs are owner economics, editable in the attendant panel.
+  var DEFAULT_SUPPLIES = {
+    paper: 50, ribbon: 50,
+    paperMax: 50, ribbonMax: 50,
+    paperPackCostCents: 1800, ribbonPackCostCents: 2200,
+    soldToday: 0,
+  };
+
+  // Attendant-issued one-time top-up codes (6–8 alphanumeric chars exchanged
+  // for cash at the counter). The demo set ships enabled until production lock.
+  var DEFAULT_TOKENS = {
+    codes: {
+      SNAP01: 1, SNAP03: 3, SNAP05: 5, SNAP10: 10,
+      PIKA42: 4, EEVEE2: 2, MEWTWO: 3, CELADON: 5,
+    },
+    used: [],
+  };
+
+  var VALID_THEMES = ['snap', 'ocean', 'grape', 'mint', 'sunset', 'berry'];
 
   function getSettings() {
     var s = get('settings', {});
     var out = {};
     for (var k in DEFAULT_SETTINGS) out[k] = (k in s) ? s[k] : DEFAULT_SETTINGS[k];
+    // Pre-v4 theme names (videoRental, marioLevel, …) map to the default dot theme.
+    if (VALID_THEMES.indexOf(out.theme) === -1) out.theme = DEFAULT_SETTINGS.theme;
     return out;
   }
   function setSettings(patch) {
@@ -103,6 +129,79 @@
 
   function getCredits() { var c = get('credits', 0); return typeof c === 'number' && isFinite(c) ? Math.max(0, Math.floor(c)) : 0; }
   function setCredits(n) { set('credits', Math.max(0, Math.floor(n))); }
+
+  // --- Supplies (paper + dye-sub ribbon) ---
+  function getSupplies() {
+    var s = get('supplies', {});
+    var out = {};
+    for (var k in DEFAULT_SUPPLIES) out[k] = (k in s) ? s[k] : DEFAULT_SUPPLIES[k];
+    return out;
+  }
+  function setSupplies(patch) {
+    var s = getSupplies();
+    for (var k in patch) s[k] = patch[k];
+    set('supplies', s);
+    return s;
+  }
+  function suppliesLevel(s, which) {
+    var max = s[which + 'Max'] || 1;
+    var pct = Math.max(0, Math.min(100, Math.round(s[which] / max * 100)));
+    return pct <= 0 ? 'empty' : pct <= 10 ? 'critical' : pct <= 25 ? 'low' : 'good';
+  }
+  function suppliesSnapshot() {
+    var s = getSupplies();
+    var paperLevel = suppliesLevel(s, 'paper');
+    var ribbonLevel = suppliesLevel(s, 'ribbon');
+    var unitCostCents = s.paperPackCostCents / (s.paperMax || 1) + s.ribbonPackCostCents / (s.ribbonMax || 1);
+    return {
+      paper: s.paper, ribbon: s.ribbon,
+      paperMax: s.paperMax, ribbonMax: s.ribbonMax,
+      paperLevel: paperLevel, ribbonLevel: ribbonLevel,
+      remaining: Math.min(s.paper, s.ribbon),
+      out: s.paper <= 0 || s.ribbon <= 0,
+      low: paperLevel !== 'good' || ribbonLevel !== 'good',
+      soldToday: s.soldToday,
+      unitCostCents: unitCostCents,
+      paperPackCostCents: s.paperPackCostCents,
+      ribbonPackCostCents: s.ribbonPackCostCents,
+    };
+  }
+  function canPrint(n) {
+    n = Math.max(1, Math.floor(n || 1));
+    var s = getSupplies();
+    return s.paper >= n && s.ribbon >= n;
+  }
+  function consumeSupplies(n) {
+    n = Math.max(0, Math.floor(n || 0));
+    var s = getSupplies();
+    return setSupplies({
+      paper: Math.max(0, s.paper - n),
+      ribbon: Math.max(0, s.ribbon - n),
+      soldToday: s.soldToday + n,
+    });
+  }
+  function restockSupplies(which) {
+    var s = getSupplies();
+    var patch = {};
+    if (!which || which === 'paper') patch.paper = s.paperMax;
+    if (!which || which === 'ribbon') patch.ribbon = s.ribbonMax;
+    return setSupplies(patch);
+  }
+
+  // --- Top-up token codes ---
+  function getTokens() {
+    var t = get('tokens', {});
+    return {
+      codes: (t.codes && typeof t.codes === 'object') ? t.codes : DEFAULT_TOKENS.codes,
+      used: Array.isArray(t.used) ? t.used : [],
+    };
+  }
+  function setTokens(patch) {
+    var t = getTokens();
+    for (var k in patch) t[k] = patch[k];
+    set('tokens', t);
+    return t;
+  }
 
   // --- Gallery with LRU cap + quota-exceeded eviction ---
   function getGallery() { var g = get('gallery', []); return Array.isArray(g) ? g : []; }
@@ -210,6 +309,9 @@
     getSettings: getSettings, setSettings: setSettings,
     getAttendant: getAttendant, setAttendant: setAttendant,
     getCredits: getCredits, setCredits: setCredits,
+    getSupplies: getSupplies, setSupplies: setSupplies, suppliesSnapshot: suppliesSnapshot,
+    canPrint: canPrint, consumeSupplies: consumeSupplies, restockSupplies: restockSupplies,
+    getTokens: getTokens, setTokens: setTokens,
     getGallery: getGallery, addToGallery: addToGallery,
     removeFromGallery: removeFromGallery, clearGallery: clearGallery,
     readExportPayload: readExportPayload, clearExportPayload: clearExportPayload,

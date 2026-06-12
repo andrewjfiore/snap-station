@@ -237,3 +237,48 @@ window.StepProgress = StepProgress;
 window.PokeballLoading = PokeballLoading;
 window.useHoldUnlock = useHoldUnlock;
 window.HoldRing = HoldRing;
+
+// ======= Persistent credit pill (design system v4) =======
+function CreditPill({ credits }) {
+  const [bump, setBump] = useState(false);
+  const prev = useRef(credits);
+  useEffect(() => {
+    if (credits !== prev.current) {
+      prev.current = credits;
+      setBump(true);
+      const t = setTimeout(() => setBump(false), 450);
+      return () => clearTimeout(t);
+    }
+  }, [credits]);
+  const freePlay = SnapStore.getAttendant().freePlay;
+  return (
+    <div className={cx('credit-pill', !freePlay && credits === 1 && 'is-low', !freePlay && credits === 0 && 'is-empty', bump && 'bump')}
+         role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" strokeDasharray="2 2"/></svg>
+      <span>{freePlay ? 'FREE PLAY' : <><span className="credit-pill__n">{credits}</span> credit{credits === 1 ? '' : 's'}</>}</span>
+    </div>
+  );
+}
+window.CreditPill = CreditPill;
+
+// ======= Physical status lamps: credit ready / printing / problem =======
+// Driven by window events: dispatch new CustomEvent('snap:leds', {detail:{printing, error}}).
+function SnapLeds() {
+  const [state, setState] = useState({ printing: false, error: false });
+  const [ready, setReady] = useState(() => SnapStore.getAttendant().freePlay || SnapStore.getCredits() > 0);
+  useEffect(() => {
+    const onLeds = (e) => setState((s) => ({ ...s, ...(e.detail || {}) }));
+    const refresh = () => setReady(SnapStore.getAttendant().freePlay || SnapStore.getCredits() > 0);
+    const iv = setInterval(refresh, 1500);
+    window.addEventListener('snap:leds', onLeds);
+    return () => { window.removeEventListener('snap:leds', onLeds); clearInterval(iv); };
+  }, []);
+  return (
+    <div className="snap-leds" aria-hidden="true">
+      <div className={cx('snap-led', ready && !state.error && 'is-on')} data-led="ready"><span className="snap-led__dot"/><span className="snap-led__label">Credit</span></div>
+      <div className={cx('snap-led', state.printing && 'is-on')} data-led="printing"><span className="snap-led__dot"/><span className="snap-led__label">Printing</span></div>
+      <div className={cx('snap-led', state.error && 'is-on')} data-led="error"><span className="snap-led__dot"/><span className="snap-led__label">Problem</span></div>
+    </div>
+  );
+}
+window.SnapLeds = SnapLeds;

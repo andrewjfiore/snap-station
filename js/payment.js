@@ -100,6 +100,54 @@
     return SnapStore.getCredits();
   }
 
+  // --- Fault-safe print accounting (design system v4, real-station model) ---
+  // The original kiosk burned the one-shot card at the button press, so a
+  // paper jam ate your credit. We reserve on print-start, commit only after a
+  // confirmed sheet, and refund the reservation on any printer fault.
+  // Reservations are deliberately in-memory: if the kiosk reboots mid-print,
+  // nothing was committed and the customer keeps their credit.
+  var reserved = 0;
+
+  function availableCredits() { return Math.max(0, SnapStore.getCredits() - reserved); }
+  function reservedCredits() { return reserved; }
+
+  function reserve(n) {
+    n = Math.max(0, Math.floor(n || 0));
+    var att = SnapStore.getAttendant();
+    if (att.freePlay) return { ok: true, freePlay: true, reserved: reserved };
+    if (availableCredits() < n) return { ok: false, freePlay: false, reserved: reserved };
+    reserved += n;
+    return { ok: true, freePlay: false, reserved: reserved };
+  }
+  function commit(n) {
+    n = Math.max(0, Math.floor(n || 0));
+    var att = SnapStore.getAttendant();
+    if (att.freePlay) return { ok: true, freePlay: true, credits: SnapStore.getCredits() };
+    var take = Math.min(n, reserved);
+    reserved -= take;
+    SnapStore.setCredits(Math.max(0, SnapStore.getCredits() - take));
+    return { ok: true, freePlay: false, credits: SnapStore.getCredits() };
+  }
+  function refund(n) {
+    n = Math.max(0, Math.floor(n || 0));
+    reserved = Math.max(0, reserved - n);
+    return { ok: true, reserved: reserved };
+  }
+
+  // --- Attendant token codes (cash sold at the counter, one-time use) ---
+  // Returns { ok, credits } or { ok: false, reason: 'short'|'used'|'invalid' }.
+  function redeemToken(raw) {
+    var code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length < 6) return { ok: false, reason: 'short' };
+    var t = SnapStore.getTokens();
+    if (t.used.indexOf(code) !== -1) return { ok: false, reason: 'used' };
+    var credits = t.codes[code];
+    if (!credits) return { ok: false, reason: 'invalid' };
+    SnapStore.setTokens({ used: t.used.concat([code]) });
+    grantCredits(credits);
+    return { ok: true, credits: credits };
+  }
+
   return {
     register: register,
     select: select,
@@ -109,5 +157,11 @@
     buyCard: buyCard,
     spendCredit: spendCredit,
     grantCredits: grantCredits,
+    availableCredits: availableCredits,
+    reservedCredits: reservedCredits,
+    reserve: reserve,
+    commit: commit,
+    refund: refund,
+    redeemToken: redeemToken,
   };
 }));

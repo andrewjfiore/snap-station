@@ -30,14 +30,17 @@
     COLS: 4, ROWS: 4, DPI: 300,
   };
 
-  // All layouts land on landscape paper with the same 4 × 4 cell grid,
-  // but different cell-group mappings — outer dimensions never change.
+  // All layouts land on landscape paper with the same outer envelope.
+  // 'big' is one full-envelope sticker (design system v4's "1 Big Photo");
+  // the grid layouts differ only in cell-group mapping.
   var SHEET_LAYOUTS = [
-    { id: 'single', name: '1 Photo (1 × 16)', groups: 1,
+    { id: 'big',    name: '1 Big Photo', sub: 'Single 4×6', groups: 1, cellCount: 1,
+      mapping: [0] },
+    { id: 'single', name: '16 of the Same', sub: 'Same photo × 16', groups: 1, cellCount: 16,
       mapping: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0] },
-    { id: 'quad',   name: '4 Photos (2 × 2 Grid)', groups: 4,
+    { id: 'quad',   name: '4 Photos', sub: '4 of each photo', groups: 4, cellCount: 16,
       mapping: [0,0,1,1, 0,0,1,1, 2,2,3,3, 2,2,3,3] },
-    { id: 'unique', name: '16 Unique Photos', groups: 16,
+    { id: 'unique', name: '16 Mini Photos', sub: 'All unique · 4×4', groups: 16, cellCount: 16,
       mapping: [0,1,2,3, 4,5,6,7, 8,9,10,11, 12,13,14,15] },
   ];
 
@@ -79,7 +82,7 @@
     for (i = 0; i < PAPER_SIZES.length; i++) if (PAPER_SIZES[i].id === paperId) paper = PAPER_SIZES[i];
     for (i = 0; i < SHEET_LAYOUTS.length; i++) if (SHEET_LAYOUTS[i].id === layoutId) layout = SHEET_LAYOUTS[i];
     if (!paper) paper = PAPER_SIZES[0];
-    if (!layout) layout = SHEET_LAYOUTS[0];
+    if (!layout) { for (i = 0; i < SHEET_LAYOUTS.length; i++) if (SHEET_LAYOUTS[i].id === 'quad') layout = SHEET_LAYOUTS[i]; }
 
     var D = STICKER_DIMS, s = paper.scale;
     var cw = D.STK_W * s, ch = D.STK_H * s, gap = D.GAP * s;
@@ -91,15 +94,30 @@
     var kox = D.KISS_OFF_X * s, koy = D.KISS_OFF_Y * s;
 
     var cells = [];
-    for (var r = 0; r < D.ROWS; r++) {
-      for (var c = 0; c < D.COLS; c++) {
-        var x = marginL + c * (cw + gap);
-        var y = marginT + r * (ch + gap);
-        cells.push({
-          x: x, y: y, w: cw, h: ch,
-          kiss: { x: x + kox, y: y + koy, w: kw, h: kh, r: kr },
-          group: layout.mapping[r * D.COLS + c],
-        });
+    if (layout.id === 'big') {
+      // One sticker spanning the full grid envelope. Kiss-cut uses the same
+      // per-edge insets as a grid cell, so the cut rules stay uniform.
+      cells.push({
+        x: marginL, y: marginT, w: gridW, h: gridH,
+        kiss: {
+          x: marginL + kox, y: marginT + koy,
+          w: gridW - kox * 2,
+          h: gridH - koy - (D.STK_H - D.KISS_INNER_H - D.KISS_OFF_Y) * s,
+          r: kr,
+        },
+        group: 0,
+      });
+    } else {
+      for (var r = 0; r < D.ROWS; r++) {
+        for (var c = 0; c < D.COLS; c++) {
+          var x = marginL + c * (cw + gap);
+          var y = marginT + r * (ch + gap);
+          cells.push({
+            x: x, y: y, w: cw, h: ch,
+            kiss: { x: x + kox, y: y + koy, w: kw, h: kh, r: kr },
+            group: layout.mapping[r * D.COLS + c],
+          });
+        }
       }
     }
     return { paper: paper, layout: layout, cells: cells, grid: { w: gridW, h: gridH, marginL: marginL, marginT: marginT } };
