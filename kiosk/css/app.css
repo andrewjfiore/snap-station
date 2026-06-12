@@ -885,3 +885,9 @@ body.a11y .capture-overlay__sub { color: #333; }
   .snap-led__dot,
   .credit-pill.bump { animation: none !important; transition: none !important; }
 }
+
+/* The attract footer is a chrome bar over a full-screen tappable scene; its
+   box can overlap the entry chips when font metrics shift (CI caught a tap
+   being eaten). Only its actual controls take pointer events. */
+.attract-foot { pointer-events: none; }
+.attract-foot > * { pointer-events: auto; }
