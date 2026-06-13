@@ -11,9 +11,9 @@
   var demoTimer = null, demoIdx = 0;
 
   var DEMO_SCENES = [
-    ['#37c1b4', '#2a75bb', 'BEACH'], ['#ffcb05', '#ee4035', 'VOLCANO'],
-    ['#9fd0ff', '#41304e', 'CAVE'], ['#7ed957', '#1f8e84', 'TUNNEL'],
-    ['#ff8fb1', '#ffcb05', 'VALLEY'], ['#2a1e33', '#37c1b4', 'RIVER'],
+    ['#5aa9e6', '#2a75bb', 'BEACH'], ['#ffcb05', '#ee1515', 'VOLCANO'],
+    ['#6b7280', '#3b4252', 'CAVE'], ['#1d5a94', '#23272f', 'TUNNEL'],
+    ['#ffd84d', '#d8a400', 'VALLEY'], ['#143e66', '#2a75bb', 'RIVER'],
   ];
   window.DEMO_SNAPS = []; // sheet renderer fallback pool (filled from real gallery instead)
 

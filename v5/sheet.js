@@ -5,7 +5,7 @@
 (function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
-  var COLORS = ['#ffffff', '#fdf6e3', '#ffe9f0', '#e8f6ff', '#eaffe9', '#fff8d6'];
+  var COLORS = ['#ffffff', '#f4f4f6', '#ffecec', '#fff7d1', '#e8f1fb', '#e9ebef'];
   var BAG = ['⚡','🔥','💧','🌱','⭐','✨','🌸','🐾','🎮','📸','💫','🌈','🎀','🍄','👻','💥','🫧','🌙','☀️','🦋','🐢','🐱','🧢','🎒','⚔️','🔔','🍎','🎵','💜','🤍'];
 
   var sheet = null; // { layoutId, paperId, paperColor, kissCut, stamps[], sourceMap{} }
@@ -164,7 +164,7 @@
       r.setAttribute('x', cell.kiss.x); r.setAttribute('y', cell.kiss.y);
       r.setAttribute('width', cell.kiss.w); r.setAttribute('height', cell.kiss.h);
       r.setAttribute('rx', cell.kiss.r);
-      r.setAttribute('fill', 'none'); r.setAttribute('stroke', '#e0408a');
+      r.setAttribute('fill', 'none'); r.setAttribute('stroke', '#ee1515');
       r.setAttribute('stroke-width', '0.4'); r.setAttribute('stroke-dasharray', '1.2,0.8');
       svg.appendChild(r);
     });
