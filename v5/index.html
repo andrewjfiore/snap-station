@@ -48,19 +48,19 @@
   </header>
   <nav class="menu-grid" id="menu-grid" role="menu" aria-label="Main menu">
     <button class="menu-tile" role="menuitem" data-go="capture" data-hue="0">
-      <span class="menu-tile__ic">📷</span><span class="menu-tile__lb">CAPTURE</span>
+      <span class="menu-tile__badge">Live</span><span class="menu-tile__ic">📷</span><span class="menu-tile__lb">CAPTURE</span>
       <span class="menu-tile__sub">Camera · Console · Paste</span>
     </button>
     <button class="menu-tile" role="menuitem" data-go="box" data-hue="1">
-      <span class="menu-tile__ic">📦</span><span class="menu-tile__lb">BOX</span>
+      <span class="menu-tile__badge">Storage</span><span class="menu-tile__ic">📦</span><span class="menu-tile__lb">BOX</span>
       <span class="menu-tile__sub" id="menu-box-count">Your snaps</span>
     </button>
     <button class="menu-tile" role="menuitem" data-go="sheet" data-hue="2">
-      <span class="menu-tile__ic">🖼️</span><span class="menu-tile__lb">SHEET</span>
+      <span class="menu-tile__badge">Builder</span><span class="menu-tile__ic">🖼️</span><span class="menu-tile__lb">SHEET</span>
       <span class="menu-tile__sub">Arrange &amp; decorate</span>
     </button>
     <button class="menu-tile" role="menuitem" data-go="print" data-hue="3">
-      <span class="menu-tile__ic">🖨️</span><span class="menu-tile__lb">PRINT</span>
+      <span class="menu-tile__badge">Score!</span><span class="menu-tile__ic">🖨️</span><span class="menu-tile__lb">PRINT</span>
       <span class="menu-tile__sub" id="menu-print-sub">$4 · 16 stickers</span>
     </button>
   </nav>
@@ -72,6 +72,7 @@
   <header class="hud">
     <span class="hud-loc">▼ CAPTURE</span>
     <span class="hud-title" id="cap-source-name">Camera</span>
+    <span class="hud-chip" id="cap-counter">📷 0</span>
     <span class="hud-chip" id="cap-rec" hidden>● REC</span>
   </header>
   <div class="cap-stage">
@@ -181,7 +182,8 @@
       <div class="lab-status" id="lab-status"></div>
     </div>
     <div class="done" id="done-pane" hidden>
-      <div class="done-head">✦ ALL SET! ✦</div>
+      <div class="done-head">★ Print Complete! ★</div>
+      <div class="results-row" id="results-row"></div>
       <div class="done-sheet" id="done-sheet"></div>
       <div class="done-actions">
         <button class="chip chip--wide" id="dl-png">PNG</button>

@@ -21,7 +21,7 @@
     video = $('#cap-video'); fallback = $('#cap-fallback'); msg = $('#cap-msg');
     wire();
     V5.on('screen', function (s) {
-      if (s.name === 'capture') { buildInputs(); use(activeId); }
+      if (s.name === 'capture') { buildInputs(); use(activeId); syncCounter(); }
       else stop();
     });
   });
@@ -167,6 +167,11 @@
   function saveSnap(dataUrl, kind) {
     SnapStore.addToGallery({ dataUrl: dataUrl, kind: kind || 'photo' });
     V5.emit('gallery');
+    syncCounter();
+  }
+  function syncCounter() {
+    var el = $('#cap-counter');
+    if (el) el.textContent = '📷 ' + SnapStore.getGallery().length;
   }
 
   // ---------- shutter + countdown ----------

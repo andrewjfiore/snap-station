@@ -161,6 +161,19 @@
 
   function done() {
     pane('done');
+    var sup = SnapStore.suppliesSnapshot();
+    var a = SnapStore.getAttendant();
+    var row = $('#results-row');
+    if (row) {
+      row.innerHTML = '';
+      [[copies * 16, 'stickers'], [a.freePlay ? '∞' : SnapPayment.availableCredits(), 'credits left'], [sup.remaining, 'sheets in machine']]
+        .forEach(function (st) {
+          var d = document.createElement('div');
+          d.className = 'results-stat';
+          d.innerHTML = '<b>' + st[0] + '</b><span>' + st[1] + '</span>';
+          row.appendChild(d);
+        });
+    }
     var host = $('#done-sheet');
     host.innerHTML = '';
     if (renderedCanvas) {
