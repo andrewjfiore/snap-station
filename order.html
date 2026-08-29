@@ -250,6 +250,23 @@ h1 span::before { content: " / "; }
 .opt-name { font-weight: 500; line-height: 1.4; }
 .opt-blurb { font-size: 13px; color: var(--ink-2); margin-top: 3px; display: block; }
 
+.opt-wrap { display: flex; flex-direction: column; }
+.opt-wrap > .opt { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.opt-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  padding: 8px 14px 10px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface-2);
+  font-size: 12.5px;
+}
+.opt-foot a { color: var(--brand); }
+.opt-foot a:hover { color: var(--brand-hover); }
+.cut-spec { color: var(--ink-3); flex: 1 1 100%; }
 .bill {
   width: 100%;
   margin-top: 10px;
@@ -258,6 +275,7 @@ h1 span::before { content: " / "; }
   color: var(--ink-3);
 }
 .bill td { padding: 3px 0; vertical-align: top; }
+.bill td a { color: var(--brand); white-space: nowrap; }
 .bill-price {
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -691,22 +709,34 @@ var BUILD_FEE = 0;
    published rate schedule, or a range taken from completed used sales.     */
 
 var CITES = {
-  hd:        { kind:"quoted", who:"The Home Depot", what:"panel goods, per sheet, priced Aug 2026",
-               url:"https://www.homedepot.com/b/Lumber-Composites-Panels/N-5yc1vZbqmy" },
+  hd:        { kind:"quoted", who:"The Home Depot", what:"panel goods per sheet, priced Aug 2026. Columbia Forest PureBond birch $74.98, ULTRASTOCK MDF $49.98, Veranda melamine $47.20. Home Depot prices by store, so these are the Worcester Massachusetts numbers",
+               url:"https://www.homedepot.com/p/ULTRASTOCK-3-4-in-x-4-ft-x-8-ft-MDF-Panel-D11612490970000/304325742" },
   oshcut:    { kind:"estimate", who:"OSH Cut", what:"laser cut and formed 16 gauge steel, quantity one, quoted through their online estimator",
                url:"https://oshcut.com/" },
-  speedy:    { kind:"quoted", who:"Speedy Metals", what:"steel tube and plate stock",
-               url:"https://www.speedymetals.com/" },
-  fittings:  { kind:"quoted", who:"Outwater, Component Hardware, Paradise Arcade, Super Bright LEDs, The Paint Store, SnakeClamp",
-               what:"leg collars, leveling feet, arcade button, beacon lens, coin tray, arm parts", url:"" },
-  liene:     { kind:"quoted", who:"Liene", what:"PixCut S1 Inspire Kit, photo sticker printer and cutter",
+  speedy:    { kind:"quoted", who:"Speedy Metals", what:"6061-T6 aluminum tube, 1-1/4 in OD by .065 wall, $19.91 for a 72 in stick",
+               url:"https://www.speedymetals.com/pc-4571-8371-1-14-od-x-065-wall-tube-6061-t6-aluminum.aspx" },
+  sendcut:   { kind:"quoted", who:"SendCutSend", what:"the ballast plate, quoted live at $339.91: 20 by 20 in of 0.500 in A36 mild steel, 1.75 in corner radius, four 0.5 in holes on a 17 by 17 in pattern, cut on a fiber laser",
+               url:"https://app.sendcutsend.com/customer#/quote?action=builder:rectangle_bolt_flange" },
+  fittings:  { kind:"quoted", who:"Outwater", what:"T21/OF chrome flange for 1-1/4 in tube, $3.91 each",
+               url:"https://www.outwater.com/T21-FLANGE-PARENT" },
+  chfeet:    { kind:"quoted", who:"Component Hardware", what:"A10-0421-C adjustable foot, $7.41 each",
+               url:"https://www.componenthardware.com/en/ft-insert-rd-zn-np-075h-pop-in-hex-toe1400lbs-1125-adj-nsf" },
+  paradise:  { kind:"quoted", who:"Paradise Arcade Shop", what:"Sanwa OBSF-24 snap in button in red, $2.75",
+               url:"https://paradisearcadeshop.com/products/sanwa-obsf-24-snap-in-button-red" },
+  sbl:       { kind:"quoted", who:"Super Bright LEDs", what:"M4F-R13 red marker light, 2.5 in round, $8.09",
+               url:"https://www.superbrightleds.com/led-clearance-or-side-marker-light-with-flange-2-1-2-round-13-leds" },
+  paintstore:{ kind:"quoted", who:"The Paint Store", what:"Range Kleen SGP401 chrome drip pan, $30.49 for six",
+               url:"https://thepaintstore.com/products/range-kleen-style-j-9-125-x-9-3125-inch-square-heavy-duty-chrome-drip-pan-sgp401" },
+  snake:     { kind:"quoted", who:"SnakeClamp", what:"heavy duty gooseneck arm $27.95, and the 3 by 4 in mounting plate $12.95",
+               url:"https://snakeclamp.com/products/custom-length-heavy-duty-flexible-gooseneck-arm?variant=52297982181685" },
+  liene:     { kind:"quoted", who:"Liene", what:"PixCut S1 Inspire Kit, photo sticker printer and cutter, $346.99 down from $399.04",
                url:"https://www.liene-life.com/products/pixcut-s1-photo-sticker-printer-and-cutter-inspire-kit" },
-  smule:     { kind:"quoted", who:"Sticker Mule", what:"cut vinyl decals, four faces",
-               url:"https://www.stickermule.com/" },
-  paint:     { kind:"quoted", who:"Montana Colors and Rust-Oleum", what:"aerosol enamel in the three cabinet colors, plus filler, primer and abrasives",
-               url:"https://www.montanacolors.com/" },
-  columbia:  { kind:"quoted", who:"Columbia Coatings", what:"powder by the pound, plus a masked second bake",
-               url:"https://columbiacoatings.com/" },
+  smule:     { kind:"estimate", who:"Sticker Mule", what:"die cut vinyl for the four faces. Their published ladder starts at $60 for fifty 3 inch stickers; the cabinet panels are large format and are quoted per job",
+               url:"https://www.stickermule.com/products/die-cut-stickers" },
+  paint:     { kind:"quoted", who:"Montana Colors and Rust-Oleum", what:"aerosol enamel in the three cabinet colors, plus filler, primer and abrasives. MTN PRO RAL 5002 is the blue",
+               url:"https://linercoatings.ca/mtn-pro-spray-paint-400ml-ral-5002-ultramarine-blue/" },
+  columbia:  { kind:"quoted", who:"Columbia Coatings", what:"RAL 5002 Ultramarine Blue powder at $12.98 a pound in single pound quantities, plus a masked second bake",
+               url:"https://www.columbiacoatings.com/product/ral-5002-ultramarine-blue/" },
   ebayN64:   { kind:"used", who:"eBay", what:"completed sales, Nintendo 64 consoles and controllers described as tested",
                url:"https://www.ebay.com/sch/i.html?_nkw=nintendo+64+console+tested&LH_Sold=1" },
   ebayCRT:   { kind:"used", who:"eBay", what:"completed sales, 13 and 15 inch consumer CRT televisions, working",
@@ -721,16 +751,16 @@ var CITES = {
                url:"https://retrorgb.com/digging-into-the-mister-pi.html" },
   retrotink: { kind:"quoted", who:"RetroTINK", what:"4K CE video converter, $475",
                url:"https://www.retrotink.com/shop/retrotink-4k-ce" },
-  uperfect:  { kind:"quoted", who:"UPERFECT", what:"17.3 inch portable panels, 4K and 1440p",
-               url:"https://www.uperfect.com/" },
+  uperfect:  { kind:"quoted", who:"UPERFECT", what:"17.3 inch 4K portable panel, $389.99 against a $699.99 list",
+               url:"https://uperfect.com/products/4k-60hz-monitor" },
   bitdo:     { kind:"quoted", who:"8BitDo", what:"8BitDo 64, $44.99, receiver included",
                url:"https://www.8bitdo.com/64-controller/" },
   retrobit:  { kind:"quoted", who:"Retro-Bit", what:"Tribute64, the Hori Pad Mini shape under license",
                url:"https://retro-bit.com/controllers/platinum-collection/tribute64/" },
-  fighters:  { kind:"quoted", who:"Retro Fighters", what:"Brawler64 wireless",
-               url:"https://retrofighters.com/" },
+  fighters:  { kind:"quoted", who:"Retro Fighters", what:"Brawler64 Wireless Edition, $49.99",
+               url:"https://retrofighters.com/our-collection/brawler64-wireless-edition/" },
   nintendo:  { kind:"quoted", who:"Nintendo", what:"Nintendo 64 controller for Switch Online, $54.99, sold to Switch Online members",
-               url:"https://www.nintendo.com/" },
+               url:"https://www.nintendo.com/us/store/products/nintendo-64-controller-128577/" },
   raphnet:   { kind:"quoted", who:"Raphnet Technologies", what:"N64 to USB adapter version 3, bought direct. Resellers list the same part at twice this",
                url:"https://www.raphnet-tech.com/products/n64_usb_adapter_gen3/index.php" },
   misteradd: { kind:"quoted", who:"MiSTer Addons", what:"Bluetooth USB adapter",
@@ -861,14 +891,31 @@ function shipQuote(kind, miles, lb) {
    SOURCING.md; ballast plate, leg mounting plate and the fixings, adhesive and
    sealer bundle from bin/fab_cost.py at its likely column. */
 var BILL = [
-  { name:"Four legs, with collars, adjustable feet and their mounting plate", price:95.19 },
-  { name:"Ballast plate, twenty inches square in half inch steel, cut to shape", price:185.00 },
-  { name:"Controller arm, gooseneck and controller plate", price:40.90 },
-  { name:"Red arcade button", price:2.40 },
-  { name:"Red beacon lens for the top cap", price:8.09 },
-  { name:"Chrome coin tray", price:5.08 },
-  { name:"Artwork for all four faces, cut vinyl", price:185.00 },
-  { name:"Photo sticker printer and cutter", price:294.00 },
+  { name:"Four legs, with collars, adjustable feet and their mounting plate", price:95.19,
+    buy:"https://www.speedymetals.com/pc-4571-8371-1-14-od-x-065-wall-tube-6061-t6-aluminum.aspx",
+    buyText:"Speedy Metals" },
+  { name:"Ballast plate, twenty inches square in half inch steel, cut to shape", price:339.91,
+    buy:"https://app.sendcutsend.com/customer#/quote?action=builder:rectangle_bolt_flange",
+    buyText:"Price this cut",
+    cut:"Plate 20 by 20 in, corner radius 1.75 in, four 0.5 in holes on a 17 by 17 in pattern, in 0.500 in A36 mild steel." },
+  { name:"Controller arm, gooseneck and controller plate", price:40.90,
+    buy:"https://snakeclamp.com/products/custom-length-heavy-duty-flexible-gooseneck-arm?variant=52297982181685",
+    buyText:"SnakeClamp" },
+  { name:"Red arcade button", price:2.75,
+    buy:"https://paradisearcadeshop.com/products/sanwa-obsf-24-snap-in-button-red",
+    buyText:"Paradise Arcade" },
+  { name:"Red beacon lens for the top cap", price:8.09,
+    buy:"https://www.superbrightleds.com/led-clearance-or-side-marker-light-with-flange-2-1-2-round-13-leds",
+    buyText:"Super Bright LEDs" },
+  { name:"Chrome coin tray", price:5.08,
+    buy:"https://thepaintstore.com/products/range-kleen-style-j-9-125-x-9-3125-inch-square-heavy-duty-chrome-drip-pan-sgp401",
+    buyText:"The Paint Store" },
+  { name:"Artwork for all four faces, cut vinyl", price:185.00,
+    buy:"https://www.stickermule.com/products/die-cut-stickers",
+    buyText:"Sticker Mule" },
+  { name:"Photo sticker printer and cutter", price:346.99,
+    buy:"https://www.liene-life.com/products/pixcut-s1-photo-sticker-printer-and-cutter-inspire-kit",
+    buyText:"Liene" },
   { name:"Fixings, adhesive and sealer", price:225.00 }
 ];
 
@@ -891,7 +938,7 @@ var INCLUDED = Math.round(
 
 var PARTS = [
 
-  { id:"fitted", cat:"base", cite:["speedy","fittings","liene","smule"], name:"Legs, plate, arm, artwork, printer and fittings", price:INCLUDED,
+  { id:"fitted", cat:"base", cite:["speedy","sendcut","fittings","chfeet","paradise","sbl","paintstore","snake","liene","smule"], name:"Legs, plate, arm, artwork, printer and fittings", price:INCLUDED,
     bill:BILL,
     url:"",
     blurb:"Four legs on a half inch steel plate that weights the base so it cannot be tipped over, artwork applied to all four faces, the controller arm, and the beacon, arcade button, coin tray and sticker printer fitted, with every fixing, adhesive and sealer the body is put together with. The printer prints your photo and then cuts the sticker outlines through the top layer only, so the stickers stay on their backing sheet until somebody peels one off.",
@@ -899,22 +946,26 @@ var PARTS = [
 
   /* ---- cabinet material ------------------------------------------------- */
 
-  { id:"body_birch", cite:["hd"], cat:"material", name:"Birch plywood", price:146.62,
+  { id:"body_birch", cite:["hd"], cat:"material", name:"Birch plywood", price:119.50,
+    buy:"https://www.homedepot.com/p/Columbia-Forest-Products-3-4-in-x-4-ft-x-8-ft-PureBond-Birch-Plywood-165921/100077837",
     url:"",
     blurb:"Layers of real birch glued in a stack. Lightest and stiffest of the three woods.",
     note:"" },
 
-  { id:"body_mdf", cite:["hd"], cat:"material", name:"MDF", price:82.88,
+  { id:"body_mdf", cite:["hd"], cat:"material", name:"MDF", price:79.66,
+    buy:"https://www.homedepot.com/p/ULTRASTOCK-3-4-in-x-4-ft-x-8-ft-MDF-Panel-D11612490970000/304325742",
     url:"",
     blurb:"Wood fiber pressed into board. No grain at all, so paint sits more smoothly on it than on anything else here.",
     note:"The heaviest of the three woods, by a noticeable margin." },
 
-  { id:"body_melamine", cite:["hd"], cat:"material", name:"Melamine board", price:76.50,
+  { id:"body_melamine", cite:["hd"], cat:"material", name:"Melamine board", price:75.23,
+    buy:"https://www.homedepot.com/p/Veranda-3-4-in-x-4-ft-x-8-ft-Melamine-White-Particleboard-Panel-461877/100070209",
     url:"",
     blurb:"Pressed board with a hard white surface already bonded to both faces. The most affordable body.",
     note:"" },
 
   { id:"body_steel", cite:["oshcut"], cat:"material", name:"Steel", price:1466.25,
+    buy:"https://oshcut.com/",
     url:"",
     blurb:"What Nintendo used. 16 gauge sheet, cut, folded and welded to the original dimensions. The only body that can take the baked enamel finish.",
     note:"At 54 lb it is the lightest of the four bodies. Birch is 58, melamine 71, MDF 85. The ballast plate is the same on all of them." },
@@ -927,6 +978,7 @@ var PARTS = [
     note:"" },
 
   { id:"finish_powder", cite:["columbia"], cat:"finish", name:"Baked enamel", price:720,
+    buy:"https://www.columbiacoatings.com/product/ral-5002-ultramarine-blue/",
     url:"",
     blurb:"Color baked onto the metal in an oven rather than sprayed on top. Resists chips and scratches, and it is what the originals used.",
     note:"Adds two to three weeks: the body goes out to a coating shop and comes back.",
@@ -941,6 +993,7 @@ var PARTS = [
     note:"Second hand and tested before fitting." },
 
   { id:"analogue3d", cite:["analogue"], cat:"console", name:"Analogue 3D", price:279.99,
+    buy:"https://www.analogue.co/3d",
     url:"https://www.analogue.co/3d",
     blurb:"An Intel Cyclone 10 GX FPGA, 220,000 logic elements, reproducing the Nintendo 64 in hardware rather than emulating it in software. Real cartridges, four original controller ports, 4K output with variable refresh rate. Released November 2025 at $249.99, now $269.99 after tariffs.",
     note:"Its core is proprietary and closed, so it runs only what Analogue ships.",
@@ -948,6 +1001,7 @@ var PARTS = [
       text:"Analogue produces in runs rather than holding stock. If the current run is sold out your machine waits on one." } },
 
   { id:"modretro", cat:"console", cite:["modretro"], name:"ModRetro M64", price:239.99,
+    buy:"https://modretro.com/",
     url:"https://modretro.com/",
     blurb:"An AMD Artix UltraScale+ FPGA running a modified version of the open source MiSTer Nintendo 64 core. Real cartridges, four original controller ports, 4K, fanless, and it ships with a controller included. Launched 28 July 2026 at $229.99.",
     note:"Built to accept third party cores, unlike the Analogue. The 16nm process is why it outputs 4K without a fan." },
@@ -974,6 +1028,7 @@ var PARTS = [
       ? "This console outputs a modern digital picture only, which a television of this age cannot read. Pair a CRT with the original Nintendo 64, or a MiSTer with the analog add-on board." : null; } },
 
   { id:"screen4k", cite:["uperfect"], cat:"display", name:"4K flat screen", price:389.99,
+    buy:"https://uperfect.com/products/4k-60hz-monitor",
     url:"",
     blurb:"A 17.3 inch 4K panel with a matte surface that does not mirror the room. The game enlarges onto it by a whole number of times, so each original pixel stays a square block. Nothing inside it needs servicing.",
     note:"Its delay between signal and picture has been measured at 11 milliseconds, under one frame. Most screens this size have never been tested for it.",
@@ -1012,7 +1067,7 @@ var PARTS = [
     blocked: function (s) { return s.console === "ipad"
       ? "It connects through an original style controller port, which a tablet does not have." : null; } },
 
-  { id:"pad_8bitdo", cite:["bitdo"], cat:"controller", tier:"Made today",
+  { id:"pad_8bitdo", buy:"https://www.8bitdo.com/64-controller/", cite:["bitdo"], cat:"controller", tier:"Made today",
     name:"8BitDo 64", price:44.99,
     url:"https://www.8bitdo.com/64-controller/",
     blurb:"Wireless, with a Hall effect stick that keeps the original octagonal gate but cannot wear into drift. A 2.4GHz receiver is in the box for the original console.",
@@ -1020,7 +1075,7 @@ var PARTS = [
     blocked: function (s) { return s.console === "ipad"
       ? "8BitDo lists no Apple device for this controller." : null; } },
 
-  { id:"pad_tribute", cite:["retrobit"], cat:"controller", tier:"Made today",
+  { id:"pad_tribute", buy:"https://retro-bit.com/controllers/platinum-collection/tribute64/", cite:["retrobit"], cat:"controller", tier:"Made today",
     name:"Retro-Bit Tribute64", price:29.99,
     url:"https://retro-bit.com/controllers/platinum-collection/tribute64/",
     blurb:"The Hori Pad Mini shape, made under license from Hori, with a new Japanese made analog stick and an original N64 plug. The two grip layout without collector pricing.",
@@ -1029,7 +1084,8 @@ var PARTS = [
       ? "It connects through an original style controller port, which a tablet does not have." : null; } },
 
   { id:"pad_brawler", cite:["fighters"], cat:"controller", tier:"Made today",
-    name:"Retro Fighters Brawler64", price:39.99,
+    name:"Retro Fighters Brawler64",
+    buy:"https://retrofighters.com/our-collection/brawler64-wireless-edition/", price:49.99,
     url:"",
     blurb:"Wireless, and the only one here reshaped for adult hands rather than reproducing the 1996 shape.",
     note:"",
@@ -1038,7 +1094,7 @@ var PARTS = [
       if (s.console === "n64")  return "This edition ships no receiver for the original console. Retro Fighters make a separate version that does.";
       return null; } },
 
-  { id:"pad_nso", cite:["nintendo"], cat:"controller", tier:"Made today",
+  { id:"pad_nso", buy:"https://www.nintendo.com/us/store/products/nintendo-64-controller-128577/", cite:["nintendo"], cat:"controller", tier:"Made today",
     name:"Nintendo Switch Online N64 controller", price:54.99,
     url:"",
     blurb:"Nintendo's own modern reissue, wireless, in the original shape. It pairs over Bluetooth, which on this page means it works with a MiSTer and nothing else.",
@@ -1050,7 +1106,7 @@ var PARTS = [
       if (s.console === "ipad")       return "A tablet only accepts controllers through Apple's own system.";
       return null; } },
 
-  { id:"pad_link", cite:["raphnet"], cat:"adapter", name:"Connector for the original controller", price:24.49,
+  { id:"pad_link", buy:"https://www.raphnet-tech.com/products/n64_usb_adapter_gen3/index.php", cite:["raphnet"], cat:"adapter", name:"Connector for the original controller", price:24.49,
     url:"",
     blurb:"Fitted inside so a 1990s controller reaches the system you chose.",
     note:"",
@@ -1079,7 +1135,7 @@ var PARTS = [
     alert:{ tone:"caution", label:"Beyond 300 miles",
       text:"The price is agreed with you rather than shown here." } },
 
-  { id:"pad_radio", cite:["misteradd"], cat:"adapter", name:"Wireless receiver", price:5.00,
+  { id:"pad_radio", buy:"https://misteraddons.com/products/mister-fpga-bluetooth-and-wifi-usb-adapters", cite:["misteradd"], cat:"adapter", name:"Wireless receiver", price:5.00,
     url:"",
     blurb:"A Bluetooth adapter fitted inside, so a cordless controller has something to reach.",
     note:"",
@@ -1355,6 +1411,9 @@ function render() {
         list.appendChild(sh);
       }
 
+      var wrap = document.createElement("div");
+      wrap.className = "opt-wrap";
+
       var row = document.createElement("button");
       row.type = "button";
       row.className = "opt";
@@ -1376,7 +1435,6 @@ function render() {
       bl.className = "opt-blurb";
       bl.textContent = p.blurb;
       mid.appendChild(nm); mid.appendChild(bl);
-      if (p.bill) mid.appendChild(billTable(p.bill));
       row.appendChild(mid);
 
       var pr = document.createElement("span");
@@ -1413,7 +1471,17 @@ function render() {
       if (interactive) {
         row.addEventListener("click", function () { togglePick(p); render(); });
       }
-      list.appendChild(row);
+      wrap.appendChild(row);
+
+      /* Below the button, never inside it: an anchor in a button is inert. */
+      if (p.buy || p.bill) {
+        var foot = document.createElement("div");
+        foot.className = "opt-foot";
+        if (p.buy) foot.appendChild(sourceLink(p.buy, p.buyText));
+        if (p.bill) foot.appendChild(billTable(p.bill));
+        wrap.appendChild(foot);
+      }
+      list.appendChild(wrap);
     });
 
     box.appendChild(list);
@@ -1421,6 +1489,16 @@ function render() {
   });
 
   renderSheet();
+}
+
+/* One link, opening the seller's own page for that part in a new tab. */
+function sourceLink(url, text) {
+  var a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.textContent = text || ("See it at " + url.replace(/^https?:\/\/(www\.)?/, "").replace(/[\/#?].*$/, ""));
+  return a;
 }
 
 /* The fixed line is the one row a buyer cannot change, so it is the one row
@@ -1431,7 +1509,19 @@ function billTable(items) {
   t.className = "bill";
   items.forEach(function (it) {
     var tr = t.insertRow();
-    tr.insertCell().textContent = it.name;
+    var nc = tr.insertCell();
+    nc.appendChild(document.createTextNode(it.name));
+    if (it.buy) {
+      nc.appendChild(document.createTextNode(" "));
+      nc.appendChild(sourceLink(it.buy, it.buyText));
+    }
+    if (it.cut) {
+      var sp = document.createElement("span");
+      sp.className = "cut-spec";
+      sp.textContent = it.cut;
+      nc.appendChild(document.createElement("br"));
+      nc.appendChild(sp);
+    }
     var c = tr.insertCell();
     c.className = "bill-price";
     c.textContent = money(it.price);
