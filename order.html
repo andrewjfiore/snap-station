@@ -1045,17 +1045,13 @@ var PARTS = [
     name:"Nintendo 64 controller", price:35.00,
     url:"",
     blurb:"First party, cleaned and tested, with the stick checked for wear.",
-    note:"Sticks of this age wear loose and drift. Selected on stick condition, and replaceable later.",
-    blocked: function (s) { return s.console === "ipad"
-      ? "A tablet only accepts controllers through Apple's own system, and a wired 1990s controller has no route in." : null; } },
+    note:"Sticks of this age wear loose and drift. Selected on stick condition, and replaceable later." },
 
   { id:"pad_hori", cite:["ebayHori"], cat:"controller", tier:"Original hardware",
     name:"Hori Pad Mini", price:65.00,
     url:"",
     blurb:"Hori's own N64 controller, sold only in Japan and late in the console's life. Two grips instead of three, with the D-pad moved to the center so both thumbs reach everything, closer to the shape controllers settled on afterwards.",
-    note:"Widely regarded as having a better stick than Nintendo's own. Short production run, so the price moves with what is listed that week.",
-    blocked: function (s) { return s.console === "ipad"
-      ? "A tablet only accepts controllers through Apple's own system, and a wired 1990s controller has no route in." : null; } },
+    note:"Widely regarded as having a better stick than Nintendo's own. Short production run, so the price moves with what is listed that week." },
 
   { id:"pad_m64", cite:["modretro"], cat:"controller", tier:"Made today",
     name:"ModRetro M64 controller", price:89.99,
@@ -1063,25 +1059,19 @@ var PARTS = [
     blurb:"The original three grip shape with an aluminum back, a TMR thumbstick that will not drift, and swappable buttons. You can set it up with the single Z trigger the original had, or two.",
     note:"Aluminum back, so it weighs more than the other modern controllers. The most expensive here.",
     notneeded: function (s) { return s.console === "modretro"
-      ? "One comes in the box with the M64. Pick another here only if you want a second." : null; },
-    blocked: function (s) { return s.console === "ipad"
-      ? "It connects through an original style controller port, which a tablet does not have." : null; } },
+      ? "One comes in the box with the M64. Pick another here only if you want a second." : null; } },
 
   { id:"pad_8bitdo", buy:"https://www.8bitdo.com/64-controller/", cite:["bitdo"], cat:"controller", tier:"Made today",
     name:"8BitDo 64", price:44.99,
     url:"https://www.8bitdo.com/64-controller/",
     blurb:"Wireless, with a Hall effect stick that keeps the original octagonal gate but cannot wear into drift. A 2.4GHz receiver is in the box for the original console.",
-    note:"Its button layout is rearranged rather than copied from the original.",
-    blocked: function (s) { return s.console === "ipad"
-      ? "8BitDo lists no Apple device for this controller." : null; } },
+    note:"Its button layout is rearranged rather than copied from the original." },
 
   { id:"pad_tribute", buy:"https://retro-bit.com/controllers/platinum-collection/tribute64/", cite:["retrobit"], cat:"controller", tier:"Made today",
     name:"Retro-Bit Tribute64", price:29.99,
     url:"https://retro-bit.com/controllers/platinum-collection/tribute64/",
     blurb:"The Hori Pad Mini shape, made under license from Hori, with a new Japanese made analog stick and an original N64 plug. The two grip layout without collector pricing.",
-    note:"Wired. Availability comes and goes, and some versions of it are USB only rather than N64, so it is bought by part number rather than by name.",
-    blocked: function (s) { return s.console === "ipad"
-      ? "It connects through an original style controller port, which a tablet does not have." : null; } },
+    note:"Wired. Availability comes and goes, and some versions of it are USB only rather than N64, so it is bought by part number rather than by name." },
 
   { id:"pad_brawler", cite:["fighters"], cat:"controller", tier:"Made today",
     name:"Retro Fighters Brawler64",
@@ -1089,10 +1079,8 @@ var PARTS = [
     url:"",
     blurb:"Wireless, and the only one here reshaped for adult hands rather than reproducing the 1996 shape.",
     note:"",
-    blocked: function (s) {
-      if (s.console === "ipad") return "The maker lists computers and the Switch only. The one mention of Apple devices on the product page is a customer review.";
-      if (s.console === "n64")  return "This edition ships no receiver for the original console. Retro Fighters make a separate version that does.";
-      return null; } },
+    blocked: function (s) { return s.console === "n64"
+      ? "This edition ships no receiver for the original console. Retro Fighters make a separate version that does." : null; } },
 
   { id:"pad_nso", buy:"https://www.nintendo.com/us/store/products/nintendo-64-controller-128577/", cite:["nintendo"], cat:"controller", tier:"Made today",
     name:"Nintendo Switch Online N64 controller", price:54.99,
@@ -1103,15 +1091,17 @@ var PARTS = [
       if (s.console === "n64")        return "This controller is Bluetooth only and Nintendo ships no receiver for the 1996 console. For original hardware you want the Nintendo 64 controller, the Hori, the Tribute64 or the 8BitDo 64, which comes with a receiver.";
       if (s.console === "analogue3d") return "Not confirmed. The Analogue 3D has Bluetooth, but its wireless support is built around the 8BitDo 64 and generic pads, and nothing states that Nintendo's own reissue pairs with it.";
       if (s.console === "modretro")   return "Not confirmed with the M64, and one of ModRetro's own controllers comes in the box with that console anyway.";
-      if (s.console === "ipad")       return "A tablet only accepts controllers through Apple's own system.";
       return null; } },
 
   { id:"pad_link", buy:"https://www.raphnet-tech.com/products/n64_usb_adapter_gen3/index.php", cite:["raphnet"], cat:"adapter", name:"Connector for the original controller", price:24.49,
     url:"",
     blurb:"Fitted inside so a 1990s controller reaches the system you chose.",
     note:"",
-    auto: function (s) { return (s.console === "mister" && WIRED_N64.indexOf(s.controller) >= 0)
-      ? "A MiSTer has USB sockets and nothing else, so a controller with a 1990s plug cannot reach it without this." : null; },
+    auto: function (s) {
+      if (WIRED_N64.indexOf(s.controller) < 0) return null;
+      if (s.console === "mister") return "A MiSTer has USB sockets and nothing else, so a controller with a 1990s plug cannot reach it without this.";
+      if (s.console === "ipad")   return "A tablet has no original controller socket, so this one reaches it through the connector fitted inside.";
+      return null; },
     notneeded: function (s) {
       if (WIRED_N64.indexOf(s.controller) < 0) return "Your controller is wireless.";
       return "Your console has original controller sockets on the front, so it plugs straight in."; } },
