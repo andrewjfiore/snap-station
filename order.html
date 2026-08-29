@@ -1,0 +1,1696 @@
+<title>Snap Station Built to Order</title>
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+/* ---------------------------------------------------------------- tokens --
+   A neutral gray ramp, one blue for anything interactive, one red for
+   anything refused, one amber for anything conditional. No decorative color:
+   this page is a quote for a four figure purchase and should read like one.
+
+   Every color is defined on bare :root, then redefined wholesale for the two
+   dark states. Nothing downstream declares a literal color.                */
+
+:root {
+  --bg:          #F7F8FA;
+  --surface:     #FFFFFF;
+  --surface-2:   #F9FAFB;
+  --surface-3:   #F1F3F7;
+  --border:      #E2E5EB;
+  --border-2:    #EDEFF3;
+
+  --ink:         #0F1419;
+  --ink-2:       #515C6B;
+  --ink-3:       #69737F;
+
+  --brand:       #1857C4;
+  --brand-hover: #12459C;
+  --brand-tint:  #EFF4FE;
+  --brand-edge:  #C4D6F7;
+  --brand-ink:   #FFFFFF;
+
+  --stop:        #B42318;
+  --stop-bg:     #FEF3F2;
+  --stop-edge:   #FBD3CE;
+
+  --warn:        #8A4B0B;
+  --warn-bg:     #FFFAEB;
+  --warn-edge:   #F3DCA4;
+
+  --head-bg:     #0F1419;
+  --head-ink:    #FFFFFF;
+  --head-ink-2:  #98A2B3;
+
+  --radius:      6px;
+  --radius-sm:   4px;
+
+  color-scheme: light;
+}
+
+/* ----------------------------------------------------------------- base -- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+.tnum { font-variant-numeric: tabular-nums; }
+.display { font-weight: 600; letter-spacing: -.011em; }
+
+a { color: var(--brand); text-underline-offset: 2px; }
+a:hover { color: var(--brand-hover); }
+
+:where(button, a, input):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+.wide { max-width: 1240px; margin: 0 auto; padding-inline: 24px; }
+
+/* -------------------------------------------------------------- masthead -- */
+
+.mast {
+  background: var(--head-bg);
+  color: var(--head-ink);
+}
+.mast-in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 40px;
+  padding-block: 20px;
+}
+h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -.014em;
+  line-height: 1.25;
+}
+h1 span {
+  display: inline;
+  color: var(--head-ink-2);
+  font-weight: 400;
+}
+h1 span::before { content: " / "; }
+
+/* ----------------------------------------------------------------- intro -- */
+
+.intro { background: var(--surface); border-bottom: 1px solid var(--border); }
+.intro-in { padding-block: 14px; }
+.intro strong { color: var(--ink); font-weight: 600; }
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px 32px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.legend div { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 12px; align-items: baseline; }
+.legend b {
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------------- shell -- */
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 348px;
+  gap: 24px;
+  align-items: start;
+  padding-block: 24px 96px;
+}
+.picker { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* ------------------------------------------------------------ stage bar -- */
+
+.stage {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 10px 2px 4px;
+}
+.stage:not(:first-child) { padding-top: 18px; }
+.stage h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--ink-2); }
+.bullets { list-style: none; margin: 0; padding: 0; }
+.bullets li { display: block; padding-left: 12px; position: relative; line-height: 1.45; }
+.bullets li::before {
+  content: "\2022";
+  position: absolute;
+  left: 0;
+  color: var(--ink-3);
+}
+.stage-sub { font-size: 12.5px; color: var(--ink-3); }
+.stage-sum {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+/* --------------------------------------------------------------- groups -- */
+
+.group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.group-head {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 11px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.group-step {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.group-name { font-weight: 600; font-size: 13.5px; letter-spacing: -.005em; }
+.group-note { margin-left: auto; font-size: 12.5px; color: var(--ink-3); }
+
+.opts { display: flex; flex-direction: column; }
+
+.subhead {
+  padding: 9px 16px 6px;
+  border-top: 1px solid var(--border-2);
+  background: var(--surface-2);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.subhead:first-child { border-top: 0; }
+
+/* ------------------------------------------------------------ option row -- */
+
+.opt {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 0 13px;
+  align-items: start;
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  border-top: 1px solid var(--border-2);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  transition: background .1s ease;
+}
+.opt:first-child { border-top: 0; }
+.opt:hover:not([data-state="blocked"]):not([data-state="notneeded"]):not([data-state="included"]) {
+  background: var(--surface-2);
+}
+.opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+.tick {
+  width: 16px; height: 16px;
+  margin-top: 2px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.tick::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
+
+.opt-name { font-weight: 500; line-height: 1.4; }
+.opt-blurb { font-size: 13px; color: var(--ink-2); margin-top: 3px; display: block; }
+
+.bill {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.bill td { padding: 3px 0; vertical-align: top; }
+.bill-price {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 12px;
+}
+.bill tr.bill-sum td { border-top: 1px solid var(--border); padding-top: 6px; }
+.opt-price {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-align: right;
+  padding-top: 1px;
+}
+.opt-price.soft-price { color: var(--ink-3); font-size: 12px; font-family: "Public Sans", sans-serif; }
+
+/* citation markers */
+
+/* messages */
+.msg {
+  grid-column: 2 / -1;
+  margin-top: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 8px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.msg b { font-weight: 600; }
+.msg + .msg { margin-top: 6px; }
+.msg[data-tone="caution"] { background: var(--warn-bg); border-color: var(--warn-edge); color: var(--warn); }
+.msg[data-tone="danger"],
+.msg[data-tone="stop"]    { background: var(--stop-bg); border-color: var(--stop-edge); color: var(--stop); }
+.msg[data-tone="required"]{ background: var(--brand-tint); border-color: var(--brand-edge); color: var(--ink-2); }
+
+/* row states */
+.opt[data-state="chosen"] { background: var(--brand-tint); }
+.opt[data-state="chosen"] .tick { border-color: var(--brand); border-width: 5px; }
+.opt[data-state="auto"] { background: var(--surface-2); }
+.opt[data-state="auto"] .tick { border-color: var(--brand); border-style: dashed; }
+.opt[data-state="auto"] .tick::after { background: var(--brand); }
+
+.opt[data-state="notneeded"] { cursor: default; }
+.opt[data-state="notneeded"] .opt-name,
+.opt[data-state="notneeded"] .opt-price { color: var(--ink-3); }
+.opt[data-state="notneeded"] .opt-price { text-decoration: line-through; }
+
+.opt[data-state="blocked"] { cursor: not-allowed; }
+.opt[data-state="blocked"] .opt-name,
+.opt[data-state="blocked"] .opt-blurb,
+.opt[data-state="blocked"] .opt-price { color: var(--ink-3); }
+.opt[data-state="blocked"] .opt-name { text-decoration: line-through; }
+
+.opt[data-state="included"] { cursor: default; }
+.opt[data-state="included"] .opt-price { color: var(--ink-3); }
+.opt[data-state="included"] .tick { border-style: dashed; }
+
+/* ---------------------------------------------------------- ZIP entry -- */
+
+.zipbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-2);
+  background: var(--surface);
+}
+.zipbar label { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.zipbar input {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  letter-spacing: .1em;
+  width: 7em;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.zipbar input::placeholder { color: var(--ink-3); }
+.zipbar input:focus-visible { border-color: var(--brand); outline-offset: 0; }
+.zipbar .zipout { font-size: 12.5px; color: var(--ink-2); }
+.zipbar .zipout b { color: var(--ink); font-weight: 600; }
+.zipbar .zipbad { color: var(--stop); font-weight: 500; }
+
+/* ------------------------------------------------------------ order panel -- */
+
+.sheet {
+  position: sticky;
+  top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.sheet-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.reset {
+  background: none;
+  border: 0;
+  color: var(--brand);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+.reset:hover { color: var(--brand-hover); text-decoration: underline; }
+
+.prog { padding: 12px 16px 0; }
+.prog-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+.prog-track { height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.prog-fill { height: 100%; background: var(--brand); transition: width .2s ease; }
+
+.sheet-body { padding: 4px 16px 16px; }
+
+.sheet-stage {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 14px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.sheet-stage span:last-child {
+  letter-spacing: 0;
+  font-size: 12.5px;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--ink-2);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-2);
+  font-size: 13px;
+}
+.line:last-of-type { border-bottom: 0; }
+.line-cat {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.line-name { line-height: 1.4; color: var(--ink-2); }
+.line-req { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.line-price {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.line.todo .line-name { color: var(--stop); font-weight: 500; }
+
+.total {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.total-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.total-sum {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+.total-sum.total-pending { font-size: 13px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
+.total-fine { margin: 7px 0 0; font-size: 11.5px; color: var(--ink-3); line-height: 1.45; }
+
+
+/* --------------------------------------------------------- mobile totals -- */
+
+.bar {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  background: var(--head-bg);
+  color: var(--head-ink);
+  padding: 10px 20px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.bar-l { display: flex; flex-direction: column; gap: 1px; }
+.bar-k { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--head-ink-2); }
+.bar-v { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 600; }
+.bar a {
+  color: var(--brand-ink);
+  background: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- footer -- */
+
+footer { border-top: 1px solid var(--border); background: var(--surface); }
+.foot-in { padding-block: 28px 40px; }
+
+.foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px 40px; }
+.foot-grid h3 { margin: 0 0 5px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+.foot-grid p { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; max-width: 48ch; }
+
+
+/* sources */
+.srcs { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 20px; }
+.srcs h3 { margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+.srcs > p { margin: 0 0 14px; font-size: 12.5px; color: var(--ink-2); max-width: 74ch; }
+.srcs ol { margin: 0; padding: 0; list-style: none; counter-reset: src; display: grid; gap: 7px; }
+.srcs li {
+  counter-increment: src;
+  display: grid;
+  grid-template-columns: 26px 74px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  align-items: baseline;
+  line-height: 1.5;
+}
+.srcs li::before {
+  content: counter(src);
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  text-align: right;
+}
+.srcs .kind {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  text-align: center;
+  color: var(--ink-2);
+  background: var(--surface-3);
+}
+.srcs .kind[data-k="quoted"]   { color: var(--brand); border-color: var(--brand-edge); background: var(--brand-tint); }
+.srcs .kind[data-k="estimate"] { color: var(--warn);  border-color: var(--warn-edge);  background: var(--warn-bg); }
+.srcs li b { color: var(--ink); font-weight: 600; }
+.srcs li:target { background: var(--brand-tint); border-radius: var(--radius-sm); }
+
+.colophon { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-2); font-size: 11.5px; color: var(--ink-3); line-height: 1.6; max-width: 82ch; }
+
+/* --------------------------------------------------------------- narrow -- */
+
+@media (max-width: 1040px) {
+  .shell { grid-template-columns: minmax(0, 1fr); padding-bottom: 88px; }
+  .sheet { position: static; }
+  .legend { border-top: 1px solid var(--border); padding-top: 14px; }
+  .bar { display: flex; }
+}
+
+@media (max-width: 560px) {
+  .wide { padding-inline: 16px; }
+  .opt { grid-template-columns: 16px minmax(0, 1fr); padding: 12px 14px; }
+  .opt-price { grid-column: 2; text-align: left; margin-top: 6px; }
+  .msg { grid-column: 1 / -1; }
+  .group-note { margin-left: 0; width: 100%; }
+  .legend div { grid-template-columns: minmax(0,1fr); gap: 2px; }
+  .legend b { justify-self: start; }
+  .srcs li { grid-template-columns: 20px minmax(0,1fr); }
+  .srcs .kind { grid-column: 2; justify-self: start; margin-bottom: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ---------------------------------------------------------------- print -- */
+
+@media print {
+  .mast, .intro, .picker, .bar, .btn, .reset, .prog, .foot-grid { display: none !important; }
+  body { background: #fff; color: #000; font-size: 10.5pt; }
+  .shell { display: block; padding: 0; }
+  .sheet { position: static; border: 0; }
+  .sheet-head { background: #fff; border-bottom: 1px solid #000; padding-inline: 0; }
+  .sheet-body { padding-inline: 0; }
+  .check { border: 1px solid #000; background: #fff; color: #000; }
+  footer { border: 0; }
+  .srcs { border-top: 1px solid #000; }
+}
+</style>
+
+<header class="mast">
+  <div class="wide mast-in">
+    <h1 class="display">Snap Station<span>Built to Order</span></h1>
+  </div>
+</header>
+
+<div class="intro">
+  <div class="wide intro-in">
+    <div class="legend">
+      <div><b>Included</b>In the price of every machine.</div>
+      <div><b>Comes with</b>Required by something else you picked.</div>
+      <div><b>Not available</b>Cannot be combined with something else you picked.</div>
+    </div>
+  </div>
+</div>
+
+<div class="wide shell">
+  <div class="picker" id="picker"></div>
+
+  <aside class="sheet" id="sheetcard">
+    <div class="sheet-head">
+      <span>Your machine</span>
+      <button class="reset" id="reset" type="button">Start again</button>
+    </div>
+    <div class="prog">
+      <div class="prog-label">
+        <span id="proglabel">Nothing chosen yet</span>
+        <span class="mono tnum" id="progcount"></span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progfill" style="width:0%"></div></div>
+    </div>
+    <div class="sheet-body" id="sheet" aria-live="polite"></div>
+  </aside>
+</div>
+
+<footer>
+  <div class="wide foot-in">
+    <div class="foot-grid">
+      <div>
+        <h3>What arrives</h3>
+        <p>A finished machine, built, painted, decorated and tested, with
+        the electronics already fitted. Crated and hand delivered orders arrive
+        assembled. Flat packed orders take about two hours to put together.</p>
+      </div>
+      <div>
+        <h3>Prices</h3>
+        <p>US dollars, at August 2026 component costs, before sales tax.
+        Second hand options move with the market.</p>
+        <p style="margin-top:8px">Delivery is an estimate from your ZIP
+        code. The real price is confirmed with you before anything is
+        booked.</p>
+      </div>
+    </div>
+
+    <div class="srcs">
+      <h3>Where every figure comes from</h3>
+      <p>Prices marked <b>quoted</b> are a seller's own current price.
+      Prices marked <b>estimate</b> are worked out from a published rate
+      schedule, which is named. Prices marked <b>used</b> are a range from
+      completed sales, so they move.</p>
+      <ol id="srclist"></ol>
+    </div>
+
+    <p class="colophon">Hand built reproductions, made one at a time. Not
+    Nintendo products, and not affiliated with, licensed by or endorsed by
+    Nintendo. Some options depend on second hand parts that are not always
+    obtainable.</p>
+  </div>
+</footer>
+
+<div class="bar" id="bar">
+  <div class="bar-l">
+    <span class="bar-k">Your machine</span>
+    <span class="bar-v" id="barsum">–</span>
+  </div>
+  <a href="#sheetcard">Details</a>
+</div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------- pricing --
+   Component costs in US dollars, August 2026.
+
+   BUILD_FEE is the builder's charge for the work: cutting, assembly, finishing,
+   artwork, fitting out, testing. One number in one place; every quote on the
+   page follows it. At 0 the page quotes components only and the line is hidden. */
+
+var BUILD_FEE = 0;
+
+/* ------------------------------------------------------------- delivery --
+   Where it ships from: 16 Kosta Ave, Rutland MA, ZIP 01543.
+
+   The published page cannot call a carrier's API. A strict content policy
+   blocks every outbound request from it, so the distance table travels with
+   the page rather than being looked up. It is real data: GeoNames US postal
+   codes, 41,490 of them, averaged into 926 three digit prefixes. Each entry is
+   prefix, latitude, longitude, fixed width, semicolon separated.
+
+   A three digit prefix covers one postal sorting area, so it places a customer
+   within a few tens of miles. Freight does not price finer than that. */
+
+
+/* ------------------------------------------------------------- sources --
+   Every figure on this page traces to one of these. `kind` is the honest
+   status of the number: a seller's current price, an estimate fitted to a
+   published rate schedule, or a range taken from completed used sales.     */
+
+var CITES = {
+  hd:        { kind:"quoted", who:"The Home Depot", what:"panel goods, per sheet, priced Aug 2026",
+               url:"https://www.homedepot.com/b/Lumber-Composites-Panels/N-5yc1vZbqmy" },
+  oshcut:    { kind:"estimate", who:"OSH Cut", what:"laser cut and formed 16 gauge steel, quantity one, quoted through their online estimator",
+               url:"https://oshcut.com/" },
+  speedy:    { kind:"quoted", who:"Speedy Metals", what:"steel tube and plate stock",
+               url:"https://www.speedymetals.com/" },
+  fittings:  { kind:"quoted", who:"Outwater, Component Hardware, Paradise Arcade, Super Bright LEDs, The Paint Store, SnakeClamp",
+               what:"leg collars, leveling feet, arcade button, beacon lens, coin tray, arm parts", url:"" },
+  liene:     { kind:"quoted", who:"Liene", what:"PixCut S1 Inspire Kit, photo sticker printer and cutter",
+               url:"https://www.liene-life.com/products/pixcut-s1-photo-sticker-printer-and-cutter-inspire-kit" },
+  smule:     { kind:"quoted", who:"Sticker Mule", what:"cut vinyl decals, four faces",
+               url:"https://www.stickermule.com/" },
+  paint:     { kind:"quoted", who:"Montana Colors and Rust-Oleum", what:"aerosol enamel in the three cabinet colors, plus filler, primer and abrasives",
+               url:"https://www.montanacolors.com/" },
+  columbia:  { kind:"quoted", who:"Columbia Coatings", what:"powder by the pound, plus a masked second bake",
+               url:"https://columbiacoatings.com/" },
+  ebayN64:   { kind:"used", who:"eBay", what:"completed sales, Nintendo 64 consoles and controllers described as tested",
+               url:"https://www.ebay.com/sch/i.html?_nkw=nintendo+64+console+tested&LH_Sold=1" },
+  ebayCRT:   { kind:"used", who:"eBay", what:"completed sales, 13 and 15 inch consumer CRT televisions, working",
+               url:"https://www.ebay.com/sch/i.html?_nkw=15+inch+crt+tv+working&LH_Sold=1" },
+  ebayHori:  { kind:"used", who:"eBay", what:"completed sales, Hori Pad Mini. $35 to $65 for common colors, more for rare ones",
+               url:"https://www.ebay.com/sch/i.html?_nkw=hori+pad+mini+n64&LH_Sold=1" },
+  analogue:  { kind:"quoted", who:"Analogue", what:"Analogue 3D, $269.99 after the 2026 tariff increase, up from $249.99 at its November 2025 release",
+               url:"https://www.analogue.co/3d" },
+  modretro:  { kind:"quoted", who:"ModRetro", what:"M64 console $229.99 including one controller, additional controllers $89.99, launched 28 July 2026",
+               url:"https://modretro.com/" },
+  misterpi:  { kind:"quoted", who:"Retro Remake and QMTech", what:"MiSTer Pi $99 base, $115 with SDRAM, $160 full bundle; QMTech Cyclone V clone under $100, or $129 with SDRAM on board",
+               url:"https://retrorgb.com/digging-into-the-mister-pi.html" },
+  retrotink: { kind:"quoted", who:"RetroTINK", what:"4K CE video converter, $475",
+               url:"https://www.retrotink.com/shop/retrotink-4k-ce" },
+  uperfect:  { kind:"quoted", who:"UPERFECT", what:"17.3 inch portable panels, 4K and 1440p",
+               url:"https://www.uperfect.com/" },
+  bitdo:     { kind:"quoted", who:"8BitDo", what:"8BitDo 64, $44.99, receiver included",
+               url:"https://www.8bitdo.com/64-controller/" },
+  retrobit:  { kind:"quoted", who:"Retro-Bit", what:"Tribute64, the Hori Pad Mini shape under license",
+               url:"https://retro-bit.com/controllers/platinum-collection/tribute64/" },
+  fighters:  { kind:"quoted", who:"Retro Fighters", what:"Brawler64 wireless",
+               url:"https://retrofighters.com/" },
+  nintendo:  { kind:"quoted", who:"Nintendo", what:"Nintendo 64 controller for Switch Online, $54.99, sold to Switch Online members",
+               url:"https://www.nintendo.com/" },
+  raphnet:   { kind:"quoted", who:"Raphnet Technologies", what:"N64 to USB adapter version 3, bought direct. Resellers list the same part at twice this",
+               url:"https://www.raphnet-tech.com/products/n64_usb_adapter_gen3/index.php" },
+  misteradd: { kind:"quoted", who:"MiSTer Addons", what:"Bluetooth USB adapter",
+               url:"https://misteraddons.com/products/mister-fpga-bluetooth-and-wifi-usb-adapters" },
+  backmkt:   { kind:"quoted", who:"Back Market", what:"refurbished iPad Pro 12.9 inch M2",
+               url:"https://www.backmarket.com/en-us/l/ipad-pro/a1733845-a071-4904-b2c6-eb0f332f7ef3" },
+  ltl:       { kind:"estimate", who:"Coin-op freight brokers and 2026 LTL rate guides",
+               what:"residential curbside with a liftgate quoted at $275 to $450 over 500 miles and $400 to $700 over 2,000",
+               url:"https://www.coinmachineshippers.com/ship-arcade-machine-across-country" },
+  parcel:    { kind:"estimate", who:"UPS and FedEx 2026 surcharge schedules",
+               what:"ground service across six boxes, where the 56 lb ballast plate alone trips the over 50 pound handling surcharge",
+               url:"https://www.ups.com/us/en/support/shipping-support/shipping-dimensions-weight/avoid-additional-shipping-fees" },
+  irs:       { kind:"quoted", who:"Internal Revenue Service", what:"business standard mileage rate, 76 cents from 1 July 2026, charged here for the round trip",
+               url:"https://www.irs.gov/tax-professionals/standard-mileage-rates" },
+  geonames:  { kind:"quoted", who:"GeoNames", what:"US postal code coordinates",
+               url:"https://download.geonames.org/export/zip/" }
+};
+
+var CITE_ORDER = Object.keys(CITES);
+
+/* Where it ships from: 16 Kosta Ave, Rutland MA, ZIP 01543.
+
+   The published page cannot call a carrier's API. A strict content policy
+   blocks every outbound request from it, so the distance table travels with
+   the page rather than being looked up. Real data: GeoNames US postal codes,
+   41,490 of them, averaged into 926 three digit prefixes. Each entry is
+   prefix, latitude, longitude, fixed width, semicolon separated. */
+
+var SHIP_FROM = [42.21, -71.83];
+
+var ZIP3 = "005+40.82-073.05;010+42.26-072.57;011+42.12-072.57;012+42.35-073.23;013+42.59-072.58;014+42.58-071.77;015+42.21-071.83;016+42.28-071.83;017+42.35-071.45;018+42.63-071.20;019+42.60-070.90;020+42.15-071.04;021+42.33-071.07;022+42.35-071.02;023+42.01-070.89;024+42.36-071.22;025+41.58-070.55;026+41.73-070.17;027+41.76-071.08;028+41.67-071.52;029+41.82-071.43;030+42.88-071.48;031+42.99-071.46;032+43.52-071.65;033+43.25-071.56;034+42.91-072.20;035+44.49-071.48;036+43.17-072.34;037+43.70-072.15;038+43.38-071.04;039+43.19-070.71;040+43.73-070.51;041+43.67-070.25;042+44.31-070.37;043+44.30-069.78;044+45.12-068.72;045+43.95-069.57;046+44.54-068.01;047+46.71-068.27;048+44.11-069.11;049+44.76-069.65;050+43.82-072.39;051+43.25-072.61;052+43.03-073.14;053+42.93-072.74;054+44.59-073.04;055+42.65-071.18;056+44.33-072.57;057+43.66-073.05;058+44.67-072.13;059+44.79-071.65;060+41.86-072.79;061+41.78-072.70;062+41.83-072.09;063+41.50-072.04;064+41.43-072.78;065+41.32-072.93;066+41.19-073.19;067+41.63-073.16;068+41.21-073.42;069+41.06-073.54;070+40.76-074.23;071+40.75-074.20;072+40.67-074.23;073+40.73-074.07;074+41.04-074.30;075+40.94-074.20;076+40.93-074.02;077+40.31-074.11;078+40.94-074.76;079+40.74-074.52;080+39.82-074.98;081+39.93-075.09;082+39.27-074.68;083+39.43-075.03;084+39.35-074.47;085+40.28-074.67;086+40.25-074.72;087+39.98-074.14;088+40.54-074.63;089+40.48-074.45;090+49.45+009.17;091+49.59+009.08;092+50.06+009.12;093+50.23+008.64;094+52.47-001.26;095+19.91-075.21;096+37.46+018.65;097+42.21+012.06;098+28.04+040.29;100+40.76-073.98;101+40.77-073.98;102+40.73-074.00;103+40.59-074.15;104+40.85-073.88;105+41.19-073.78;106+41.05-073.77;107+40.95-073.86;108+40.92-073.79;109+41.26-074.17;110+40.75-073.68;111+40.76-073.93;112+40.65-073.95;113+40.74-073.84;114+40.69-073.81;115+40.71-073.64;116+40.60-073.82;117+40.80-073.25;118+40.77-073.52;119+40.92-072.55;120+42.69-073.94;121+42.69-073.93;122+42.66-073.76;123+42.81-073.95;124+42.08-074.21;125+41.76-073.86;126+41.73-073.82;127+41.69-074.77;128+43.49-073.72;129+44.57-073.92;130+42.98-076.19;131+43.07-076.27;132+43.05-076.16;133+43.15-075.23;134+43.11-075.27;135+43.10-075.23;136+44.29-075.53;137+42.25-075.54;138+42.34-075.58;139+42.11-075.89;140+42.80-078.63;141+42.82-078.72;142+42.87-078.85;143+43.10-079.03;144+42.97-077.61;145+42.95-077.49;146+43.20-077.64;147+42.20-078.86;148+42.31-077.11;149+42.11-076.82;150+40.47-080.06;151+40.43-079.93;152+40.44-080.00;153+40.04-080.16;154+39.95-079.75;155+39.97-078.89;156+40.32-079.54;157+40.73-079.03;158+41.25-078.71;159+40.36-078.86;160+40.94-079.88;161+41.15-080.35;162+41.02-079.39;163+41.58-079.55;164+41.89-080.03;165+42.13-080.07;166+40.48-078.35;167+41.81-078.50;168+40.94-077.99;169+41.83-077.26;170+40.40-077.04;171+40.28-076.86;172+40.00-077.77;173+39.90-076.87;174+39.96-076.70;175+40.06-076.24;176+40.04-076.31;177+41.29-077.12;178+40.88-076.81;179+40.71-076.28;180+40.63-075.46;181+40.60-075.51;182+40.91-075.95;183+41.08-075.24;184+41.56-075.41;185+41.40-075.67;186+41.31-076.06;187+41.26-075.88;188+41.82-076.08;189+40.35-075.18;190+40.01-075.22;191+39.99-075.14;192+40.00-075.12;193+39.93-075.72;194+40.17-075.43;195+40.41-075.89;196+40.35-075.95;197+39.63-075.64;198+39.70-075.57;199+38.88-075.44;200+38.90-077.02;201+38.92-077.59;202+38.89-077.02;203+38.89-077.02;204+38.90-077.02;205+38.89-077.03;206+38.40-076.73;207+38.91-076.83;208+39.11-077.16;209+39.01-077.02;210+39.37-076.57;211+39.39-076.64;212+39.31-076.61;214+38.99-076.52;215+39.59-078.97;216+38.86-076.05;217+39.50-077.48;218+38.27-075.61;219+39.57-075.95;220+38.83-077.25;221+38.79-077.25;222+38.87-077.10;223+38.80-077.09;224+38.13-077.07;225+38.05-077.00;226+39.03-078.22;227+38.47-078.06;228+38.56-078.82;229+38.04-078.57;230+37.59-077.13;231+37.55-077.04;232+37.52-077.46;233+37.37-075.96;234+37.24-076.00;235+36.90-076.26;236+37.11-076.44;237+36.84-076.34;238+36.97-077.43;239+37.02-078.41;240+37.20-080.04;241+37.08-080.15;242+36.83-082.47;243+36.84-081.13;244+38.08-079.36;245+37.15-079.13;246+37.20-081.80;247+37.40-081.22;248+37.47-081.64;249+37.85-080.43;250+38.20-081.49;251+38.23-081.53;252+38.62-081.56;253+38.34-081.62;254+39.40-078.04;255+38.29-082.17;256+37.76-082.05;257+38.41-082.34;258+37.79-081.21;259+37.78-081.07;260+40.17-080.63;261+39.22-081.29;262+38.77-080.06;263+39.20-080.52;264+39.26-080.40;265+39.57-080.11;266+38.46-080.81;267+39.36-078.96;268+38.95-079.02;270+36.25-080.40;271+36.07-080.24;272+35.89-079.70;273+35.94-079.64;274+36.08-079.80;275+35.88-078.57;276+35.81-078.63;277+36.02-078.89;278+35.91-077.43;279+36.10-076.19;280+35.37-081.02;281+35.29-080.77;282+35.23-080.82;283+34.98-078.99;284+34.30-078.20;285+35.01-077.12;286+36.07-081.37;287+35.44-082.68;288+35.60-082.54;289+35.08-083.95;290+33.97-080.82;291+33.89-080.88;292+34.02-081.01;293+34.86-081.91;294+32.96-080.10;295+34.06-079.41;296+34.68-082.57;297+34.88-080.95;298+33.52-081.76;299+32.54-080.90;300+33.88-084.18;301+34.02-084.87;302+33.33-084.47;303+33.81-084.39;304+32.42-082.12;305+34.52-083.72;306+33.89-083.27;307+34.76-085.09;308+33.34-082.36;309+33.43-082.08;310+32.60-083.46;311+33.83-084.39;312+32.82-083.67;313+31.92-081.42;314+32.02-081.10;315+31.34-082.13;316+30.99-083.21;317+31.46-083.87;318+32.52-084.72;319+32.48-084.93;320+30.16-082.12;321+29.31-081.43;322+30.31-081.63;323+30.34-084.27;324+30.50-085.57;325+30.54-086.99;326+29.59-082.46;327+28.78-081.31;328+28.52-081.31;329+28.03-080.59;330+25.77-080.41;331+25.77-080.26;332+25.77-080.20;333+26.13-080.21;334+26.61-080.18;335+28.09-082.27;336+27.94-082.46;337+27.86-082.73;338+27.90-081.71;339+26.69-081.90;340+05.11-075.39;341+26.14-081.66;342+27.31-082.42;344+29.02-082.32;346+28.30-082.61;347+28.50-081.61;349+27.30-080.39;350+33.57-086.70;351+33.50-086.63;352+33.52-086.84;354+33.14-087.73;355+33.97-087.64;356+34.70-087.30;357+34.74-086.35;358+34.72-086.58;359+34.28-085.95;360+32.16-086.14;361+32.30-086.24;362+33.58-085.70;363+31.29-085.55;364+31.41-087.07;365+30.86-087.94;366+30.68-088.12;367+32.32-087.38;368+32.57-085.33;369+32.14-088.25;370+36.12-086.85;371+36.06-086.71;372+36.17-086.79;373+35.27-085.35;374+35.04-085.28;375+35.16-090.02;376+36.38-082.36;377+36.16-083.87;378+36.10-083.78;379+35.97-083.96;380+35.49-089.47;381+35.16-089.96;382+36.28-088.74;383+35.61-088.56;384+35.30-087.30;385+36.19-085.42;386+34.59-089.83;387+33.57-090.81;388+34.31-088.66;389+33.77-089.95;390+32.45-090.16;391+32.36-090.25;392+32.30-090.18;393+32.37-088.82;394+31.33-089.30;395+30.44-089.00;396+31.35-090.54;397+33.53-088.83;398+31.31-084.65;399+33.89-084.07;400+38.12-085.33;401+37.87-086.13;402+38.21-085.70;403+38.06-084.18;404+37.51-084.43;405+38.03-084.48;406+38.23-084.87;407+37.00-084.08;408+36.90-083.28;409+36.93-083.70;410+38.79-084.40;411+38.37-082.95;412+37.86-082.71;413+37.57-083.48;414+37.85-083.17;415+37.45-082.37;416+37.50-082.74;417+37.24-083.22;418+37.22-082.86;420+36.90-088.58;421+36.89-086.06;422+36.96-086.99;423+37.49-087.03;424+37.51-087.66;425+37.14-084.70;426+36.78-084.69;427+37.35-085.75;430+40.16-082.93;431+39.70-082.90;432+39.99-082.99;433+40.53-083.35;434+41.47-083.30;435+41.46-084.13;436+41.67-083.53;437+39.86-081.70;438+40.27-081.85;439+40.22-080.85;440+41.55-081.39;441+41.49-081.67;442+41.12-081.58;443+41.08-081.53;444+41.09-080.75;445+41.08-080.68;446+40.67-081.47;447+40.81-081.38;448+41.03-082.76;449+40.76-082.52;450+39.39-084.49;451+39.11-083.93;452+39.17-084.50;453+39.99-084.28;454+39.75-084.20;455+39.93-083.81;456+38.93-082.82;457+39.35-081.81;458+40.83-084.19;459+39.17-084.54;460+40.15-086.03;461+39.65-086.16;462+39.80-086.14;463+41.44-087.16;464+41.56-087.34;465+41.46-086.05;466+41.66-086.26;467+41.17-085.20;468+41.09-085.10;469+40.72-086.10;470+39.16-085.07;471+38.38-085.97;472+39.06-085.75;473+40.06-085.21;474+39.05-086.67;475+38.41-087.00;476+38.15-087.46;477+38.00-087.57;478+39.46-087.32;479+40.43-087.06;480+42.67-082.92;481+42.22-083.50;482+42.35-083.10;483+42.63-083.32;484+43.24-083.29;485+43.01-083.71;486+43.81-084.28;487+43.92-083.57;488+43.03-084.69;489+42.72-084.57;490+42.22-085.59;491+41.89-086.44;492+42.05-084.34;493+43.21-085.55;494+43.23-086.13;495+42.97-085.62;496+44.55-085.63;497+45.57-084.54;498+46.07-087.20;499+46.74-088.83;500+41.70-093.78;501+41.60-093.47;502+41.68-093.56;503+41.65-093.60;504+43.16-093.34;505+42.75-094.44;506+42.63-092.45;507+42.48-092.32;508+40.96-094.55;509+41.65-093.58;510+42.60-095.91;511+42.48-096.39;512+43.26-096.03;513+43.25-095.13;514+42.09-095.07;515+41.45-095.56;516+40.73-095.36;520+42.48-090.95;521+43.16-091.73;522+41.89-091.75;523+41.90-091.73;524+42.04-091.64;525+40.97-092.43;526+40.87-091.45;527+41.66-090.74;528+41.57-090.59;530+43.45-088.21;531+42.74-088.22;532+43.05-087.95;534+42.73-087.78;535+42.94-089.61;537+43.07-089.40;538+42.82-090.75;539+43.61-089.52;540+45.07-092.49;541+44.86-088.24;542+44.55-087.56;543+44.49-088.03;544+44.87-089.80;545+45.91-089.88;546+43.86-090.91;547+44.83-091.59;548+46.03-091.63;549+44.21-088.83;550+45.05-093.02;551+44.96-093.10;553+44.98-093.87;554+44.98-093.30;555+44.97-093.61;556+47.49-091.01;557+47.18-092.78;558+46.79-092.13;559+43.90-092.29;560+44.00-093.97;561+43.90-095.66;562+45.02-095.66;563+45.75-094.60;564+46.58-094.50;565+46.84-096.13;566+47.84-094.45;567+48.43-096.34;569+38.90-077.04;570+43.49-097.01;571+43.59-096.75;572+45.03-097.11;573+43.80-098.40;574+45.35-098.74;575+43.75-100.42;576+45.54-101.37;577+44.09-103.09;580+46.68-097.31;581+46.87-096.80;582+48.21-097.61;583+48.36-099.20;584+46.95-099.02;585+46.79-100.90;586+46.77-102.90;587+48.36-101.56;588+48.24-103.51;590+45.82-108.67;591+45.80-108.52;592+48.32-105.30;593+46.31-105.37;594+47.74-111.22;595+48.49-109.42;596+46.55-111.92;597+45.69-112.14;598+47.01-114.27;599+48.32-114.46;600+42.22-088.00;601+41.97-088.21;602+42.05-087.69;603+41.90-087.82;604+41.53-087.91;605+41.74-088.29;606+41.85-087.68;607+41.95-087.77;608+41.72-087.71;609+40.82-087.93;610+42.21-089.52;611+42.30-089.10;612+41.49-090.36;613+41.34-089.21;614+40.84-090.41;615+40.69-089.70;616+40.72-089.63;617+40.50-088.92;618+40.10-088.13;619+39.68-088.22;620+39.06-090.00;622+38.44-089.80;623+40.03-091.06;624+39.05-088.21;625+39.71-089.22;626+39.82-089.99;627+39.78-089.62;628+38.31-088.67;629+37.55-088.99;630+38.45-090.66;631+38.64-090.29;633+38.95-091.01;634+39.97-091.78;635+40.20-092.59;636+37.65-090.62;637+37.33-089.77;638+36.50-089.79;639+36.84-090.52;640+39.09-094.22;641+39.12-094.57;644+40.11-094.69;645+39.75-094.84;646+39.87-093.57;647+38.09-094.22;648+36.96-094.36;649+39.10-094.58;650+38.46-092.28;651+38.57-092.18;652+39.18-092.39;653+38.76-093.25;654+37.69-091.82;655+37.64-091.91;656+37.06-093.12;657+37.06-093.01;658+37.22-093.30;660+38.92-095.11;661+39.10-094.69;662+38.96-094.71;664+39.39-096.06;665+39.33-096.11;666+39.04-095.71;667+37.60-095.09;668+38.35-096.38;669+39.78-097.71;670+37.56-097.60;671+37.55-097.67;672+37.69-097.34;673+37.19-095.76;674+38.94-097.74;675+38.23-098.83;676+39.32-099.40;677+39.34-101.08;678+37.80-100.66;679+37.14-101.38;680+41.47-096.42;681+41.25-096.00;683+40.47-096.83;684+40.54-096.61;685+40.82-096.69;686+41.48-097.51;687+42.39-097.72;688+41.14-098.92;689+40.35-098.81;690+40.33-100.87;691+41.28-101.60;692+42.75-100.61;693+42.16-103.03;700+29.88-090.16;701+29.96-090.07;703+29.68-090.78;704+30.57-090.20;705+30.23-092.12;706+30.39-093.19;707+30.51-091.17;708+30.48-091.11;710+32.49-093.48;711+32.55-093.75;712+32.55-092.00;713+31.32-092.02;714+31.55-092.86;716+33.70-091.76;717+33.51-092.81;718+33.67-093.83;719+34.40-093.52;720+34.96-091.99;721+34.90-092.10;722+34.76-092.34;723+35.11-090.52;724+36.03-090.74;725+36.00-091.79;726+36.18-092.87;727+36.17-094.17;728+35.28-093.39;729+35.34-094.24;730+35.31-097.74;731+35.49-097.49;733+30.33-097.77;734+34.23-097.17;735+34.53-098.72;736+35.50-099.28;737+36.38-098.12;738+36.46-099.47;739+36.73-101.53;740+36.26-096.18;741+36.14-095.97;743+36.54-094.97;744+35.65-095.44;745+34.67-095.69;746+36.69-097.15;747+34.01-095.58;748+35.17-096.69;749+35.21-094.70;750+33.04-096.79;751+32.55-096.47;752+32.80-096.79;753+32.77-096.78;754+33.36-095.81;755+33.28-094.34;756+32.46-094.64;757+32.26-095.33;758+31.50-095.70;759+31.30-094.39;760+32.67-097.34;761+32.76-097.31;762+33.41-097.28;763+33.80-098.75;764+32.53-098.46;765+31.09-097.55;766+31.76-097.03;767+31.55-097.17;768+31.33-099.33;769+31.42-100.57;770+29.78-095.41;772+29.82-095.42;773+30.35-095.34;774+29.48-095.94;775+29.58-095.04;776+30.09-094.13;777+30.09-094.14;778+30.67-096.34;779+28.90-096.92;780+28.95-098.88;781+29.20-097.98;782+29.46-098.50;783+27.72-097.84;784+27.76-097.43;785+26.27-098.05;786+30.28-097.91;787+30.31-097.76;788+29.26-100.11;789+29.92-096.82;790+35.34-101.54;791+35.25-101.87;792+34.27-100.67;793+33.51-102.18;794+33.57-101.87;795+32.65-100.20;796+32.44-099.75;797+31.72-102.47;798+30.77-104.76;799+31.76-106.40;800+39.80-104.92;801+39.51-104.84;802+39.74-104.98;803+40.04-105.30;804+39.83-105.92;805+40.41-105.13;806+40.33-104.63;807+40.48-103.09;808+39.08-103.83;809+38.84-104.77;810+37.91-103.81;811+37.44-106.20;812+38.51-106.11;813+37.43-108.43;814+38.43-108.01;815+39.06-108.61;816+39.70-107.38;820+41.29-105.06;821+44.80-110.61;822+42.30-104.55;823+41.65-107.15;824+44.45-108.38;825+43.14-108.78;826+42.99-106.60;827+44.34-104.84;828+44.70-106.84;829+41.74-109.87;830+43.61-110.72;831+42.54-110.72;832+42.91-112.38;833+42.82-114.26;834+44.02-112.13;835+46.17-116.31;836+43.88-116.34;837+43.55-116.23;838+47.68-116.56;840+40.63-111.43;841+40.71-111.89;842+41.25-111.98;843+41.71-112.09;844+41.24-111.96;845+38.68-110.28;846+39.55-111.86;847+37.79-112.72;850+33.50-112.08;851+33.07-111.52;852+33.44-111.82;853+33.47-112.89;855+33.33-110.32;856+31.83-110.47;857+32.23-110.94;859+34.21-109.90;860+35.70-111.22;863+34.69-112.29;864+35.22-114.18;865+35.97-109.45;870+35.22-106.77;871+35.08-106.65;873+35.50-108.56;874+36.71-108.25;875+36.10-105.92;876+32.99-106.97;877+36.03-104.95;878+34.05-107.76;879+32.96-107.30;880+32.43-107.52;881+34.20-103.49;882+32.81-103.89;883+33.25-105.63;884+35.66-103.79;885+31.69-106.30;889+36.13-114.90;890+36.48-115.32;891+36.16-115.18;893+39.23-115.28;894+39.67-119.11;895+39.54-119.81;897+39.17-119.78;898+41.07-115.54;900+34.03-118.28;901+34.05-118.25;902+33.94-118.35;903+33.91-118.34;904+34.02-118.49;905+33.81-118.31;906+33.93-118.03;907+33.80-118.19;908+33.79-118.20;910+34.18-118.12;911+34.15-118.14;912+34.16-118.25;913+34.26-118.58;914+34.18-118.46;915+34.18-118.31;916+34.15-118.38;917+34.07-117.85;918+34.09-118.13;919+32.70-116.86;920+33.10-117.13;921+32.76-117.14;922+33.60-115.94;923+34.47-117.00;924+34.12-117.30;925+33.79-117.21;926+33.63-117.79;927+33.74-117.86;928+33.84-117.84;930+34.28-119.11;931+34.42-119.75;932+35.90-119.22;933+35.33-118.99;934+35.20-120.59;935+35.52-118.10;936+36.85-119.70;937+36.75-119.69;938+36.75-119.64;939+36.51-121.63;940+37.47-122.27;941+37.77-122.42;942+38.58-121.49;943+37.44-122.15;944+37.55-122.31;945+37.94-122.06;946+37.80-122.24;947+37.87-122.27;948+37.95-122.33;949+38.08-122.64;950+37.11-121.87;951+37.32-121.88;952+38.09-121.00;953+37.63-120.69;954+38.85-123.04;955+40.73-123.93;956+38.64-121.28;957+38.85-120.97;958+38.58-121.44;959+39.49-121.53;960+40.86-122.27;961+39.90-120.25;962+36.30+127.60;963+30.35+134.37;964+15.03+119.65;965+09.06+055.41;967+20.81-157.05;968+21.29-151.62;969+07.95+169.49;970+45.44-122.27;971+45.53-123.49;972+45.52-122.66;973+44.76-123.18;974+43.56-123.46;975+42.38-123.11;976+42.43-121.22;977+43.86-120.61;978+45.20-118.62;979+43.88-117.55;980+47.55-122.16;981+47.60-122.33;982+48.36-122.31;983+47.44-122.67;984+47.21-122.46;985+46.93-123.22;986+45.92-122.51;988+47.85-119.90;989+46.66-120.54;990+47.62-117.45;991+47.82-117.99;992+47.66-117.40;993+46.36-118.98;994+46.22-117.05;995+60.10-155.20;996+60.23-156.69;997+65.72-153.32;998+58.02-134.86;999+55.66-132.24";
+
+var ZIPS = null;
+function zipTable() {
+  if (ZIPS) return ZIPS;
+  ZIPS = {};
+  ZIP3.split(";").forEach(function (r) {
+    ZIPS[r.slice(0, 3)] = [parseFloat(r.slice(3, 9)), parseFloat(r.slice(9))];
+  });
+  return ZIPS;
+}
+
+/* Great circle, then 1.18 for the fact that roads are not straight. Checked
+   against known lanes: Worcester to Chicago computes 959 miles against roughly
+   980 actually driven, Worcester to Los Angeles 3,015 against roughly 3,000. */
+function roadMiles(zip) {
+  var t = zipTable()[String(zip).slice(0, 3)];
+  if (!t) return null;
+  var R = Math.PI / 180;
+  var la1 = SHIP_FROM[0] * R, lo1 = SHIP_FROM[1] * R;
+  var la2 = t[0] * R, lo2 = t[1] * R;
+  var h = Math.pow(Math.sin((la2 - la1) / 2), 2) +
+          Math.cos(la1) * Math.cos(la2) * Math.pow(Math.sin((lo2 - lo1) / 2), 2);
+  return 7917.5 * Math.asin(Math.sqrt(h)) * 1.18;
+}
+
+/* Shipping weight of the machine as configured, in pounds. Body weights are
+   measured in bin/bom.py; the rest are component weights. The steel body is
+   lighter than the wood ones because it is 16 gauge sheet rather than
+   three quarter inch board, but it still carries the same ballast plate. */
+var BODY_LB   = { body_birch:58, body_mdf:85, body_melamine:71, body_steel:54 };
+var SCREEN_LB = { screen4k:8, tube15:42 };
+
+function shipWeight(s) {
+  var w = 56 + 5 + 11 + 2 + 3;              /* ballast plate, legs, printer, arm, fittings */
+  w += BODY_LB[s.material] || 70;
+  w += SCREEN_LB[s.display] || (s.console === "ipad" ? 2 : 8);
+  w += 3;                                    /* console */
+  return w;
+}
+
+/* Rates fitted to published 2026 figures.
+
+   Crated freight: coin-op freight brokers put a residential curbside delivery
+   with a liftgate at roughly $275 to $450 over 500 miles and $400 to $700 over
+   2,000. Fitting a line through the middle of both gives $340 plus 13.3 cents a
+   mile, with the $340 covering the crate itself and the two accessorial charges
+   that a house without a loading dock always attracts. Weight above 200 lb is
+   charged on, because that is where the carrier's next band starts.
+
+   Parcel: six boxes on ground service. Base rates rise with distance zone, and
+   the heaviest box, the ballast plate at 56 lb, trips the over-50-pound
+   handling surcharge on its own. $215 plus 6.5 cents a mile tracks the zone
+   table closely enough for an estimate.
+
+   Hand delivery: the IRS business mileage rate from 1 July 2026 is 76 cents,
+   which is what it costs to run a vehicle. Doubled, because the journey home is
+   not billable to anyone else. Plus $200 for the day and for setting the machine
+   up in the room, which neither of the other two options include. */
+
+function shipQuote(kind, miles, lb) {
+  if (miles === null) return null;
+  if (kind === "ship_flat")  return 215 + 0.065 * miles + Math.max(0, lb - 160) * 0.45;
+  if (kind === "ship_crate") return 340 + 0.133 * miles + Math.max(0, lb - 200) * 0.60;
+  /* Mileage only, both ways. Past 300 miles it stops being a day trip and the
+     cost depends on the route rather than the distance, so it is quoted
+     individually rather than guessed at. */
+  if (kind === "ship_hand")  return miles > 300 ? "TBD" : 2 * miles * 0.76;
+  return null;
+}
+
+/* Everything a buyer is never asked about, because leaving any of it out would
+   stop the machine being a recreation: legs, levelling feet, the ballast plate
+   that stops it tipping, the arcade button, the beacon lens, the coin tray, the
+   artwork for all four faces, and the sticker printer.
+
+   The printer is in here rather than in the options for a reason: printing the
+   stickers is the entire purpose of the machine. Nintendo's own printer has not
+   been manufactured for twenty five years and its consumables are long gone, so
+   a current photo sticker printer fills the role. That is a substitution, not a
+   choice to offer.
+
+   The cabinet BODY is not in here. What it is made of decides the weight, how
+   the paint sits and whether the baked finish is possible at all, so it is the
+   first question on the page.
+
+   What IS in here, added 2026-08-27, is everything that costs the same
+   whichever body is chosen: the ballast plate, the plate that backs the leg
+   bolts, and the fixings, adhesive and sealer the carcass goes together with.
+   Those used to sit inside each material price, which is why a pair of $78 MDF
+   sheets read as $882. */
+
+/* What the fixed line is made of, priced part by part. INCLUDED is the sum of
+   this list rather than a number kept beside it, so the breakdown on the page
+   and the figure in the total cannot disagree.
+
+   Sources: legs, collars, feet, button, beacon lens and coin tray from
+   SOURCING.md; ballast plate, leg mounting plate and the fixings, adhesive and
+   sealer bundle from bin/fab_cost.py at its likely column. */
+var BILL = [
+  { name:"Four legs, with collars, adjustable feet and their mounting plate", price:95.19 },
+  { name:"Ballast plate, twenty inches square in half inch steel, cut to shape", price:185.00 },
+  { name:"Controller arm, gooseneck and controller plate", price:40.90 },
+  { name:"Red arcade button", price:2.40 },
+  { name:"Red beacon lens for the top cap", price:8.09 },
+  { name:"Chrome coin tray", price:5.08 },
+  { name:"Artwork for all four faces, cut vinyl", price:185.00 },
+  { name:"Photo sticker printer and cutter", price:294.00 },
+  { name:"Fixings, adhesive and sealer", price:225.00 }
+];
+
+var SALES_TAX = 0.0625;   /* Massachusetts */
+
+var INCLUDED = Math.round(
+  BILL.reduce(function (a, b) { return a + b.price; }, 0) * (1 + SALES_TAX) * 100) / 100;
+
+
+/* ------------------------------------------------------------------ options --
+   Each option carries its rules as predicates over the current selection:
+     blocked   -> why it cannot go with what is already chosen
+     included  -> why something already chosen supplies it
+     auto      -> why another choice forces it
+     notneeded -> why it would be redundant
+
+   Console prices INCLUDE what that console needs to work: its cables, and for
+   the 1996 machine the equipment that gets its video onto a screen. The row
+   price is the price of that choice, with nothing to add up mentally.       */
+
+var PARTS = [
+
+  { id:"fitted", cat:"base", cite:["speedy","fittings","liene","smule"], name:"Legs, plate, arm, artwork, printer and fittings", price:INCLUDED,
+    bill:BILL,
+    url:"",
+    blurb:"Four legs on a half inch steel plate that weights the base so it cannot be tipped over, artwork applied to all four faces, the controller arm, and the beacon, arcade button, coin tray and sticker printer fitted, with every fixing, adhesive and sealer the body is put together with. The printer prints your photo and then cuts the sticker outlines through the top layer only, so the stickers stay on their backing sheet until somebody peels one off.",
+    auto: function () { return "In the price of every machine."; } },
+
+  /* ---- cabinet material ------------------------------------------------- */
+
+  { id:"body_birch", cite:["hd"], cat:"material", name:"Birch plywood", price:146.62,
+    url:"",
+    blurb:"Layers of real birch glued in a stack. Lightest and stiffest of the three woods.",
+    note:"" },
+
+  { id:"body_mdf", cite:["hd"], cat:"material", name:"MDF", price:82.88,
+    url:"",
+    blurb:"Wood fiber pressed into board. No grain at all, so paint sits more smoothly on it than on anything else here.",
+    note:"The heaviest of the three woods, by a noticeable margin." },
+
+  { id:"body_melamine", cite:["hd"], cat:"material", name:"Melamine board", price:76.50,
+    url:"",
+    blurb:"Pressed board with a hard white surface already bonded to both faces. The most affordable body.",
+    note:"" },
+
+  { id:"body_steel", cite:["oshcut"], cat:"material", name:"Steel", price:1466.25,
+    url:"",
+    blurb:"What Nintendo used. 16 gauge sheet, cut, folded and welded to the original dimensions. The only body that can take the baked enamel finish.",
+    note:"At 54 lb it is the lightest of the four bodies. Birch is 58, melamine 71, MDF 85. The ballast plate is the same on all of them." },
+
+  /* ---- finish ---------------------------------------------------------- */
+
+  { id:"finish_paint", cite:["paint"], cat:"finish", name:"Painted", price:245,
+    url:"",
+    blurb:"Sprayed in the original three colors. Can be touched up if it is ever marked.",
+    note:"" },
+
+  { id:"finish_powder", cite:["columbia"], cat:"finish", name:"Baked enamel", price:720,
+    url:"",
+    blurb:"Color baked onto the metal in an oven rather than sprayed on top. Resists chips and scratches, and it is what the originals used.",
+    note:"Adds two to three weeks: the body goes out to a coating shop and comes back.",
+    blocked: function (s) { return (s.material && s.material !== "body_steel")
+      ? "Baked enamel is cured in an oven at around 400 degrees, which wood cannot survive. Choose the steel body for this finish, or have your wood cabinet painted." : null; } },
+
+  /* ---- what plays the game --------------------------------------------- */
+
+  { id:"n64", cat:"console", cite:["ebayN64","retrotink"], name:"Nintendo 64", price:575.00,
+    url:"",
+    blurb:"The original 1996 console, fitted inside as the real kiosk had. Most of this price is not the console: it is the RetroTINK 4K CE that converts its analog output for a modern screen, which is unnecessary with a CRT but essential with a flat screen.",
+    note:"Second hand and tested before fitting." },
+
+  { id:"analogue3d", cite:["analogue"], cat:"console", name:"Analogue 3D", price:279.99,
+    url:"https://www.analogue.co/3d",
+    blurb:"An Intel Cyclone 10 GX FPGA, 220,000 logic elements, reproducing the Nintendo 64 in hardware rather than emulating it in software. Real cartridges, four original controller ports, 4K output with variable refresh rate. Released November 2025 at $249.99, now $269.99 after tariffs.",
+    note:"Its core is proprietary and closed, so it runs only what Analogue ships.",
+    alert:{ tone:"caution", label:"Made in batches",
+      text:"Analogue produces in runs rather than holding stock. If the current run is sold out your machine waits on one." } },
+
+  { id:"modretro", cat:"console", cite:["modretro"], name:"ModRetro M64", price:239.99,
+    url:"https://modretro.com/",
+    blurb:"An AMD Artix UltraScale+ FPGA running a modified version of the open source MiSTer Nintendo 64 core. Real cartridges, four original controller ports, 4K, fanless, and it ships with a controller included. Launched 28 July 2026 at $229.99.",
+    note:"Built to accept third party cores, unlike the Analogue. The 16nm process is why it outputs 4K without a fan." },
+
+  { id:"mister", cat:"console", cite:["misterpi"], name:"MiSTer FPGA", price:199.00,
+    url:"",
+    blurb:"A Cyclone V board in a case with memory, ports and a power supply, running the same open Nintendo 64 core the M64 uses plus cores for dozens of other systems. The cabinet is not limited to one console.",
+    note:"Games load as files rather than cartridges, and it has no original controller ports, so a 1990s controller needs an adapter." },
+
+  { id:"ipad", cite:["backmkt"], cat:"console", name:"A tablet behind the screen opening", price:561.00,
+    url:"",
+    blurb:"Screen and computer in one.",
+    note:"The picture is about a tenth smaller than the original in each direction, so a little more of the front panel shows as blank surround." },
+
+  /* ---- the screen ------------------------------------------------------- */
+
+  { id:"tube15", cite:["ebayCRT"], cat:"display", name:"15 inch CRT in its case", price:145,
+    url:"",
+    blurb:"A consumer television left in its own case, as Nintendo fitted it. The original was a Samsung. At roughly 16.5 inches front to back it occupies almost all of the 16.63 inches of interior depth.",
+    note:"Second hand, tested and left sealed. The picture measures within a tenth of an inch of the original in both directions.",
+    included: function (s) { return s.console === "ipad"
+      ? "The tablet is the screen." : null; },
+    blocked: function (s) { return s.console === "analogue3d" || s.console === "modretro"
+      ? "This console outputs a modern digital picture only, which a television of this age cannot read. Pair a CRT with the original Nintendo 64, or a MiSTer with the analog add-on board." : null; } },
+
+  { id:"screen4k", cite:["uperfect"], cat:"display", name:"4K flat screen", price:389.99,
+    url:"",
+    blurb:"A 17.3 inch 4K panel with a matte surface that does not mirror the room. The game enlarges onto it by a whole number of times, so each original pixel stays a square block. Nothing inside it needs servicing.",
+    note:"Its delay between signal and picture has been measured at 11 milliseconds, under one frame. Most screens this size have never been tested for it.",
+    included: function (s) { return s.console === "ipad"
+      ? "The tablet is the screen." : null; } },
+
+  /* ---- the controller --------------------------------------------------- */
+
+  /* Anything with a 1990s N64 plug: works in the original console and in both
+     new cartridge consoles, which kept the original ports. Needs an adapter
+     for a MiSTer, and cannot reach a tablet at all. */
+
+  { id:"pad_original", cite:["ebayN64"], cat:"controller", tier:"Original hardware",
+    name:"Nintendo 64 controller", price:35.00,
+    url:"",
+    blurb:"First party, cleaned and tested, with the stick checked for wear.",
+    note:"Sticks of this age wear loose and drift. Selected on stick condition, and replaceable later.",
+    blocked: function (s) { return s.console === "ipad"
+      ? "A tablet only accepts controllers through Apple's own system, and a wired 1990s controller has no route in." : null; } },
+
+  { id:"pad_hori", cite:["ebayHori"], cat:"controller", tier:"Original hardware",
+    name:"Hori Pad Mini", price:65.00,
+    url:"",
+    blurb:"Hori's own N64 controller, sold only in Japan and late in the console's life. Two grips instead of three, with the D-pad moved to the center so both thumbs reach everything, closer to the shape controllers settled on afterwards.",
+    note:"Widely regarded as having a better stick than Nintendo's own. Short production run, so the price moves with what is listed that week.",
+    blocked: function (s) { return s.console === "ipad"
+      ? "A tablet only accepts controllers through Apple's own system, and a wired 1990s controller has no route in." : null; } },
+
+  { id:"pad_m64", cite:["modretro"], cat:"controller", tier:"Made today",
+    name:"ModRetro M64 controller", price:89.99,
+    url:"https://modretro.com/",
+    blurb:"The original three grip shape with an aluminum back, a TMR thumbstick that will not drift, and swappable buttons. You can set it up with the single Z trigger the original had, or two.",
+    note:"Aluminum back, so it weighs more than the other modern controllers. The most expensive here.",
+    notneeded: function (s) { return s.console === "modretro"
+      ? "One comes in the box with the M64. Pick another here only if you want a second." : null; },
+    blocked: function (s) { return s.console === "ipad"
+      ? "It connects through an original style controller port, which a tablet does not have." : null; } },
+
+  { id:"pad_8bitdo", cite:["bitdo"], cat:"controller", tier:"Made today",
+    name:"8BitDo 64", price:44.99,
+    url:"https://www.8bitdo.com/64-controller/",
+    blurb:"Wireless, with a Hall effect stick that keeps the original octagonal gate but cannot wear into drift. A 2.4GHz receiver is in the box for the original console.",
+    note:"Its button layout is rearranged rather than copied from the original.",
+    blocked: function (s) { return s.console === "ipad"
+      ? "8BitDo lists no Apple device for this controller." : null; } },
+
+  { id:"pad_tribute", cite:["retrobit"], cat:"controller", tier:"Made today",
+    name:"Retro-Bit Tribute64", price:29.99,
+    url:"https://retro-bit.com/controllers/platinum-collection/tribute64/",
+    blurb:"The Hori Pad Mini shape, made under license from Hori, with a new Japanese made analog stick and an original N64 plug. The two grip layout without collector pricing.",
+    note:"Wired. Availability comes and goes, and some versions of it are USB only rather than N64, so it is bought by part number rather than by name.",
+    blocked: function (s) { return s.console === "ipad"
+      ? "It connects through an original style controller port, which a tablet does not have." : null; } },
+
+  { id:"pad_brawler", cite:["fighters"], cat:"controller", tier:"Made today",
+    name:"Retro Fighters Brawler64", price:39.99,
+    url:"",
+    blurb:"Wireless, and the only one here reshaped for adult hands rather than reproducing the 1996 shape.",
+    note:"",
+    blocked: function (s) {
+      if (s.console === "ipad") return "The maker lists computers and the Switch only. The one mention of Apple devices on the product page is a customer review.";
+      if (s.console === "n64")  return "This edition ships no receiver for the original console. Retro Fighters make a separate version that does.";
+      return null; } },
+
+  { id:"pad_nso", cite:["nintendo"], cat:"controller", tier:"Made today",
+    name:"Nintendo Switch Online N64 controller", price:54.99,
+    url:"",
+    blurb:"Nintendo's own modern reissue, wireless, in the original shape. It pairs over Bluetooth, which on this page means it works with a MiSTer and nothing else.",
+    note:"Measured at about 13.8 ms wireless. After the machine is switched on, or after changing system, it needs one button press before it is picked up.",
+    blocked: function (s) {
+      if (s.console === "n64")        return "This controller is Bluetooth only and Nintendo ships no receiver for the 1996 console. For original hardware you want the Nintendo 64 controller, the Hori, the Tribute64 or the 8BitDo 64, which comes with a receiver.";
+      if (s.console === "analogue3d") return "Not confirmed. The Analogue 3D has Bluetooth, but its wireless support is built around the 8BitDo 64 and generic pads, and nothing states that Nintendo's own reissue pairs with it.";
+      if (s.console === "modretro")   return "Not confirmed with the M64, and one of ModRetro's own controllers comes in the box with that console anyway.";
+      if (s.console === "ipad")       return "A tablet only accepts controllers through Apple's own system.";
+      return null; } },
+
+  { id:"pad_link", cite:["raphnet"], cat:"adapter", name:"Connector for the original controller", price:24.49,
+    url:"",
+    blurb:"Fitted inside so a 1990s controller reaches the system you chose.",
+    note:"",
+    auto: function (s) { return (s.console === "mister" && WIRED_N64.indexOf(s.controller) >= 0)
+      ? "A MiSTer has USB sockets and nothing else, so a controller with a 1990s plug cannot reach it without this." : null; },
+    notneeded: function (s) {
+      if (WIRED_N64.indexOf(s.controller) < 0) return "Your controller is wireless.";
+      return "Your console has original controller sockets on the front, so it plugs straight in."; } },
+
+  /* ---- getting it to you ------------------------------------------------- */
+
+  { id:"ship_flat", cite:["parcel","geonames"], cat:"delivery", tier:"By parcel carrier", name:"Flat packed in boxes", price:0,
+    url:"",
+    blurb:"Six boxes on a normal parcel service. The machine is built and tested first, then taken apart into flat panels. The boxes fit through an ordinary front door and a courier will carry them in. You put it back together with an illustrated guide and a Phillips screwdriver, in about two hours. A cordless drill makes it quicker.",
+    note:"The electronics stay fitted to their panels, so nothing needs wiring." },
+
+  { id:"ship_crate", cite:["ltl","geonames"], cat:"delivery", tier:"By freight truck", name:"Assembled in a crate", price:0,
+    url:"",
+    blurb:"Whole and working in a wooden crate, on a freight truck with a liftgate. Freight is not parcel: the carrier calls to book a delivery window, the truck is large enough to need road access, and the driver lowers the crate to the curb or the end of your driveway and leaves it there.",
+    note:"Curbside only. Getting a crate this size the rest of the way and unpacking it is yours to arrange, and it is too heavy for one person." },
+
+  { id:"ship_hand", cite:["irs","geonames"], cat:"delivery", tier:"In person", name:"Hand delivered and set up", price:0,
+    url:"",
+    blurb:"Brought to you in person, carried in, placed where you want it, switched on and shown working before anyone leaves.",
+    note:"The only option that puts the machine in the room rather than at the curb.",
+    alert:{ tone:"caution", label:"Beyond 300 miles",
+      text:"The price is agreed with you rather than shown here." } },
+
+  { id:"pad_radio", cite:["misteradd"], cat:"adapter", name:"Wireless receiver", price:5.00,
+    url:"",
+    blurb:"A Bluetooth adapter fitted inside, so a cordless controller has something to reach.",
+    note:"",
+    auto: function (s) { return (s.console === "mister" && s.controller &&
+        WIRED_N64.indexOf(s.controller) < 0)
+      ? "A MiSTer has no wireless of its own, so a cordless controller has nothing to pair with." : null; },
+    notneeded: function (s) {
+      if (s.console !== "mister") return "Your console has wireless built in.";
+      return "Your controller plugs in with a cable, so there is nothing to pair."; } }
+];
+
+/* Controllers that end in a 1990s N64 plug. They reach the original console and
+   both new cartridge consoles directly, because those kept the original ports,
+   and need an adapter for anything with only USB. */
+var WIRED_N64 = ["pad_original", "pad_hori", "pad_m64", "pad_tribute"];
+
+var STAGES = [
+  { id:"machine", name:"The cabinet",  sub:["Material", "Finish"] },
+  { id:"inside",  name:"What is inside", sub:["Console", "Screen", "Controller"] },
+  { id:"delivery", name:"Delivery", sub:["4.5 ft tall", "175 lb"] }
+];
+
+var CATS = [
+  { sec:"machine", id:"base",       step:"",   name:"Included",        note:"" },
+  { sec:"machine", id:"material",   step:"01", name:"What it is made of", note:["Sets weight", "Limits finish"] },
+  { sec:"machine", id:"finish",     step:"02", name:"Finish",          note:"" },
+
+  { sec:"inside",  id:"console",    step:"03", name:"What plays the game", note:["Sets everything below"] },
+  { sec:"inside",  id:"display",    step:"04", name:"The screen",      note:"" },
+  { sec:"inside",  id:"controller", step:"05", name:"The controller",  note:"" },
+  { sec:"inside",  id:"adapter",    step:"",   name:"Connections",     note:"" },
+
+  { sec:"delivery", id:"delivery",  step:"06", name:"Delivery",        note:["ZIP code sets the price"] }
+];
+
+var USER_CATS = ["material", "finish", "console", "display", "controller", "delivery"];
+
+function emptySel() {
+  return { material:null, finish:null, console:null, display:null,
+           controller:null, adapter:null, delivery:null, zip:"" };
+}
+
+/* ------------------------------------------------------------------ state */
+
+var sel = emptySel();
+try {
+  var saved = localStorage.getItem("snapstation.order.v3");
+  if (saved) {
+    var p = JSON.parse(saved);
+    if (p && typeof p === "object") sel = Object.assign(sel, p);
+  }
+} catch (e) { /* private window, or site data blocked */ }
+
+function save() {
+  try { localStorage.setItem("snapstation.order.v3", JSON.stringify(sel)); } catch (e) {}
+}
+
+function isPicked(p) { return sel[p.cat] === p.id; }
+function togglePick(p) { sel[p.cat] = (sel[p.cat] === p.id) ? null : p.id; }
+
+function part(id) {
+  for (var i = 0; i < PARTS.length; i++) if (PARTS[i].id === id) return PARTS[i];
+  return null;
+}
+
+/* Resolve one option against the current selection.
+
+   Order matters, and `auto` deliberately outranks `notneeded`: something the
+   order REQUIRES cannot also be unnecessary, and writing every notneeded
+   predicate to carve out its own auto case by hand is exactly the kind of
+   duplicated condition that goes stale. Resolving it here means each predicate
+   only has to describe its own case. */
+function stateOf(p) {
+  var r;
+  if (p.blocked   && (r = p.blocked(sel)))   return { state:"blocked",   reason:r };
+  if (p.included  && (r = p.included(sel)))  return { state:"included",  reason:r };
+  if (p.auto      && (r = p.auto(sel)))      return { state:"auto",      reason:r };
+  if (p.notneeded && (r = p.notneeded(sel))) return { state:"notneeded", reason:r };
+  if (isPicked(p))                           return { state:"chosen",    reason:null };
+  return { state:"available", reason:null };
+}
+
+/* A choice can be invalidated by a LATER one: pick a CRT, then pick the
+   new console, and the tube can no longer be used. Sweep repeatedly, because
+   dropping one choice can free or invalidate another. */
+function prune() {
+  for (var pass = 0; pass < 4; pass++) {
+    var changed = false;
+    USER_CATS.forEach(function (c) {
+      if (!sel[c]) return;
+      var p = part(sel[c]);
+      if (!p) { sel[c] = null; changed = true; return; }
+      var st = stateOf(p);
+      if (st.state === "blocked" || st.state === "included") { sel[c] = null; changed = true; }
+    });
+    if (!changed) break;
+  }
+}
+
+/* Delivery prices depend on the ZIP code and on how heavy the machine ended up,
+   so they cannot be a fixed number on the part. Everything that reads a price
+   goes through here. */
+function priceOf(p) {
+  if (p.cat !== "delivery") return p.price;
+  var q = shipQuote(p.id, sel.zip ? roadMiles(sel.zip) : null, shipWeight(sel));
+  return typeof q === "number" ? q : 0;
+}
+
+/* True when the chosen delivery has no number yet, so the total is a subtotal. */
+function hasTBD() {
+  if (!sel.delivery || !sel.zip) return false;
+  return shipQuote(sel.delivery, roadMiles(sel.zip), shipWeight(sel)) === "TBD";
+}
+
+function money(n) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+/* ----------------------------------------------------------------- render */
+
+function addMsg(row, tone, label, text) {
+  var m = document.createElement("span");
+  m.className = "msg";
+  m.dataset.tone = tone;
+  if (label) {
+    var b = document.createElement("b");
+    b.textContent = label + ". ";
+    m.appendChild(b);
+  }
+  m.appendChild(document.createTextNode(text));
+  row.appendChild(m);
+}
+
+function zipBar() {
+  var bar = document.createElement("div");
+  bar.className = "zipbar";
+
+  var lab = document.createElement("label");
+  lab.setAttribute("for", "zip");
+  lab.textContent = "Delivering to ZIP code";
+  bar.appendChild(lab);
+
+  var inp = document.createElement("input");
+  inp.id = "zip";
+  inp.type = "text";
+  inp.inputMode = "numeric";
+  inp.maxLength = 5;
+  inp.placeholder = "01543";
+  inp.value = sel.zip || "";
+  inp.setAttribute("aria-describedby", "zipout");
+  bar.appendChild(inp);
+
+  var out = document.createElement("span");
+  out.className = "zipout";
+  out.id = "zipout";
+
+  var miles = sel.zip ? roadMiles(sel.zip) : null;
+  if (!sel.zip) {
+    out.textContent = "Five digits.";
+  } else if (miles === null) {
+    out.className = "zipout zipbad";
+    out.textContent = "That is not a US ZIP code we recognize.";
+  } else {
+    var lb = Math.round(shipWeight(sel));
+    /* A ZIP code inside our own sorting area computes as zero, because both
+       ends resolve to the same centroid. Say "local" rather than "0 miles". */
+    out.innerHTML = (miles < 15
+        ? "<b>Local</b> to us, carrying roughly "
+        : "About <b>" + Math.round(miles).toLocaleString("en-US") +
+          " miles</b> by road, carrying roughly ") + "<b>" + lb + " lb</b>.";
+  }
+  bar.appendChild(out);
+
+  /* Re-rendering on every keystroke would tear the field out from under the
+     cursor, so the field is only committed once five digits are in. */
+  inp.addEventListener("input", function () {
+    var v = inp.value.replace(/\D/g, "").slice(0, 5);
+    inp.value = v;
+    if (v.length === 5 || v.length === 0) {
+      sel.zip = v;
+      render();
+      var again = document.getElementById("zip");
+      if (again) { again.focus(); again.setSelectionRange(v.length, v.length); }
+    }
+  });
+
+  return bar;
+}
+
+/* A subheading is a list, so it is built as one: one item per line, each with
+   its own marker. Accepts a plain string for the empty case. */
+function bulletList(items, cls) {
+  var ul = document.createElement("ul");
+  ul.className = "bullets " + cls;
+  (Array.isArray(items) ? items : (items ? [items] : [])).forEach(function (t) {
+    var li = document.createElement("li");
+    li.textContent = t;
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function render() {
+  prune();
+  save();
+
+  var picker = document.getElementById("picker");
+  picker.textContent = "";
+  var seenStage = {};
+
+  CATS.forEach(function (cat) {
+    var parts = PARTS.filter(function (p) { return p.cat === cat.id; });
+    if (!parts.length) return;
+
+    /* Connections are the one group the buyer never decides. Showing two grayed
+       "not needed" rows for internal wiring is the builder's business leaking
+       onto a customer's page, so the group appears only when something in it is
+       actually going on the bill. */
+    if (cat.id === "adapter" && !parts.some(function (p) {
+          return stateOf(p).state === "auto"; })) return;
+
+    if (!seenStage[cat.sec]) {
+      seenStage[cat.sec] = true;
+      var meta = STAGES.filter(function (s) { return s.id === cat.sec; })[0];
+      if (meta) {
+        var bar = document.createElement("div");
+        bar.className = "stage";
+        var t = document.createElement("h2");
+        t.className = "display";
+        t.textContent = meta.name;
+        var sb = bulletList(meta.sub, "stage-sub");
+        var st = document.createElement("span");
+        st.className = "stage-sum mono tnum";
+        st.dataset.sec = cat.sec;
+        bar.appendChild(t); bar.appendChild(sb); bar.appendChild(st);
+        picker.appendChild(bar);
+      }
+    }
+
+    /* Nothing is hidden. An option that no longer works stays on screen
+       carrying the reason, because the reason is what the reader needs. */
+    var states = parts.map(function (p) { return { p:p, st:stateOf(p) }; });
+
+    var box = document.createElement("section");
+    box.className = "group";
+
+    var head = document.createElement("div");
+    head.className = "group-head";
+    head.innerHTML =
+      '<span class="group-step">' + cat.step + '</span>' +
+      '<span class="group-name"></span>' +
+      '<span class="group-name"></span>';
+    head.querySelector(".group-name").textContent = cat.name;
+    head.appendChild(bulletList(cat.note, "group-note"));
+    box.appendChild(head);
+
+    if (cat.id === "delivery") box.appendChild(zipBar());
+
+    var list = document.createElement("div");
+    list.className = "opts";
+
+    var lastTier = null;
+    states.forEach(function (x) {
+      var p = x.p, st = x.st;
+
+      /* Options that split into eras get a divider, because "which of these is
+         the old one" is the first thing a reader wants to know. */
+      if (p.tier && p.tier !== lastTier) {
+        lastTier = p.tier;
+        var sh = document.createElement("div");
+        sh.className = "subhead";
+        sh.textContent = p.tier;
+        list.appendChild(sh);
+      }
+
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "opt";
+      row.dataset.state = st.state;
+      row.dataset.id = p.id;
+      var interactive = (st.state === "available" || st.state === "chosen");
+      if (!interactive) row.setAttribute("aria-disabled", "true");
+      row.setAttribute("aria-pressed", String(st.state === "chosen"));
+
+      var tick = document.createElement("span");
+      tick.className = "tick";
+      row.appendChild(tick);
+
+      var mid = document.createElement("span");
+      var nm = document.createElement("span");
+      nm.className = "opt-name";
+      nm.textContent = p.name;
+      var bl = document.createElement("span");
+      bl.className = "opt-blurb";
+      bl.textContent = p.blurb;
+      mid.appendChild(nm); mid.appendChild(bl);
+      if (p.bill) mid.appendChild(billTable(p.bill));
+      row.appendChild(mid);
+
+      var pr = document.createElement("span");
+      pr.className = "opt-price";
+      if (p.cat === "delivery") {
+        var q = sel.zip ? shipQuote(p.id, roadMiles(sel.zip), shipWeight(sel)) : null;
+        pr.textContent = typeof q === "number" ? money(q) : (q === "TBD" ? "TBD" : "enter ZIP code");
+        if (typeof q !== "number") pr.classList.add("soft-price");
+      } else {
+        pr.textContent = money(p.price);
+      }
+      row.appendChild(pr);
+
+      if (st.reason) {
+        var tone =
+          st.state === "auto"      ? "required" :
+          st.state === "notneeded" ? "caution"  :
+          st.state === "blocked"   ? "stop"     : "neutral";
+        var label =
+          st.state === "auto"      ? (p.cat === "base" ? "Included" : "Comes with your choice") :
+          st.state === "notneeded" ? "Not needed" :
+          st.state === "blocked"   ? "Not available" : "You already have this";
+        addMsg(row, tone, label, st.reason);
+      }
+
+      if (p.alert && st.state !== "blocked" && st.state !== "notneeded" && st.state !== "included") {
+        addMsg(row, p.alert.tone, p.alert.label, p.alert.text);
+      }
+
+      if (p.note && !st.reason && (st.state === "chosen" || st.state === "auto")) {
+        addMsg(row, "neutral", "Worth knowing", p.note);
+      }
+
+      if (interactive) {
+        row.addEventListener("click", function () { togglePick(p); render(); });
+      }
+      list.appendChild(row);
+    });
+
+    box.appendChild(list);
+    picker.appendChild(box);
+  });
+
+  renderSheet();
+}
+
+/* The fixed line is the one row a buyer cannot change, so it is the one row
+   that has to show its working. Each part on its own line with its own price,
+   and a rule above the tax so the arithmetic reads. */
+function billTable(items) {
+  var t = document.createElement("table");
+  t.className = "bill";
+  items.forEach(function (it) {
+    var tr = t.insertRow();
+    tr.insertCell().textContent = it.name;
+    var c = tr.insertCell();
+    c.className = "bill-price";
+    c.textContent = money(it.price);
+  });
+  var sub = items.reduce(function (a, b) { return a + b.price; }, 0);
+  [["Parts", sub], ["Massachusetts sales tax", INCLUDED - sub]].forEach(function (r, i) {
+    var tr = t.insertRow();
+    tr.className = i === 0 ? "bill-sum" : "";
+    tr.insertCell().textContent = r[0];
+    var c = tr.insertCell();
+    c.className = "bill-price";
+    c.textContent = money(r[1]);
+  });
+  return t;
+}
+
+function buildLines() {
+  var lines = [];
+  CATS.forEach(function (cat) {
+    PARTS.filter(function (p) { return p.cat === cat.id; }).forEach(function (p) {
+      var st = stateOf(p);
+      if (st.state === "chosen" || st.state === "auto") {
+        lines.push({ sec:cat.sec, cat:cat.name, part:p, auto:st.state === "auto" });
+      }
+    });
+  });
+  return lines;
+}
+
+function stageTotals(lines) {
+  var t = {};
+  STAGES.forEach(function (s) { t[s.id] = 0; });
+  lines.forEach(function (l) { t[l.sec] += priceOf(l.part); });
+  return t;
+}
+
+var ASKS = [
+  ["material",   "what the cabinet is made of"],
+  ["finish",     "how it is finished"],
+  ["console",    "what plays the game"],
+  ["display",    "a screen"],
+  ["controller", "a controller"],
+  ["delivery",   "how it reaches you"]
+];
+
+/* The screen question disappears when the tablet is chosen: that answers it. */
+function unanswered() {
+  var need = [];
+  ASKS.forEach(function (a) {
+    /* The M64 includes a controller, so that question is already answered. */
+    if (a[0] === "controller" && sel.console === "modretro" && !sel.controller) return;
+    if (a[0] === "delivery") {
+      if (!sel.zip) { need.push("your ZIP code"); return; }
+      if (!sel.delivery) { need.push(a[1]); }
+      return;
+    }
+    if (sel[a[0]]) return;
+    if (a[0] === "display" && sel.console === "ipad") return;
+    need.push(a[1]);
+  });
+  return need;
+}
+
+function renderProgress(need) {
+  var TOTAL = ASKS.length;
+  var done = TOTAL - need.length;
+  document.getElementById("progfill").style.width = Math.round((done / TOTAL) * 100) + "%";
+  document.getElementById("progcount").textContent = done + " of " + TOTAL;
+  document.getElementById("proglabel").textContent =
+    done === 0     ? "Nothing chosen yet" :
+    done === TOTAL ? "Ready to order" :
+                     "Next: " + need[0];
+}
+
+function renderSheet() {
+  var sheet = document.getElementById("sheet");
+  sheet.textContent = "";
+
+  var lines = buildLines();
+  var total = lines.reduce(function (a, l) { return a + priceOf(l.part); }, 0) + BUILD_FEE;
+  var need = unanswered();
+
+  renderProgress(need);
+  document.getElementById("barsum").textContent = need.length ? "–" : money(total);
+
+  var secT = stageTotals(lines);
+  var showSums = !need.length;
+  Array.prototype.forEach.call(document.querySelectorAll(".stage-sum"), function (el) {
+    if (!showSums) { el.textContent = ""; return; }
+    el.textContent = secT[el.dataset.sec] ? money(secT[el.dataset.sec]) : "";
+  });
+
+  var lastCat = null, lastSec = null;
+  lines.forEach(function (l) {
+    if (l.sec !== lastSec) {
+      lastSec = l.sec;
+      var meta = STAGES.filter(function (s) { return s.id === l.sec; })[0];
+      var sh = document.createElement("div");
+      sh.className = "sheet-stage";
+      var nm = document.createElement("span");
+      nm.textContent = meta ? meta.name : l.sec;
+      var amt = document.createElement("span");
+      amt.className = "mono tnum";
+      amt.textContent = money(secT[l.sec]);
+      sh.appendChild(nm); sh.appendChild(amt);
+      sheet.appendChild(sh);
+    }
+
+    var row = document.createElement("div");
+    row.className = "line";
+    if (l.cat !== lastCat) {
+      var c = document.createElement("span");
+      c.className = "line-cat";
+      c.textContent = l.cat;
+      row.appendChild(c);
+      lastCat = l.cat;
+    }
+
+    var n = document.createElement("span");
+    n.className = "line-name";
+    n.appendChild(document.createTextNode(l.part.name));
+    if (l.auto && l.part.cat !== "base") {
+      var rq = document.createElement("span");
+      rq.className = "line-req";
+      rq.textContent = "  included";
+      n.appendChild(rq);
+    }
+
+    var pr = document.createElement("span");
+    pr.className = "line-price";
+    var tbd = l.part.cat === "delivery" && hasTBD();
+    pr.textContent = tbd ? "TBD" : money(priceOf(l.part));
+    row.appendChild(n); row.appendChild(pr);
+    sheet.appendChild(row);
+  });
+
+  if (BUILD_FEE > 0) {
+    var bf = document.createElement("div");
+    bf.className = "line";
+    var bn = document.createElement("span");
+    bn.className = "line-name";
+    bn.textContent = "Assembly, finishing and testing";
+    var bp = document.createElement("span");
+    bp.className = "line-price";
+    bp.textContent = money(BUILD_FEE);
+    bf.appendChild(bn); bf.appendChild(bp);
+    sheet.appendChild(bf);
+  }
+
+  need.forEach(function (m) {
+    var row = document.createElement("div");
+    row.className = "line todo";
+    var n = document.createElement("span");
+    n.className = "line-name";
+    n.textContent = "Still to choose: " + m;
+    var pr = document.createElement("span");
+    pr.className = "line-price";
+    pr.textContent = "–";
+    row.appendChild(n); row.appendChild(pr);
+    sheet.appendChild(row);
+  });
+
+  var tot = document.createElement("div");
+  tot.className = "total";
+  var tl = document.createElement("span");
+  tl.className = "total-label";
+  tl.textContent = need.length ? "Price" : (hasTBD() ? "Subtotal" : "Your price");
+  var sum = document.createElement("span");
+  sum.className = "total-sum";
+  /* No running tally. Each row carries its own price, but the sum only appears
+     once there is a whole machine to put a price on. */
+  if (need.length) {
+    sum.classList.add("total-pending");
+    sum.textContent = "Shown once complete";
+  } else {
+    sum.textContent = money(total);
+  }
+  tot.appendChild(tl); tot.appendChild(sum);
+  sheet.appendChild(tot);
+
+  var fine = document.createElement("p");
+  fine.className = "total-fine";
+  fine.textContent = need.length
+    ? "Every option shows its own price above."
+    : hasTBD()
+      ? "Before sales tax, and before hand delivery, which is quoted individually beyond 300 miles."
+      : "Before sales tax.";
+  sheet.appendChild(fine);
+
+  var copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "btn";
+  copy.textContent = "Copy this specification";
+  copy.addEventListener("click", function () {
+    var txt = "SNAP STATION, BUILT TO ORDER\n";
+    txt += "US dollars, before sales tax and delivery.\n";
+    var lc = null;
+    lines.forEach(function (l) {
+      if (l.cat !== lc) { txt += "\n" + l.cat.toUpperCase() + "\n"; lc = l.cat; }
+      txt += "  " + money(priceOf(l.part)).padStart(11) + "  " + l.part.name + "\n";
+    });
+    if (BUILD_FEE > 0) txt += "  " + money(BUILD_FEE).padStart(11) + "  Assembly, finishing and testing\n";
+    txt += "\n  " + money(total).padStart(11) + "  TOTAL\n";
+    if (need.length) txt += "\n  Still to choose: " + need.join(", ") + "\n";
+    navigator.clipboard.writeText(txt).then(function () {
+      copy.textContent = "Copied";
+      setTimeout(function () { copy.textContent = "Copy this specification"; }, 1600);
+    }, function () {
+      copy.textContent = "Copy failed, select the page instead";
+      setTimeout(function () { copy.textContent = "Copy this specification"; }, 2600);
+    });
+  });
+  sheet.appendChild(copy);
+
+  var printer = document.createElement("button");
+  printer.type = "button";
+  printer.className = "btn ghost";
+  printer.textContent = "Print or save as PDF";
+  printer.addEventListener("click", function () { window.print(); });
+  sheet.appendChild(printer);
+}
+
+document.getElementById("reset").addEventListener("click", function () {
+  sel = emptySel();
+  render();
+});
+
+/* The source list is fixed, so it is built once rather than on every render. */
+(function renderSources() {
+  var ol = document.getElementById("srclist");
+  if (!ol) return;
+  CITE_ORDER.forEach(function (k) {
+    var c = CITES[k];
+    var li = document.createElement("li");
+    li.id = "src-" + k;
+
+    var kind = document.createElement("span");
+    kind.className = "kind";
+    kind.dataset.k = c.kind;
+    kind.textContent = c.kind;
+    li.appendChild(kind);
+
+    var body = document.createElement("span");
+    var who = document.createElement("b");
+    who.textContent = c.who;
+    body.appendChild(who);
+    body.appendChild(document.createTextNode(". " + c.what + ". "));
+    if (c.url) {
+      var a = document.createElement("a");
+      a.href = c.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = c.url.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+      body.appendChild(a);
+    }
+    li.appendChild(body);
+    ol.appendChild(li);
+  });
+})();
+
+render();
+</script>
