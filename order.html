@@ -562,6 +562,27 @@ footer { border-top: 1px solid var(--border); background: var(--surface); }
 
 .colophon { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-2); font-size: 11.5px; color: var(--ink-3); line-height: 1.6; max-width: 82ch; }
 
+/* builder card, visible only after the PIN */
+.admincard { margin-top: 16px; }
+.admincard .sheet-head { justify-content: space-between; }
+.adminrow { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 0; }
+.adminrow button {
+  font: inherit; font-size: 11.5px; font-weight: 500;
+  color: var(--ink-2); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 3px 9px; cursor: pointer;
+}
+.adminrow button[data-on] { background: var(--brand-tint); border-color: var(--brand-edge); color: var(--brand); }
+.admininputs { display: flex; flex-wrap: wrap; gap: 8px 12px; padding: 10px 16px 2px; }
+.admininputs label { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.admininputs input {
+  font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+  font-size: 13px; width: 5.5em; padding: 5px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink);
+}
+.adminout { padding: 6px 16px 16px; }
+
 /* buyer responses on a chosen row */
 .askrow { display: flex; flex-wrap: wrap; gap: 6px; }
 .askrow button {
@@ -1944,6 +1965,8 @@ function renderSheet() {
   printer.textContent = "Print or save as PDF";
   printer.addEventListener("click", function () { window.print(); });
   sheet.appendChild(printer);
+
+  if (typeof renderAdmin === "function") renderAdmin();
 }
 
 document.getElementById("reset").addEventListener("click", function () {
@@ -1952,6 +1975,157 @@ document.getElementById("reset").addEventListener("click", function () {
 });
 
 /* The source list is fixed, so it is built once rather than on every render. */
+/* ---------------------------------------------------------- builder mode --
+   Typing the PIN anywhere outside a field opens a card under the order
+   summary. The gate hides the card; it is not a secret vault, since this
+   file is public. So no rate, margin or hour figure is written in the file:
+   the numbers are typed here and stay in this browser's storage. */
+
+var ADMIN_PIN = "3113";
+var admin = { mode: "hour", rate: "", hours: "", pct: "", gross: "" };
+try {
+  var savedAdm = localStorage.getItem("snapstation.admin.v1");
+  if (savedAdm) admin = Object.assign(admin, JSON.parse(savedAdm));
+} catch (e) {}
+
+function adminOn() {
+  try { return sessionStorage.getItem("snapstation.admin.on") === "1"; }
+  catch (e) { return false; }
+}
+function setAdminOn(v) {
+  try {
+    if (v) sessionStorage.setItem("snapstation.admin.on", "1");
+    else sessionStorage.removeItem("snapstation.admin.on");
+  } catch (e) {}
+}
+function saveAdmin() {
+  try { localStorage.setItem("snapstation.admin.v1", JSON.stringify(admin)); } catch (e) {}
+}
+
+var pinBuffer = "";
+document.addEventListener("keydown", function (e) {
+  var tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  if (e.key >= "0" && e.key <= "9") {
+    pinBuffer = (pinBuffer + e.key).slice(-4);
+    if (pinBuffer === ADMIN_PIN) {
+      pinBuffer = "";
+      setAdminOn(!adminOn());
+      renderAdmin();
+    }
+  }
+});
+
+/* Parts and delivery of the CURRENT config, priced the same way the sheet
+   prices them. Partial configs still compute, on what is chosen so far. */
+function adminTotals() {
+  var parts = 0, delivery = 0;
+  buildLines().forEach(function (l) {
+    var v = priceOf(l.part);
+    if (l.part.cat === "delivery") delivery += v;
+    else parts += v;
+  });
+  return { parts: parts, delivery: delivery };
+}
+
+function adminNum(v) { var x = parseFloat(v); return isFinite(x) && x > 0 ? x : 0; }
+
+function laborOf(parts) {
+  if (admin.mode === "hour") return adminNum(admin.rate) * adminNum(admin.hours);
+  if (admin.mode === "pct") return parts * adminNum(admin.pct) / 100;
+  return adminNum(admin.gross);
+}
+
+function renderAdmin() {
+  var old = document.getElementById("admincard");
+  if (old) old.parentNode.removeChild(old);
+  if (!adminOn()) return;
+
+  var card = document.createElement("div");
+  card.id = "admincard";
+  card.className = "sheet admincard";
+
+  var head = document.createElement("div");
+  head.className = "sheet-head";
+  var hs = document.createElement("span");
+  hs.textContent = "Builder";
+  var out2 = document.createElement("button");
+  out2.type = "button";
+  out2.className = "reset";
+  out2.textContent = "Close";
+  out2.addEventListener("click", function () { setAdminOn(false); renderAdmin(); });
+  head.appendChild(hs); head.appendChild(out2);
+  card.appendChild(head);
+
+  var modes = [["hour", "Per hour"], ["pct", "Percent of parts"], ["gross", "Gross amount"]];
+  var mrow = document.createElement("div");
+  mrow.className = "adminrow";
+  modes.forEach(function (m) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = m[1];
+    if (admin.mode === m[0]) b.dataset.on = "1";
+    b.addEventListener("click", function () { admin.mode = m[0]; saveAdmin(); renderAdmin(); });
+    mrow.appendChild(b);
+  });
+  card.appendChild(mrow);
+
+  var ins = document.createElement("div");
+  ins.className = "admininputs";
+  function field(key, label) {
+    var lab = document.createElement("label");
+    lab.appendChild(document.createTextNode(label));
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.inputMode = "decimal";
+    inp.value = admin[key];
+    inp.addEventListener("input", function () {
+      admin[key] = inp.value.replace(/[^0-9.]/g, "");
+      saveAdmin();
+      recompute();
+    });
+    lab.appendChild(inp);
+    ins.appendChild(lab);
+  }
+  if (admin.mode === "hour") { field("rate", "$ an hour"); field("hours", "hours"); }
+  else if (admin.mode === "pct") { field("pct", "% of parts"); }
+  else { field("gross", "$ gross"); }
+  card.appendChild(ins);
+
+  var outBox = document.createElement("div");
+  outBox.className = "adminout";
+  card.appendChild(outBox);
+
+  function recompute() {
+    var tt = adminTotals();
+    var labor = laborOf(tt.parts);
+    var sale = tt.parts + tt.delivery + labor;
+    var margin = sale > 0 ? (labor / sale) * 100 : 0;
+    outBox.textContent = "";
+    [["Parts", money(tt.parts)],
+     ["Delivery", money(tt.delivery)],
+     ["Labor", money(labor)],
+     ["Sale price", money(sale)],
+     ["Profit", money(labor)],
+     ["Margin", margin.toFixed(1) + "%"]].forEach(function (r) {
+      var line = document.createElement("div");
+      line.className = "line";
+      var a = document.createElement("span");
+      a.className = "line-name";
+      a.textContent = r[0];
+      var b = document.createElement("span");
+      b.className = "line-price";
+      b.textContent = r[1];
+      line.appendChild(a); line.appendChild(b);
+      outBox.appendChild(line);
+    });
+  }
+  recompute();
+
+  var host = document.getElementById("sheetcard");
+  host.parentNode.insertBefore(card, host.nextSibling);
+}
+
 (function renderSources() {
   var ol = document.getElementById("srclist");
   if (!ol) return;
