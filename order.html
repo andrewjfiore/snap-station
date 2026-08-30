@@ -723,11 +723,12 @@ footer { border-top: 1px solid var(--border); background: var(--surface); }
 /* ---------------------------------------------------------------- pricing --
    Component costs in US dollars, August 2026.
 
-   BUILD_FEE is the builder's charge for the work: cutting, assembly, finishing,
-   artwork, fitting out, testing. One number in one place; every quote on the
-   page follows it. At 0 the page quotes components only and the line is hidden. */
+   BUILD_FEE is the builder's charge for the work: assembly, setup, quality
+   assurance and support. One number in one place; every quote on the page
+   follows it. Set 2026-08-29. At 0 the line would hide and the page would
+   quote components only. */
 
-var BUILD_FEE = 0;
+var BUILD_FEE = 3000;
 
 /* ------------------------------------------------------------- delivery --
    Where it ships from: 16 Kosta Ave, Rutland MA, ZIP 01543.
@@ -1854,7 +1855,7 @@ function renderSheet() {
     bf.className = "line";
     var bn = document.createElement("span");
     bn.className = "line-name";
-    bn.textContent = "Assembly, finishing and testing";
+    bn.textContent = "Assembly, setup, quality assurance and support";
     var bp = document.createElement("span");
     bp.className = "line-price";
     bp.textContent = money(BUILD_FEE);
@@ -1940,7 +1941,7 @@ function renderSheet() {
       if (l.cat !== lc) { txt += "\n" + l.cat.toUpperCase() + "\n"; lc = l.cat; }
       txt += "  " + money(priceOf(l.part)).padStart(11) + "  " + l.part.name + "\n";
     });
-    if (BUILD_FEE > 0) txt += "  " + money(BUILD_FEE).padStart(11) + "  Assembly, finishing and testing\n";
+    if (BUILD_FEE > 0) txt += "  " + money(BUILD_FEE).padStart(11) + "  Assembly, setup, quality assurance and support\n";
     txt += "\n  " + money(total).padStart(11) + "  TOTAL\n";
     if (need.length) txt += "\n  Still to choose: " + need.join(", ") + "\n";
     var reqs = askEntries();
@@ -2099,14 +2100,16 @@ function renderAdmin() {
   function recompute() {
     var tt = adminTotals();
     var labor = laborOf(tt.parts);
-    var sale = tt.parts + tt.delivery + labor;
-    var margin = sale > 0 ? (labor / sale) * 100 : 0;
+    var sale = tt.parts + tt.delivery + BUILD_FEE;
+    var profit = BUILD_FEE - labor;
+    var margin = sale > 0 ? (profit / sale) * 100 : 0;
     outBox.textContent = "";
     [["Parts", money(tt.parts)],
      ["Delivery", money(tt.delivery)],
-     ["Labor", money(labor)],
+     ["Build fee", money(BUILD_FEE)],
+     ["Labor expense", money(labor)],
      ["Sale price", money(sale)],
-     ["Profit", money(labor)],
+     ["Profit", money(profit)],
      ["Margin", margin.toFixed(1) + "%"]].forEach(function (r) {
       var line = document.createElement("div");
       line.className = "line";
