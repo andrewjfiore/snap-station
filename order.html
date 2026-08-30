@@ -562,6 +562,20 @@ footer { border-top: 1px solid var(--border); background: var(--surface); }
 }
 .adminout { padding: 6px 16px 16px; }
 
+/* the one option whose price the buyer types */
+.budgetfield { display: flex; align-items: center; gap: 8px; flex: 1 1 100%; }
+.budgetfield label { font-size: 12.5px; color: var(--ink-2); font-weight: 500; }
+.budgetfield input {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px; width: 7em; padding: 6px 9px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink);
+}
+.budgetfield input:focus-visible { border-color: var(--brand); outline-offset: 0; }
+.budgetfield .budgetout { font-size: 12.5px; color: var(--ink-2); }
+.budgetfield .budgetbad { color: var(--stop); font-weight: 500; }
+
 /* buyer responses on a chosen row */
 .askrow { display: flex; flex-wrap: wrap; gap: 6px; }
 .askrow button {
@@ -1448,16 +1462,17 @@ function zipBar() {
 }
 
 /* Same pattern as the ZIP bar: the one number the buyer types rather than
-   picks. Committed on Enter or focus leaving the field, because committing on
-   every keystroke would re-render mid-typing. */
-function budgetBar() {
-  var bar = document.createElement("div");
-  bar.className = "zipbar";
+   picks. It sits on the row it prices, under the option itself. Committed on
+   Enter or on focus leaving the field, because committing on every keystroke
+   would re-render the page mid typing. */
+function budgetField() {
+  var box = document.createElement("span");
+  box.className = "budgetfield";
 
   var lab = document.createElement("label");
   lab.setAttribute("for", "pcbudget");
-  lab.textContent = "Your PC budget";
-  bar.appendChild(lab);
+  lab.textContent = "Your budget";
+  box.appendChild(lab);
 
   var inp = document.createElement("input");
   inp.id = "pcbudget";
@@ -1467,17 +1482,17 @@ function budgetBar() {
   inp.placeholder = "600";
   inp.value = sel.pcBudget ? String(sel.pcBudget) : "";
   inp.setAttribute("aria-describedby", "budgetout");
-  bar.appendChild(inp);
+  box.appendChild(inp);
 
   var out = document.createElement("span");
-  out.className = "zipout";
+  out.className = "budgetout";
   out.id = "budgetout";
   if (!sel.pcBudget) {
     out.textContent = "From $300, whole dollars.";
   } else {
     out.innerHTML = "Up to <b>" + money(sel.pcBudget) + "</b> for the machine inside.";
   }
-  bar.appendChild(out);
+  box.appendChild(out);
 
   inp.addEventListener("input", function () {
     inp.value = inp.value.replace(/\D/g, "").slice(0, 5);
@@ -1487,12 +1502,12 @@ function budgetBar() {
     if (v >= 300) { sel.pcBudget = v; render(); }
     else if (v === 0 && sel.pcBudget) { sel.pcBudget = 0; render(); }
     else {
-      out.className = "zipout zipbad";
+      out.className = "budgetout budgetbad";
       out.textContent = "A working build starts at $300.";
     }
   });
 
-  return bar;
+  return box;
 }
 
 /* A subheading is a list, so it is built as one: one item per line, each with
@@ -1563,7 +1578,6 @@ function render() {
     box.appendChild(head);
 
     if (cat.id === "delivery") box.appendChild(zipBar());
-    if (cat.id === "console" && sel.console === "pc") box.appendChild(budgetBar());
 
     var list = document.createElement("div");
     list.className = "opts";
@@ -1649,9 +1663,11 @@ function render() {
 
       /* Below the button, never inside it: an anchor in a button is inert. */
       var chips = (st.state === "chosen" && p.cat !== "base") ? askChips(p) : null;
-      if (p.buy || p.bill || chips) {
+      var budget = (p.budget && st.state === "chosen") ? budgetField() : null;
+      if (p.buy || p.bill || chips || budget) {
         var foot = document.createElement("div");
         foot.className = "opt-foot";
+        if (budget) foot.appendChild(budget);
         if (p.buy) foot.appendChild(sourceLink(p.buy, p.buyText));
         if (chips) foot.appendChild(chips);
         if (p.bill) foot.appendChild(billTable(p.bill));
