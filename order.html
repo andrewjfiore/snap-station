@@ -709,7 +709,7 @@ var BUILD_FEE = 0;
    published rate schedule, or a range taken from completed used sales.     */
 
 var CITES = {
-  hd:        { kind:"quoted", who:"The Home Depot", what:"panel goods per sheet, priced Aug 2026. Columbia Forest PureBond birch $74.98, ULTRASTOCK MDF $49.98, Veranda melamine $47.20. Home Depot prices by store, so these are the Worcester Massachusetts numbers",
+  hd:        { kind:"quoted", who:"The Home Depot", what:"panel goods per sheet, priced Aug 2026. Columbia Forest PureBond birch $74.98, ULTRASTOCK MDF $49.98. Home Depot prices by store, so these are the Worcester Massachusetts numbers",
                url:"https://www.homedepot.com/p/ULTRASTOCK-3-4-in-x-4-ft-x-8-ft-MDF-Panel-D11612490970000/304325742" },
   oshcut:    { kind:"estimate", who:"OSH Cut", what:"laser cut and formed 16 gauge steel, quantity one, quoted through their online estimator",
                url:"https://oshcut.com/" },
@@ -821,7 +821,7 @@ function roadMiles(zip) {
    measured in bin/bom.py; the rest are component weights. The steel body is
    lighter than the wood ones because it is 16 gauge sheet rather than
    three quarter inch board, but it still carries the same ballast plate. */
-var BODY_LB   = { body_birch:58, body_mdf:85, body_melamine:71, body_steel:54 };
+var BODY_LB   = { body_birch:58, body_mdf:85, body_steel:54 };
 var SCREEN_LB = { screen4k:8, tube15:42 };
 
 function shipWeight(s) {
@@ -949,26 +949,20 @@ var PARTS = [
   { id:"body_birch", cite:["hd"], cat:"material", name:"Birch plywood", price:119.50,
     buy:"https://www.homedepot.com/p/Columbia-Forest-Products-3-4-in-x-4-ft-x-8-ft-PureBond-Birch-Plywood-165921/100077837",
     url:"",
-    blurb:"Layers of real birch glued in a stack. Lightest and stiffest of the three woods.",
-    note:"" },
+    blurb:"Layers of real birch glued in a stack. The lighter and stiffer of the two woods.",
+    note:"Every edge you can see is capped in solid birch and rounded, so no plywood layers read through the paint." },
 
   { id:"body_mdf", cite:["hd"], cat:"material", name:"MDF", price:79.66,
     buy:"https://www.homedepot.com/p/ULTRASTOCK-3-4-in-x-4-ft-x-8-ft-MDF-Panel-D11612490970000/304325742",
     url:"",
     blurb:"Wood fiber pressed into board. No grain at all, so paint sits more smoothly on it than on anything else here.",
-    note:"The heaviest of the three woods, by a noticeable margin." },
-
-  { id:"body_melamine", cite:["hd"], cat:"material", name:"Melamine board", price:75.23,
-    buy:"https://www.homedepot.com/p/Veranda-3-4-in-x-4-ft-x-8-ft-Melamine-White-Particleboard-Panel-461877/100070209",
-    url:"",
-    blurb:"Pressed board with a hard white surface already bonded to both faces. The most affordable body.",
-    note:"" },
+    note:"The heaviest body, by a noticeable margin. Its edges are filled and sealed before paint, so they finish as smooth as the faces." },
 
   { id:"body_steel", cite:["oshcut"], cat:"material", name:"Steel", price:1466.25,
     buy:"https://oshcut.com/",
     url:"",
     blurb:"What Nintendo used. 16 gauge sheet, cut, folded and welded to the original dimensions. The only body that can take the baked enamel finish.",
-    note:"At 54 lb it is the lightest of the four bodies. Birch is 58, melamine 71, MDF 85. The ballast plate is the same on all of them." },
+    note:"At 54 lb it is the lightest of the three bodies. Birch is 58, MDF 85. The ballast plate is the same on all of them. Its edges are the folded corner itself, at the original radius." },
 
   /* ---- finish ---------------------------------------------------------- */
 
