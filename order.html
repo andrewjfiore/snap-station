@@ -765,8 +765,10 @@ var CITES = {
                url:"https://www.raphnet-tech.com/products/n64_usb_adapter_gen3/index.php" },
   misteradd: { kind:"quoted", who:"MiSTer Addons", what:"Bluetooth USB adapter",
                url:"https://misteraddons.com/products/mister-fpga-bluetooth-and-wifi-usb-adapters" },
-  backmkt:   { kind:"quoted", who:"Back Market", what:"refurbished iPad Pro 12.9 inch M2",
-               url:"https://www.backmarket.com/en-us/l/ipad-pro/a1733845-a071-4904-b2c6-eb0f332f7ef3" },
+  amztab:    { kind:"quoted", who:"Amazon", what:"Samsung Galaxy Tab S10 Ultra, 14.6 inch, 256GB Wi-Fi",
+               url:"https://www.amazon.com/dp/B0DLJ6F4DL" },
+  maddons_io:{ kind:"quoted", who:"MiSTer Addons", what:"IO Analog Pro board $60, and the Saturn universal cable with composite RCA $35",
+               url:"https://misteraddons.com/products/mister-fpga-io-analog-pro" },
   ltl:       { kind:"estimate", who:"Coin-op freight brokers and 2026 LTL rate guides",
                what:"residential curbside with a liftgate quoted at $275 to $450 over 500 miles and $400 to $700 over 2,000",
                url:"https://www.coinmachineshippers.com/ship-arcade-machine-across-country" },
@@ -827,7 +829,7 @@ var SCREEN_LB = { screen4k:8, tube15:42 };
 function shipWeight(s) {
   var w = 56 + 5 + 11 + 2 + 3;              /* ballast plate, legs, printer, arm, fittings */
   w += BODY_LB[s.material] || 70;
-  w += SCREEN_LB[s.display] || (s.console === "ipad" ? 2 : 8);
+  w += SCREEN_LB[s.display] || (s.console === "tablet" ? 2 : 8);
   w += 3;                                    /* console */
   return w;
 }
@@ -1005,9 +1007,11 @@ var PARTS = [
     blurb:"A Cyclone V board in a case with memory, ports and a power supply, running the same open Nintendo 64 core the M64 uses plus cores for dozens of other systems. The cabinet is not limited to one console.",
     note:"Games load as files rather than cartridges, and it has no original controller ports, so a 1990s controller needs an adapter." },
 
-  { id:"ipad", cite:["backmkt"], cat:"console", name:"A tablet behind the screen opening", price:561.00,
+  { id:"tablet", cite:["amztab"], cat:"console", name:"A tablet behind the screen opening", price:729.99,
+    buy:"https://www.amazon.com/dp/B0DLJ6F4DL",
+    buyText:"Amazon",
     url:"",
-    blurb:"Screen and computer in one.",
+    blurb:"Screen and computer in one. A Samsung Galaxy Tab S10 Ultra running Android, drawing the game the way the 1996 hardware drew it.",
     note:"The picture is about a tenth smaller than the original in each direction, so a little more of the front panel shows as blank surround." },
 
   /* ---- the screen ------------------------------------------------------- */
@@ -1016,7 +1020,7 @@ var PARTS = [
     url:"",
     blurb:"A consumer television left in its own case, as Nintendo fitted it. The original was a Samsung. At roughly 16.5 inches front to back it occupies almost all of the 16.63 inches of interior depth.",
     note:"Second hand, tested and left sealed. The picture measures within a tenth of an inch of the original in both directions.",
-    included: function (s) { return s.console === "ipad"
+    included: function (s) { return s.console === "tablet"
       ? "The tablet is the screen." : null; },
     blocked: function (s) { return s.console === "analogue3d" || s.console === "modretro"
       ? "This console outputs a modern digital picture only, which a television of this age cannot read. Pair a CRT with the original Nintendo 64, or a MiSTer with the analog add-on board." : null; } },
@@ -1026,14 +1030,14 @@ var PARTS = [
     url:"",
     blurb:"A 17.3 inch 4K panel with a matte surface that does not mirror the room. The game enlarges onto it by a whole number of times, so each original pixel stays a square block. Nothing inside it needs servicing.",
     note:"Its delay between signal and picture has been measured at 11 milliseconds, under one frame. Most screens this size have never been tested for it.",
-    included: function (s) { return s.console === "ipad"
+    included: function (s) { return s.console === "tablet"
       ? "The tablet is the screen." : null; } },
 
   /* ---- the controller --------------------------------------------------- */
 
   /* Anything with a 1990s N64 plug: works in the original console and in both
      new cartridge consoles, which kept the original ports. Needs an adapter
-     for a MiSTer, and cannot reach a tablet at all. */
+     for a MiSTer or the tablet, which take it over USB. */
 
   { id:"pad_original", cite:["ebayN64"], cat:"controller", tier:"Original hardware",
     name:"Nintendo 64 controller", price:35.00,
@@ -1094,7 +1098,7 @@ var PARTS = [
     auto: function (s) {
       if (WIRED_N64.indexOf(s.controller) < 0) return null;
       if (s.console === "mister") return "A MiSTer has USB sockets and nothing else, so a controller with a 1990s plug cannot reach it without this.";
-      if (s.console === "ipad")   return "A tablet has no original controller socket, so this one reaches it through the connector fitted inside.";
+      if (s.console === "tablet")   return "A tablet has no original controller socket, so this one reaches it through the connector fitted inside.";
       return null; },
     notneeded: function (s) {
       if (WIRED_N64.indexOf(s.controller) < 0) return "Your controller is wireless.";
@@ -1118,6 +1122,18 @@ var PARTS = [
     note:"The only option that puts the machine in the room rather than at the curb.",
     alert:{ tone:"caution", label:"Beyond 300 miles",
       text:"The price is agreed with you rather than shown here." } },
+
+  { id:"io_analog", cite:["maddons_io"], cat:"adapter", name:"Analog video board with composite cable", price:95.00,
+    buy:"https://misteraddons.com/products/mister-fpga-io-analog-pro",
+    buyText:"MiSTer Addons",
+    url:"",
+    blurb:"Fitted inside so the MiSTer reaches the tube.",
+    note:"",
+    auto: function (s) { return (s.console === "mister" && s.display === "tube15")
+      ? "A MiSTer outputs a digital picture only. This board makes the analog signal the tube reads, through its composite input." : null; },
+    notneeded: function (s) {
+      if (s.display !== "tube15") return "Your screen takes a digital picture directly.";
+      return "Your console already makes the analog signal the tube reads."; } },
 
   { id:"pad_radio", buy:"https://misteraddons.com/products/mister-fpga-bluetooth-and-wifi-usb-adapters", cite:["misteradd"], cat:"adapter", name:"Wireless receiver", price:5.00,
     url:"",
@@ -1563,7 +1579,7 @@ function unanswered() {
       return;
     }
     if (sel[a[0]]) return;
-    if (a[0] === "display" && sel.console === "ipad") return;
+    if (a[0] === "display" && sel.console === "tablet") return;
     need.push(a[1]);
   });
   return need;
