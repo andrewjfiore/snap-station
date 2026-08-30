@@ -715,7 +715,7 @@ var CITES = {
                url:"https://oshcut.com/" },
   speedy:    { kind:"quoted", who:"Speedy Metals", what:"6061-T6 aluminum tube, 1-1/4 in OD by .065 wall, $19.91 for a 72 in stick",
                url:"https://www.speedymetals.com/pc-4571-8371-1-14-od-x-065-wall-tube-6061-t6-aluminum.aspx" },
-  sendcut:   { kind:"quoted", who:"SendCutSend", what:"the ballast plate, quoted live at $339.91: 20 by 20 in of 0.500 in A36 mild steel, 1.75 in corner radius, four 0.5 in holes on a 17 by 17 in pattern, cut on a fiber laser",
+  sendcut:   { kind:"quoted", who:"SendCutSend", what:"the ballast plate, quoted live at $339.91: 20 by 20 in of 0.500 in A36 mild steel, 1.75 in corner radius, four 0.5 in holes on a 7.3 by 7.3 in pattern, cut on a fiber laser",
                url:"https://app.sendcutsend.com/customer#/quote?action=builder:rectangle_bolt_flange" },
   fittings:  { kind:"quoted", who:"Outwater", what:"T21/OF chrome flange for 1-1/4 in tube, $3.91 each",
                url:"https://www.outwater.com/T21-FLANGE-PARENT" },
@@ -897,7 +897,7 @@ var BILL = [
   { name:"Ballast plate, twenty inches square in half inch steel, cut to shape", price:339.91,
     buy:"https://app.sendcutsend.com/customer#/quote?action=builder:rectangle_bolt_flange",
     buyText:"Price this cut",
-    cut:"Plate 20 by 20 in, corner radius 1.75 in, four 0.5 in holes on a 17 by 17 in pattern, in 0.500 in A36 mild steel." },
+    cut:"Plate 20 by 20 in, corner radius 1.75 in, four 0.5 in holes on a 7.3 by 7.3 in pattern, in 0.500 in A36 mild steel." },
   { name:"Controller arm, gooseneck and controller plate", price:40.90,
     buy:"https://snakeclamp.com/products/custom-length-heavy-duty-flexible-gooseneck-arm?variant=52297982181685",
     buyText:"SnakeClamp" },
@@ -1079,7 +1079,7 @@ var PARTS = [
   { id:"pad_nso", buy:"https://www.nintendo.com/us/store/products/nintendo-64-controller-128577/", cite:["nintendo"], cat:"controller", tier:"Made today",
     name:"Nintendo Switch Online N64 controller", price:54.99,
     url:"",
-    blurb:"Nintendo's own modern reissue, wireless, in the original shape. It pairs over Bluetooth, which on this page means it works with a MiSTer and nothing else.",
+    blurb:"Nintendo's own modern reissue, wireless, in the original shape. It pairs over Bluetooth, which on this page means it works with a MiSTer or the tablet.",
     note:"Measured at about 13.8 ms wireless. After the machine is switched on, or after changing system, it needs one button press before it is picked up.",
     blocked: function (s) {
       if (s.console === "n64")        return "This controller is Bluetooth only and Nintendo ships no receiver for the 1996 console. For original hardware you want the Nintendo 64 controller, the Hori, the Tribute64 or the 8BitDo 64, which comes with a receiver.";
