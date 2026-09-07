@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#2a75bb"/>
+<title>Snap Station v5</title>
+<link rel="stylesheet" href="fonts/fonts.css"/>
+<link rel="stylesheet" href="v5.css"/>
+<script src="lib/sticker-constants.js" defer></script>
+<script src="lib/sticker-export.js" defer></script>
+<script src="lib/snap-store.js" defer></script>
+<script src="lib/payment.js" defer></script>
+<script src="lib/sound.js" defer></script>
+<script src="lib/sheet-render.js" defer></script>
+<script src="vendor/gif.js" defer></script>
+<script src="capture.js" defer></script>
+<script src="boxes.js" defer></script>
+<script src="sheet.js" defer></script>
+<script src="print.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<!-- ================= TITLE (attract) ================= -->
+<section class="screen is-active" id="scr-title" data-screen="title">
+  <div class="title-field" aria-hidden="true"></div>
+  <div class="title-card">
+    <div class="title-ball" aria-hidden="true"><span class="title-ball__band"></span><span class="title-ball__btn"></span></div>
+    <h1 class="title-logo">SNAP<span> </span>STATION</h1>
+    <div class="title-sub">SERIES 5</div>
+    <button class="press-start" id="press-start">PRESS START</button>
+    <div class="title-foot-hint">or tap anywhere · insert your Game Pak below</div>
+  </div>
+  <footer class="title-foot">
+    <span class="title-ver" id="title-ver">v5.0 · CELADON MALL</span>
+    <span class="title-credits" id="title-credits"></span>
+    <span class="title-attendant" id="title-attendant" role="button" tabindex="0">⚙ ATTENDANT</span>
+  </footer>
+</section>
+
+<!-- ================= MAIN MENU (pause menu) ================= -->
+<section class="screen" id="scr-menu" data-screen="menu">
+  <header class="hud">
+    <span class="hud-loc">▼ MENU</span>
+    <span class="hud-title">What next, photographer?</span>
+    <span class="hud-money" id="menu-money"></span>
+  </header>
+  <nav class="menu-grid" id="menu-grid" role="menu" aria-label="Main menu">
+    <button class="menu-tile" role="menuitem" data-go="capture" data-hue="0">
+      <span class="menu-tile__badge">Live</span><span class="menu-tile__ic">📷</span><span class="menu-tile__lb">CAPTURE</span>
+      <span class="menu-tile__sub">Camera · Console · Paste</span>
+    </button>
+    <button class="menu-tile" role="menuitem" data-go="box" data-hue="1">
+      <span class="menu-tile__badge">Storage</span><span class="menu-tile__ic">📦</span><span class="menu-tile__lb">BOX</span>
+      <span class="menu-tile__sub" id="menu-box-count">Your snaps</span>
+    </button>
+    <button class="menu-tile" role="menuitem" data-go="sheet" data-hue="2">
+      <span class="menu-tile__badge">Builder</span><span class="menu-tile__ic">🖼️</span><span class="menu-tile__lb">SHEET</span>
+      <span class="menu-tile__sub">Arrange &amp; decorate</span>
+    </button>
+    <button class="menu-tile" role="menuitem" data-go="print" data-hue="3">
+      <span class="menu-tile__badge">Score!</span><span class="menu-tile__ic">🖨️</span><span class="menu-tile__lb">PRINT</span>
+      <span class="menu-tile__sub" id="menu-print-sub">$4 · 16 stickers</span>
+    </button>
+  </nav>
+  <div class="menu-tip" id="menu-tip">Snaps go in your BOX. Drop them on the SHEET. PRINT makes them real.</div>
+</section>
+
+<!-- ================= CAPTURE ================= -->
+<section class="screen" id="scr-capture" data-screen="capture">
+  <header class="hud">
+    <span class="hud-loc">▼ CAPTURE</span>
+    <span class="hud-title" id="cap-source-name">Camera</span>
+    <span class="hud-chip" id="cap-counter">📷 0</span>
+    <span class="hud-chip" id="cap-rec" hidden>● REC</span>
+  </header>
+  <div class="cap-stage">
+    <div class="viewport" id="cap-viewport">
+      <video id="cap-video" autoplay playsinline muted></video>
+      <canvas id="cap-fallback" hidden></canvas>
+      <div class="vp-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="vp-msg" id="cap-msg">Pick an input to begin — or paste / drop an image anywhere.</div>
+      <div class="vp-flash" id="cap-flash" hidden></div>
+      <div class="vp-count" id="cap-count" hidden></div>
+    </div>
+    <aside class="cap-rail">
+      <div class="rail-label">INPUT</div>
+      <div class="input-list" id="input-list" role="listbox" aria-label="Capture input"></div>
+      <div class="rail-label">EFFECT</div>
+      <div class="fx-row">
+        <button class="chip" id="fx-mirror" aria-pressed="true">MIRROR</button>
+        <button class="chip" id="fx-crt" aria-pressed="false">CRT</button>
+      </div>
+      <button class="shutter" id="shutter" aria-label="Take snap">
+        <span class="shutter__ring"></span><span class="shutter__core"></span>
+      </button>
+      <button class="chip chip--wide" id="rec-gif">🎞 RECORD GIF</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= BOX (gallery) ================= -->
+<section class="screen" id="scr-box" data-screen="box">
+  <header class="hud">
+    <span class="hud-loc">▼ BOX</span>
+    <div class="box-tabs" id="box-tabs"></div>
+    <span class="hud-chip" id="box-sel-count" hidden></span>
+  </header>
+  <div class="box-stage">
+    <div class="box-wall" id="box-wall">
+      <div class="box-grid" id="box-grid" role="grid" aria-label="Snap box"></div>
+    </div>
+    <aside class="box-rail">
+      <div class="box-preview" id="box-preview"><span class="box-preview__empty">Hover a snap</span></div>
+      <div class="box-meta" id="box-meta"></div>
+      <button class="btn btn--primary" id="box-to-sheet" disabled>SEND TO SHEET ▶</button>
+      <button class="btn" id="box-release" disabled>RELEASE</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= SHEET (composer) ================= -->
+<section class="screen" id="scr-sheet" data-screen="sheet">
+  <header class="hud">
+    <span class="hud-loc">▼ SHEET</span>
+    <div class="seg" id="layout-seg" role="radiogroup" aria-label="Layout"></div>
+    <span class="hud-chip" id="sheet-dims"></span>
+  </header>
+  <div class="sheet-stage">
+    <div class="sheet-wall">
+      <div class="paper" id="paper">
+        <div class="paper-grid" id="paper-grid"></div>
+        <svg class="paper-kiss" id="paper-kiss" preserveAspectRatio="none"></svg>
+        <div class="paper-stamps" id="paper-stamps"></div>
+      </div>
+      <div class="sheet-under">
+        <label class="chip chip--check"><input type="checkbox" id="kiss-toggle"/> CUT LINES</label>
+        <div class="swatches" id="paper-swatches"></div>
+      </div>
+    </div>
+    <aside class="sheet-rail">
+      <div class="rail-label">BAG · STAMPS</div>
+      <div class="bag" id="stamp-bag"></div>
+      <div class="rail-label">TEXT</div>
+      <div class="textrow">
+        <input class="tin" id="stamp-text" maxlength="16" placeholder="Add a caption…"/>
+        <button class="chip" id="stamp-text-add">ADD</button>
+      </div>
+      <div class="rail-hint">Drag stamps · wheel/pinch = size · double-tap = remove</div>
+      <button class="btn btn--primary" id="sheet-print">PRINT ▶</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= PRINT ================= -->
+<section class="screen" id="scr-print" data-screen="print">
+  <header class="hud">
+    <span class="hud-loc">▼ PRINT</span>
+    <span class="hud-title">Poké Mart · Print Counter</span>
+    <span class="hud-money" id="print-money"></span>
+  </header>
+  <div class="print-stage" id="print-stage">
+    <div class="mart" id="mart-pane">
+      <div class="mart-preview" id="mart-preview"></div>
+      <div class="mart-panel">
+        <div class="mart-row"><span>SHEET</span><b id="mart-layout"></b></div>
+        <div class="mart-row"><span>COPIES</span>
+          <span class="stepper"><button class="chip" id="copies-dn">−</button><b id="mart-copies">1</b><button class="chip" id="copies-up">+</button></span>
+        </div>
+        <div class="mart-row mart-row--total"><span>TOTAL</span><b id="mart-total"></b></div>
+        <div class="mart-pay">
+          <button class="btn btn--primary" id="pay-credit">USE CREDIT</button>
+          <button class="btn" id="pay-token">ENTER CODE</button>
+        </div>
+        <div class="mart-note" id="mart-note"></div>
+      </div>
+    </div>
+    <div class="lab" id="lab-pane" hidden>
+      <div class="lab-machine"><div class="lab-paper" id="lab-paper"></div><div class="lab-head"></div></div>
+      <div class="lab-passes" id="lab-passes"></div>
+      <div class="lab-status" id="lab-status"></div>
+    </div>
+    <div class="done" id="done-pane" hidden>
+      <div class="done-head">★ Print Complete! ★</div>
+      <div class="results-row" id="results-row"></div>
+      <div class="done-sheet" id="done-sheet"></div>
+      <div class="done-actions">
+        <button class="chip chip--wide" id="dl-png">PNG</button>
+        <button class="chip chip--wide" id="dl-pdf" hidden>PDF</button>
+        <button class="chip chip--wide" id="dl-print">PRINT DIALOG</button>
+        <button class="chip chip--wide" id="dl-cricut">CRICUT SVG</button>
+        <button class="chip chip--wide" id="dl-cut">CUT SVG</button>
+      </div>
+      <div class="done-again">
+        <button class="btn" id="done-home">HOME</button>
+        <button class="btn btn--primary" id="done-again-btn">PRINT ANOTHER</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= chrome: dialog / footer / cursor ================= -->
+<div class="dlg-host" id="dlg-host" hidden>
+  <div class="dlg" id="dlg" role="dialog" aria-modal="true">
+    <div class="dlg-text" id="dlg-text"></div>
+    <span class="dlg-arrow" id="dlg-arrow" hidden>▼</span>
+    <div class="dlg-opts" id="dlg-opts" hidden></div>
+  </div>
+</div>
+
+<footer class="btnbar" id="btnbar" hidden>
+  <span class="btnbar-left" id="btnbar-ctx"></span>
+  <span class="btnbar-right">
+    <span class="bkey"><i>A</i> Select</span>
+    <span class="bkey"><i>B</i> Back</span>
+  </span>
+</footer>
+
+<input type="file" id="file-in" accept="image/*" multiple hidden/>
+</body>
+</html>
